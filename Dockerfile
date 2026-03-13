@@ -1,5 +1,5 @@
 # Estágio 1: Build da aplicação
-FROM node:20-alpine as build
+FROM node:22-alpine as build
 
 WORKDIR /app
 
@@ -15,24 +15,23 @@ COPY . .
 # Executa o build de produção (Vite)
 RUN npm run build
 
-# Estágio 2: Servidor Web (Nginx)
-FROM nginx:alpine
+# Estágio 2: Execução (Node.js)
+FROM node:22-alpine
 
-# Copia os arquivos compilados do estágio anterior
-COPY --from=build /app/dist /usr/share/nginx/html
+WORKDIR /app
 
-# Configura o Nginx para rodar na porta 3000 e suportar rotas do React (SPA)
-RUN echo 'server { \
-    listen 3000; \
-    location / { \
-        root /usr/share/nginx/html; \
-        index index.html index.htm; \
-        try_files $uri $uri/ /index.html; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# Copia as dependências e arquivos necessários
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/server.ts ./
+COPY --from=build /app/server ./server
+COPY --from=build /app/node_modules ./node_modules
+
+# Define a variável de ambiente para produção
+ENV NODE_ENV=production
 
 # Expõe a porta 3000
 EXPOSE 3000
 
-# Inicia o Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Inicia o servidor Node.js
+CMD ["npm", "start"]
