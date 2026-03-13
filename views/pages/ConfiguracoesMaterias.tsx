@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useStudy } from '../../controllers/context/StudyContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Modal } from '../components/ui/Modal';
 import { useTheme } from '../../controllers/context/ThemeContext';
-import { Plus, Trash2, ChevronDown, ChevronRight, FileText, List } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, FileText, List, Edit2, Save, X, AlertTriangle } from 'lucide-react';
 
 export const ConfiguracoesMaterias: React.FC = () => {
-  const { materias, addMateria, addAssunto, setMaterias } = useStudy();
+  const { materias, addMateria, updateMateria, deleteMateria, addAssunto, updateAssunto, deleteAssunto, setMaterias } = useStudy();
   const { themeClasses } = useTheme();
   
   const [activeTab, setActiveTab] = useState<'manual' | 'import'>('manual');
@@ -14,7 +15,21 @@ export const ConfiguracoesMaterias: React.FC = () => {
   const [expandedMateriaId, setExpandedMateriaId] = useState<string | null>(null);
   const [newAssuntoName, setNewAssuntoName] = useState('');
   
+  const [editingMateriaId, setEditingMateriaId] = useState<string | null>(null);
+  const [editingMateriaName, setEditingMateriaName] = useState('');
+  
+  const [editingAssuntoId, setEditingAssuntoId] = useState<string | null>(null);
+  const [editingAssuntoName, setEditingAssuntoName] = useState('');
+
   const [importText, setImportText] = useState('');
+
+  // Confirmation Modal State
+  const [confirmDelete, setConfirmDelete] = useState<{
+    type: 'materia' | 'assunto';
+    materiaId: string;
+    assuntoId?: string;
+    name: string;
+  } | null>(null);
 
   const handleAddMateria = () => {
     if (newMateriaName.trim()) {
@@ -30,7 +45,55 @@ export const ConfiguracoesMaterias: React.FC = () => {
     }
   };
 
+  const handleEditMateria = (materiaId: string, currentName: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingMateriaId(materiaId);
+    setEditingMateriaName(currentName);
+  };
+
+  const handleSaveMateria = (materiaId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (editingMateriaName.trim()) {
+      updateMateria(materiaId, editingMateriaName.trim());
+    }
+    setEditingMateriaId(null);
+  };
+
+  const handleDeleteMateria = (materiaId: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setConfirmDelete({ type: 'materia', materiaId, name });
+  };
+
+  const handleEditAssunto = (assuntoId: string, currentName: string) => {
+    setEditingAssuntoId(assuntoId);
+    setEditingAssuntoName(currentName);
+  };
+
+  const handleSaveAssunto = (materiaId: string, assuntoId: string) => {
+    if (editingAssuntoName.trim()) {
+      updateAssunto(materiaId, assuntoId, { nome: editingAssuntoName.trim() });
+    }
+    setEditingAssuntoId(null);
+  };
+
+  const handleDeleteAssunto = (materiaId: string, assuntoId: string, name: string) => {
+    setConfirmDelete({ type: 'assunto', materiaId, assuntoId, name });
+  };
+
+  const executeDelete = () => {
+    if (!confirmDelete) return;
+
+    if (confirmDelete.type === 'materia') {
+      deleteMateria(confirmDelete.materiaId);
+    } else if (confirmDelete.type === 'assunto' && confirmDelete.assuntoId) {
+      deleteAssunto(confirmDelete.materiaId, confirmDelete.assuntoId);
+    }
+
+    setConfirmDelete(null);
+  };
+
   const toggleExpand = (id: string) => {
+    if (editingMateriaId === id) return;
     setExpandedMateriaId(expandedMateriaId === id ? null : id);
   };
 
@@ -142,12 +205,51 @@ export const ConfiguracoesMaterias: React.FC = () => {
                     className={`p-4 flex items-center justify-between cursor-pointer ${themeClasses.bg === 'bg-gray-950' ? 'hover:bg-gray-800' : 'hover:bg-gray-50'}`}
                     onClick={() => toggleExpand(materia.id)}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     {expandedMateriaId === materia.id ? <ChevronDown size={20} className="text-gray-400" /> : <ChevronRight size={20} className="text-gray-400" />}
-                    <h4 className={`font-bold ${themeClasses.text}`}>{materia.nome}</h4>
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                        {materia.assuntos.length} assuntos
-                    </span>
+                    
+                    {editingMateriaId === materia.id ? (
+                      <div className="flex items-center gap-2 flex-1" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="text"
+                          value={editingMateriaName}
+                          onChange={(e) => setEditingMateriaName(e.target.value)}
+                          className={`flex-1 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveMateria(materia.id, e as any);
+                            if (e.key === 'Escape') setEditingMateriaId(null);
+                          }}
+                        />
+                        <button onClick={(e) => handleSaveMateria(materia.id, e)} className="text-green-600 p-1 hover:bg-green-50 rounded">
+                          <Save size={16} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditingMateriaId(null); }} className="text-red-500 p-1 hover:bg-red-50 rounded">
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <h4 className={`font-bold ${themeClasses.text}`}>{materia.nome}</h4>
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                            {materia.assuntos.length} assuntos
+                        </span>
+                        <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => handleEditMateria(materia.id, materia.nome, e)}
+                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          <button 
+                            onClick={(e) => handleDeleteMateria(materia.id, materia.nome, e)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -170,9 +272,50 @@ export const ConfiguracoesMaterias: React.FC = () => {
                     <ul className="space-y-2 pl-2">
                         {materia.assuntos.length === 0 && <li className="text-sm text-gray-400 italic">Nenhum assunto cadastrado.</li>}
                         {materia.assuntos.map((assunto) => (
-                            <li key={assunto.id} className={`text-sm flex items-center gap-2 ${themeClasses.text}`}>
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                                {assunto.nome}
+                            <li key={assunto.id} className={`text-sm flex items-center justify-between group ${themeClasses.text}`}>
+                                <div className="flex items-center gap-2 flex-1">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+                                  
+                                  {editingAssuntoId === assunto.id ? (
+                                    <div className="flex items-center gap-2 flex-1">
+                                      <input
+                                        type="text"
+                                        value={editingAssuntoName}
+                                        onChange={(e) => setEditingAssuntoName(e.target.value)}
+                                        className={`flex-1 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                                        autoFocus
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') handleSaveAssunto(materia.id, assunto.id);
+                                          if (e.key === 'Escape') setEditingAssuntoId(null);
+                                        }}
+                                      />
+                                      <button onClick={() => handleSaveAssunto(materia.id, assunto.id)} className="text-green-600 p-1 hover:bg-green-50 rounded">
+                                        <Save size={14} />
+                                      </button>
+                                      <button onClick={() => setEditingAssuntoId(null)} className="text-red-500 p-1 hover:bg-red-50 rounded">
+                                        <X size={14} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <span>{assunto.nome}</span>
+                                      <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button 
+                                          onClick={() => handleEditAssunto(assunto.id, assunto.nome)}
+                                          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                        >
+                                          <Edit2 size={14} />
+                                        </button>
+                                        <button 
+                                          onClick={() => handleDeleteAssunto(materia.id, assunto.id, assunto.nome)}
+                                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
                             </li>
                         ))}
                     </ul>
@@ -212,6 +355,37 @@ Atos administrativos`}
           </div>
         </Card>
       )}
+
+      {/* Confirmation Modal */}
+      <Modal 
+        isOpen={!!confirmDelete} 
+        onClose={() => setConfirmDelete(null)} 
+        title="Confirmar Exclusão"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 text-amber-600 bg-amber-50 p-3 rounded-lg">
+            <AlertTriangle size={24} />
+            <p className="text-sm font-medium">
+              Esta ação não pode ser desfeita.
+            </p>
+          </div>
+          
+          <p className={themeClasses.text}>
+            Tem certeza que deseja excluir o {confirmDelete?.type === 'materia' ? 'matéria' : 'assunto'} 
+            <strong className="mx-1">"{confirmDelete?.name}"</strong>?
+            {confirmDelete?.type === 'materia' && " Todos os assuntos vinculados também serão removidos."}
+          </p>
+          
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="outline" onClick={() => setConfirmDelete(null)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={executeDelete}>
+              Excluir
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

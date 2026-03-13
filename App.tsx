@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { StudyProvider } from './controllers/context/StudyContext';
 import { ThemeProvider, useTheme } from './controllers/context/ThemeContext';
 import { ProductProvider } from './controllers/context/ProductContext';
@@ -21,6 +21,7 @@ import { ConfiguracoesProdutos } from './views/pages/ConfiguracoesProdutos';
 import { ConfiguracoesPrompts } from './views/pages/ConfiguracoesPrompts';
 import { ConfiguracoesAssinatura } from './views/pages/ConfiguracoesAssinatura';
 import { ConfiguracoesMenu } from './views/pages/ConfiguracoesMenu';
+import { ConfiguracoesUsuarios } from './views/pages/ConfiguracoesUsuarios';
 import { Revisoes } from './views/pages/Revisoes';
 import { Login } from './views/pages/Login';
 import { Menu } from 'lucide-react';
@@ -57,13 +58,19 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AppContent: React.FC = () => {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
 
   if (isLoginPage) {
     return (
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   return (
@@ -81,13 +88,13 @@ const AppContent: React.FC = () => {
         <Route path="/configuracoes/assinatura" element={<ConfiguracoesAssinatura />} />
         <Route path="/configuracoes/menu" element={<ConfiguracoesMenu />} />
         <Route path="/configuracoes/materias" element={<ConfiguracoesMaterias />} />
-        <Route path="/configuracoes/usuarios" element={<Configuracoes />} />
+        <Route path="/configuracoes/usuarios" element={<ConfiguracoesUsuarios />} />
         <Route path="/configuracoes/dashboard" element={<ConfiguracoesDashboard />} />
         <Route path="/configuracoes/permissoes" element={<ConfiguracoesPermissoes />} />
         <Route path="/configuracoes/produtos" element={<ConfiguracoesProdutos />} />
         <Route path="/configuracoes/prompts" element={<ConfiguracoesPrompts />} />
         {/* Redirect unknown routes to dashboard or login */}
-        <Route path="*" element={<Dashboard />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
   );

@@ -11,6 +11,15 @@ export interface Role {
   permissions: string[]; // List of Permission IDs
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  roleId: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
 export interface Assunto {
   id: string;
   nome: string;
@@ -74,6 +83,8 @@ export interface StudyContextType {
   setDisciplinas: (d: Disciplina[]) => void;
   setMaterias: (m: Materia[]) => void;
   addMateria: (nome: string, id?: string) => void;
+  updateMateria: (id: string, nome: string) => void;
+  deleteMateria: (id: string) => void;
   addAssunto: (materiaId: string, nome: string) => void;
   updateAssunto: (materiaId: string, assuntoId: string, updates: Partial<Assunto>) => void;
   deleteAssunto: (materiaId: string, assuntoId: string) => void;

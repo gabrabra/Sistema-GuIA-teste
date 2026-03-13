@@ -37,6 +37,7 @@ export const ConfiguracoesPrompts: React.FC = () => {
   const [formData, setFormData] = useState<Partial<PromptOption>>({
     title: '',
     description: '',
+    content: '',
     iconName: 'Sparkles',
     color: COLOR_THEMES[0].color,
     iconColor: COLOR_THEMES[0].iconColor
@@ -54,6 +55,7 @@ export const ConfiguracoesPrompts: React.FC = () => {
       setFormData({
         title: '',
         description: '',
+        content: '',
         iconName: 'Sparkles',
         color: COLOR_THEMES[0].color,
         iconColor: COLOR_THEMES[0].iconColor
@@ -75,6 +77,7 @@ export const ConfiguracoesPrompts: React.FC = () => {
         id: Date.now().toString(),
         title: formData.title!,
         description: formData.description!,
+        content: formData.content || '',
         iconName: formData.iconName || 'Sparkles',
         color: formData.color || COLOR_THEMES[0].color,
         iconColor: formData.iconColor || COLOR_THEMES[0].iconColor
@@ -173,13 +176,24 @@ export const ConfiguracoesPrompts: React.FC = () => {
           </div>
 
           <div>
-            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Descrição (Prompt que será enviado)</label>
-            <textarea
+            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Descrição Curta</label>
+            <input
+              type="text"
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
+              className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+              placeholder="Ex: Resume o texto em tópicos"
+            />
+          </div>
+
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Prompt da IA (Instrução)</label>
+            <textarea
+              value={formData.content}
+              onChange={e => setFormData({ ...formData, content: e.target.value })}
               className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-              rows={3}
-              placeholder="Ex: Faça um resumo destacando os pontos principais..."
+              rows={4}
+              placeholder="Cole aqui o prompt que você desenvolveu..."
             />
           </div>
 

@@ -51,6 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   ];
 
   const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
     navigate('/login');
   };
 

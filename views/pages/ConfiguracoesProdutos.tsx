@@ -84,16 +84,19 @@ export const ConfiguracoesProdutos: React.FC = () => {
 
       <div className="grid grid-cols-1 gap-6">
         {products.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-200">
-            <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+          <div 
+            onClick={() => handleOpenModal()}
+            className={`text-center py-12 rounded-2xl border-2 border-dashed transition-all duration-300 cursor-pointer group
+              ${themeClasses.bg === 'bg-gray-950' 
+                ? 'bg-gray-900/40 border-gray-800 hover:border-blue-500/50 hover:bg-gray-800/40' 
+                : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-lg hover:shadow-blue-500/5'}`}
+          >
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-all duration-300 group-hover:scale-110
+              ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 text-gray-500 group-hover:text-blue-400' : 'bg-gray-50 text-gray-400 group-hover:text-blue-500'}`}>
               <AlertCircle size={32} />
             </div>
-            <h3 className="text-lg font-bold text-gray-800 mb-2">Nenhum produto cadastrado</h3>
-            <p className="text-gray-500 max-w-md mx-auto mb-6">Comece adicionando produtos para que seus usuários possam vê-los na vitrine.</p>
-            <Button onClick={() => handleOpenModal()}>
-              <Plus size={18} className="mr-2" />
-              Adicionar Primeiro Produto
-            </Button>
+            <h3 className={`text-lg font-bold mb-2 transition-colors ${themeClasses.text} group-hover:text-blue-600`}>Nenhum produto cadastrado</h3>
+            <p className="text-gray-500 max-w-md mx-auto">Comece adicionando produtos para que seus usuários possam vê-los na vitrine.</p>
           </div>
         ) : (
           products.map((product) => (

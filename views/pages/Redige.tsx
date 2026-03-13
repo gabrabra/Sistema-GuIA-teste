@@ -40,7 +40,7 @@ export const Redige: React.FC = () => {
   };
 
   const handlePromptClick = (prompt: any) => {
-    const text = `${prompt.title}: `;
+    const text = prompt.content || `${prompt.title}: `;
     setInput(text);
   };
 

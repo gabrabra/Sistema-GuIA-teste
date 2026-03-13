@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../controllers/context/ThemeContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -36,7 +36,6 @@ const ALL_PERMISSIONS: Permission[] = [
   { id: 'conf_subjects', name: 'Gerenciar Matérias', description: 'Cadastrar matérias e assuntos', module: 'configuracoes' },
 ];
 
-// Mock Data for Roles
 const INITIAL_ROLES: Role[] = [
   { 
     id: 'admin', 
@@ -57,28 +56,72 @@ const INITIAL_ROLES: Role[] = [
 
 export const ConfiguracoesPermissoes: React.FC = () => {
   const { themeClasses } = useTheme();
-  const [roles, setRoles] = useState<Role[]>(INITIAL_ROLES);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string>('admin');
   const [isEditingRoleName, setIsEditingRoleName] = useState(false);
   const [newRoleName, setNewRoleName] = useState('');
 
+  useEffect(() => {
+    fetch('/api/roles')
+      .then(res => res.json())
+      .then(async (data: Role[]) => {
+        if (data.length === 0) {
+          setRoles(INITIAL_ROLES);
+          for (const r of INITIAL_ROLES) {
+            await fetch('/api/roles', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(r)
+            });
+          }
+        } else {
+          setRoles(data);
+        }
+      })
+      .catch(err => console.error('Failed to fetch roles', err));
+  }, []);
+
   const selectedRole = roles.find(r => r.id === selectedRoleId) || roles[0];
 
-  const togglePermission = (permissionId: string) => {
-    if (selectedRole.id === 'admin') return; // Admin always has all permissions (mock rule)
+  if (!selectedRole) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-8">
+        <header>
+          <h1 className={`text-3xl font-bold ${themeClasses.text}`}>Permissões</h1>
+          <p className="text-gray-500 mt-2">Carregando perfis e permissões...</p>
+        </header>
+      </div>
+    );
+  }
 
-    setRoles(prevRoles => prevRoles.map(role => {
-      if (role.id === selectedRoleId) {
-        const hasPermission = role.permissions.includes(permissionId);
-        return {
-          ...role,
-          permissions: hasPermission 
-            ? role.permissions.filter(p => p !== permissionId)
-            : [...role.permissions, permissionId]
-        };
+  const togglePermission = (permissionId: string) => {
+    if (!selectedRole || selectedRole.id === 'admin') return; // Admin always has all permissions (mock rule)
+
+    setRoles(prevRoles => {
+      const newRoles = prevRoles.map(role => {
+        if (role.id === selectedRoleId) {
+          const hasPermission = role.permissions.includes(permissionId);
+          return {
+            ...role,
+            permissions: hasPermission 
+              ? role.permissions.filter(p => p !== permissionId)
+              : [...role.permissions, permissionId]
+          };
+        }
+        return role;
+      });
+
+      const updatedRole = newRoles.find(r => r.id === selectedRoleId);
+      if (updatedRole) {
+        fetch(`/api/roles/${updatedRole.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedRole)
+        }).catch(err => console.error('Failed to update role', err));
       }
-      return role;
-    }));
+
+      return newRoles;
+    });
   };
 
   const handleAddRole = () => {
@@ -89,25 +132,48 @@ export const ConfiguracoesPermissoes: React.FC = () => {
     };
     setRoles([...roles, newRole]);
     setSelectedRoleId(newRole.id);
+
+    fetch('/api/roles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newRole)
+    }).catch(err => console.error('Failed to create role', err));
   };
 
   const handleDeleteRole = (roleId: string) => {
     if (roleId === 'admin') return;
     setRoles(roles.filter(r => r.id !== roleId));
     if (selectedRoleId === roleId) setSelectedRoleId('admin');
+
+    fetch(`/api/roles/${roleId}`, {
+      method: 'DELETE'
+    }).catch(err => console.error('Failed to delete role', err));
   };
 
   const updateRoleName = () => {
-    if (newRoleName.trim()) {
-      setRoles(roles.map(r => r.id === selectedRoleId ? { ...r, name: newRoleName } : r));
+    if (newRoleName.trim() && selectedRole) {
+      setRoles(prevRoles => {
+        const newRoles = prevRoles.map(r => r.id === selectedRoleId ? { ...r, name: newRoleName } : r);
+        const updatedRole = newRoles.find(r => r.id === selectedRoleId);
+        if (updatedRole) {
+          fetch(`/api/roles/${updatedRole.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedRole)
+          }).catch(err => console.error('Failed to update role', err));
+        }
+        return newRoles;
+      });
       setIsEditingRoleName(false);
       setNewRoleName('');
     }
   };
 
   const startEditingName = () => {
-    setNewRoleName(selectedRole.name);
-    setIsEditingRoleName(true);
+    if (selectedRole) {
+      setNewRoleName(selectedRole.name);
+      setIsEditingRoleName(true);
+    }
   };
 
   // Group permissions by module

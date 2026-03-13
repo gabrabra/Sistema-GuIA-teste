@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface Product {
   id: string;
@@ -10,54 +10,91 @@ export interface Product {
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (product: Omit<Product, 'id'>) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    image: 'https://picsum.photos/seed/course1/400/300',
-    title: 'Curso Completo de Direito Constitucional',
-    description: 'Domine a constituição com este curso abrangente para concursos.',
-    link: 'https://exemplo.com/curso-constitucional'
-  },
-  {
-    id: '2',
-    image: 'https://picsum.photos/seed/course2/400/300',
-    title: 'Mentoria para Magistratura',
-    description: 'Acompanhamento personalizado para sua aprovação na magistratura.',
-    link: 'https://exemplo.com/mentoria'
-  },
-  {
-    id: '3',
-    image: 'https://picsum.photos/seed/course3/400/300',
-    title: 'Pacote de Questões Comentadas',
-    description: 'Mais de 5000 questões comentadas por especialistas.',
-    link: 'https://exemplo.com/questoes'
-  }
-];
-
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  const addProduct = (product: Omit<Product, 'id'>) => {
+  useEffect(() => {
+    fetch('/api/produtos')
+      .then(res => res.json())
+      .then(data => {
+        const mapped = data.map((p: any) => ({
+          id: p.id,
+          title: p.name,
+          description: p.description,
+          image: p.image,
+          link: p.url
+        }));
+        setProducts(mapped);
+      })
+      .catch(err => console.error('Failed to fetch products', err));
+  }, []);
+
+  const addProduct = async (product: Omit<Product, 'id'>) => {
     const newProduct = {
-      ...product,
-      id: crypto.randomUUID()
+      id: crypto.randomUUID(),
+      ...product
     };
-    setProducts(prev => [...prev, newProduct]);
+    
+    try {
+      await fetch('/api/produtos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newProduct.id,
+          name: newProduct.title,
+          description: newProduct.description,
+          image: newProduct.image,
+          url: newProduct.link,
+          type: 'course',
+          price: 0,
+          features: []
+        })
+      });
+      setProducts(prev => [...prev, newProduct]);
+    } catch (err) {
+      console.error('Failed to add product', err);
+    }
   };
 
-  const updateProduct = (id: string, updates: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
+    try {
+      const existing = products.find(p => p.id === id);
+      if (!existing) return;
+      const merged = { ...existing, ...updates };
+
+      await fetch(`/api/produtos/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: merged.title,
+          description: merged.description,
+          image: merged.image,
+          url: merged.link,
+          type: 'course',
+          price: 0,
+          features: []
+        })
+      });
+      setProducts(prev => prev.map(p => p.id === id ? merged : p));
+    } catch (err) {
+      console.error('Failed to update product', err);
+    }
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+  const deleteProduct = async (id: string) => {
+    try {
+      await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+      setProducts(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error('Failed to delete product', err);
+    }
   };
 
   return (

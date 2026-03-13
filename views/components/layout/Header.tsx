@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Calendar, AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
+import { Bell, Calendar, AlertCircle, CheckCircle, Clock, Pause, LogOut } from 'lucide-react';
 import { useStudy } from '../../../controllers/context/StudyContext';
 import { useTheme } from '../../../controllers/context/ThemeContext';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,12 @@ export const Header: React.FC = () => {
   const [isTimerOpen, setIsTimerOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timerDropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -208,6 +214,15 @@ export const Header: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        className={`p-2 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors`}
+        title="Sair do sistema"
+      >
+        <LogOut size={24} />
+      </button>
     </div>
   );
 };

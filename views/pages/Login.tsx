@@ -1,16 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap } from 'lucide-react';
+import { GraduationCap, AlertCircle } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // No validation, just redirect
-    navigate('/');
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('user', JSON.stringify(data.user));
+        navigate('/');
+      } else {
+        setError(data.error || 'Email ou senha incorretos');
+      }
+    } catch (err) {
+      setError('Erro ao conectar com o servidor. Tente novamente.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -27,6 +53,13 @@ export const Login: React.FC = () => {
         </div>
 
         <Card className="p-8 shadow-lg border-none">
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-center gap-3 text-sm animate-in fade-in slide-in-from-top-2 duration-200">
+              <AlertCircle size={18} className="shrink-0" />
+              {error}
+            </div>
+          )}
+
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -38,6 +71,8 @@ export const Login: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 placeholder="seu@email.com"
               />
@@ -53,6 +88,8 @@ export const Login: React.FC = () => {
                 type="password"
                 autoComplete="current-password"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 placeholder="••••••••"
               />
@@ -75,8 +112,8 @@ export const Login: React.FC = () => {
               </a>
             </div>
 
-            <Button type="submit" fullWidth className="py-3 text-lg">
-              Entrar
+            <Button type="submit" fullWidth className="py-3 text-lg" disabled={isLoading}>
+              {isLoading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
 
