@@ -107,25 +107,6 @@ apiRouter.delete('/users/:id', async (req, res) => {
 });
 
 // --- Auth ---
-apiRouter.post('/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const result = await pool.query(
-      'SELECT id, name, email, role_id as "roleId", status FROM users WHERE email = $1 AND password_hash = $2 AND status = \'active\'',
-      [email, password]
-    );
-
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
-      res.json({ success: true, user });
-    } else {
-      res.status(401).json({ error: 'Email ou senha incorretos ou usuário inativo' });
-    }
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Erro interno no servidor' });
-  }
-});
 
 // --- Prompts ---
 apiRouter.get('/prompts', async (req, res) => {
