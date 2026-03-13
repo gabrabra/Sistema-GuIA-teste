@@ -1,86 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { usePrompts } from '../../controllers/context/PromptContext';
+import * as Icons from 'lucide-react';
 import { 
   Send, Sparkles, BookOpen, Baby, Brain, Table2, Languages, 
   Paperclip, FileQuestion, Briefcase, HelpCircle, Scale, Key, X
 } from 'lucide-react';
 
-interface PromptOption {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  color: string;
-  iconColor: string;
-}
-
-const PROMPT_OPTIONS: PromptOption[] = [
-  {
-    icon: Baby,
-    title: "Ensine para uma criança",
-    description: "Vou responder a questão da maneira mais didática possível, com exemplos.",
-    color: "bg-green-100 border-green-200 hover:bg-green-200",
-    iconColor: "text-green-700"
-  },
-  {
-    icon: FileQuestion,
-    title: "Elaborar questão da banca",
-    description: "Te ajudo a criar questões da banca, só me dizer qual e a modalidade escolhida.",
-    color: "bg-lime-100 border-lime-200 hover:bg-lime-200",
-    iconColor: "text-lime-700"
-  },
-  {
-    icon: Brain,
-    title: "Regra mental para prova",
-    description: "Vou responder a questão da maneira mais didática possível, com exemplos.",
-    color: "bg-purple-100 border-purple-200 hover:bg-purple-200",
-    iconColor: "text-purple-700"
-  },
-  {
-    icon: Briefcase,
-    title: "Exemplos práticos",
-    description: "Vou te dar exemplos práticos e reais do Serviço Público para você entender.",
-    color: "bg-orange-100 border-orange-200 hover:bg-orange-200",
-    iconColor: "text-orange-700"
-  },
-  {
-    icon: HelpCircle,
-    title: "Não entendeu? Explico",
-    description: "Quer saber o porquê do porquê? Eu te explico nos mínimos detalhes.",
-    color: "bg-rose-100 border-rose-200 hover:bg-rose-200",
-    iconColor: "text-rose-700"
-  },
-  {
-    icon: Scale,
-    title: "Comparativo de conceito",
-    description: "Se ficou em dúvida entre alguns conceitos eu explico de outra forma até você entender.",
-    color: "bg-pink-100 border-pink-200 hover:bg-pink-200",
-    iconColor: "text-pink-700"
-  },
-  {
-    icon: Table2,
-    title: "Tabela Resumo",
-    description: "Para te ajudar a memorizar o conteúdo vou construir uma tabela resumo.",
-    color: "bg-sky-100 border-sky-200 hover:bg-sky-200",
-    iconColor: "text-sky-700"
-  },
-  {
-    icon: Languages,
-    title: "Tradução da linguagem",
-    description: "Simplifico o 'juridiquês' da banca para facilitar tua vida.",
-    color: "bg-yellow-100 border-yellow-200 hover:bg-yellow-200",
-    iconColor: "text-yellow-700"
-  },
-  {
-    icon: Key,
-    title: "Frase chave memorização",
-    description: "Crio os famosos 'mnemônicos' para ajudar a memorizar aquele conteúdo.",
-    color: "bg-violet-100 border-violet-200 hover:bg-violet-200",
-    iconColor: "text-violet-700"
-  }
-];
-
 export const Responde: React.FC = () => {
+  const { respondePrompts } = usePrompts();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -111,7 +40,7 @@ export const Responde: React.FC = () => {
     }, 1500);
   };
 
-  const handlePromptClick = (prompt: PromptOption) => {
+  const handlePromptClick = (prompt: any) => {
     const text = `${prompt.title}: `;
     setInput(text);
   };
@@ -149,19 +78,22 @@ export const Responde: React.FC = () => {
         {!hasMessages ? (
           /* Prompts Grid - Responsive layout */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full overflow-y-auto pb-2 pr-1 custom-scrollbar">
-            {PROMPT_OPTIONS.map((prompt, idx) => (
-              <button
-                key={idx}
-                onClick={() => handlePromptClick(prompt)}
-                className={`flex flex-col items-start p-4 rounded-2xl border transition-all duration-300 text-left w-full min-h-[140px] hover:scale-[1.01] hover:shadow-md ${prompt.color}`}
-              >
-                <div className={`p-2 rounded-xl bg-white/60 mb-2 ${prompt.iconColor}`}>
-                  <prompt.icon size={20} />
-                </div>
-                <h3 className="font-bold text-gray-800 mb-1 text-sm lg:text-base">{prompt.title}</h3>
-                <p className="text-xs lg:text-sm text-gray-600 leading-relaxed line-clamp-3">{prompt.description}</p>
-              </button>
-            ))}
+            {respondePrompts.map((prompt, idx) => {
+              const IconComponent = (Icons as any)[prompt.iconName] || Icons.HelpCircle;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handlePromptClick(prompt)}
+                  className={`flex flex-col items-start p-4 rounded-2xl border transition-all duration-300 text-left w-full min-h-[140px] hover:scale-[1.01] hover:shadow-md ${prompt.color}`}
+                >
+                  <div className={`p-2 rounded-xl bg-white/60 mb-2 ${prompt.iconColor}`}>
+                    <IconComponent size={20} />
+                  </div>
+                  <h3 className="font-bold text-gray-800 mb-1 text-sm lg:text-base">{prompt.title}</h3>
+                  <p className="text-xs lg:text-sm text-gray-600 leading-relaxed line-clamp-3">{prompt.description}</p>
+                </button>
+              );
+            })}
           </div>
         ) : (
           /* Chat History */

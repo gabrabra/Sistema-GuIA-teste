@@ -1,85 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { usePrompts } from '../../controllers/context/PromptContext';
+import * as Icons from 'lucide-react';
 import { 
   PenTool, Sparkles, Eraser, AlignLeft, Maximize2, Minimize2, 
   Lightbulb, CheckCheck, RefreshCw, Link, Briefcase, LayoutTemplate, 
   Paperclip, X
 } from 'lucide-react';
 
-interface PromptOption {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  color: string;
-  iconColor: string;
-}
-
-const PROMPT_OPTIONS: PromptOption[] = [
-  {
-    icon: CheckCheck,
-    title: "Corrigir Gramática",
-    description: "Revise meu texto em busca de erros ortográficos e gramaticais.",
-    color: "bg-green-100 border-green-200 hover:bg-green-200",
-    iconColor: "text-green-700"
-  },
-  {
-    icon: Link,
-    title: "Melhorar Coesão",
-    description: "Sugira conectivos e melhorias para tornar o texto mais fluido.",
-    color: "bg-blue-100 border-blue-200 hover:bg-blue-200",
-    iconColor: "text-blue-700"
-  },
-  {
-    icon: RefreshCw,
-    title: "Sugerir Sinônimos",
-    description: "Encontre sinônimos para evitar repetições de palavras no texto.",
-    color: "bg-purple-100 border-purple-200 hover:bg-purple-200",
-    iconColor: "text-purple-700"
-  },
-  {
-    icon: AlignLeft,
-    title: "Avaliar Estrutura",
-    description: "Analise se a estrutura argumentativa está clara e bem organizada.",
-    color: "bg-orange-100 border-orange-200 hover:bg-orange-200",
-    iconColor: "text-orange-700"
-  },
-  {
-    icon: LayoutTemplate,
-    title: "Esqueleto de Redação",
-    description: "Crie um roteiro estruturado para um tema de redação específico.",
-    color: "bg-rose-100 border-rose-200 hover:bg-rose-200",
-    iconColor: "text-rose-700"
-  },
-  {
-    icon: Maximize2,
-    title: "Expandir Ideia",
-    description: "Desenvolva melhor este parágrafo curto com mais argumentos.",
-    color: "bg-pink-100 border-pink-200 hover:bg-pink-200",
-    iconColor: "text-pink-700"
-  },
-  {
-    icon: Minimize2,
-    title: "Resumir Texto",
-    description: "Sintetize o texto mantendo apenas os pontos principais.",
-    color: "bg-sky-100 border-sky-200 hover:bg-sky-200",
-    iconColor: "text-sky-700"
-  },
-  {
-    icon: Briefcase,
-    title: "Linguagem Formal",
-    description: "Reescreva o texto adequando-o para a norma culta formal.",
-    color: "bg-yellow-100 border-yellow-200 hover:bg-yellow-200",
-    iconColor: "text-yellow-700"
-  },
-  {
-    icon: Lightbulb,
-    title: "Proposta de Intervenção",
-    description: "Gere uma proposta de intervenção detalhada para o problema.",
-    color: "bg-violet-100 border-violet-200 hover:bg-violet-200",
-    iconColor: "text-violet-700"
-  }
-];
-
 export const Redige: React.FC = () => {
+  const { redigePrompts } = usePrompts();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -110,7 +39,7 @@ export const Redige: React.FC = () => {
     }, 1500);
   };
 
-  const handlePromptClick = (prompt: PromptOption) => {
+  const handlePromptClick = (prompt: any) => {
     const text = `${prompt.title}: `;
     setInput(text);
   };
@@ -148,19 +77,22 @@ export const Redige: React.FC = () => {
         {!hasMessages ? (
           /* Prompts Grid - Responsive layout */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full overflow-y-auto pb-2 pr-1 custom-scrollbar">
-            {PROMPT_OPTIONS.map((prompt, idx) => (
-              <button
-                key={idx}
-                onClick={() => handlePromptClick(prompt)}
-                className={`flex flex-col items-start p-4 rounded-2xl border transition-all duration-300 text-left w-full min-h-[140px] hover:scale-[1.01] hover:shadow-md ${prompt.color}`}
-              >
-                <div className={`p-2 rounded-xl bg-white/60 mb-2 ${prompt.iconColor}`}>
-                  <prompt.icon size={20} />
-                </div>
-                <h3 className="font-bold text-gray-800 mb-1 text-sm lg:text-base">{prompt.title}</h3>
-                <p className="text-xs lg:text-sm text-gray-600 leading-relaxed line-clamp-3">{prompt.description}</p>
-              </button>
-            ))}
+            {redigePrompts.map((prompt, idx) => {
+              const IconComponent = (Icons as any)[prompt.iconName] || Icons.HelpCircle;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handlePromptClick(prompt)}
+                  className={`flex flex-col items-start p-4 rounded-2xl border transition-all duration-300 text-left w-full min-h-[140px] hover:scale-[1.01] hover:shadow-md ${prompt.color}`}
+                >
+                  <div className={`p-2 rounded-xl bg-white/60 mb-2 ${prompt.iconColor}`}>
+                    <IconComponent size={20} />
+                  </div>
+                  <h3 className="font-bold text-gray-800 mb-1 text-sm lg:text-base">{prompt.title}</h3>
+                  <p className="text-xs lg:text-sm text-gray-600 leading-relaxed line-clamp-3">{prompt.description}</p>
+                </button>
+              );
+            })}
           </div>
         ) : (
           /* Chat History */

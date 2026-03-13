@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { useTheme, ThemeColor } from '../../controllers/context/ThemeContext';
+import { useTheme, ThemeColor, ThemeIntensity } from '../../controllers/context/ThemeContext';
 
 export const Configuracoes: React.FC = () => {
-  const { currentTheme, setTheme, themeClasses } = useTheme();
+  const { currentTheme, setTheme, intensity, setIntensity, themeClasses } = useTheme();
 
   const themeOptions: { id: ThemeColor; name: string; color: string }[] = [
     { id: 'white', name: 'Branco', color: 'bg-white border-gray-200' },
@@ -16,6 +16,14 @@ export const Configuracoes: React.FC = () => {
     { id: 'black', name: 'Escuro', color: 'bg-gray-900 border-gray-700' },
   ];
 
+  const intensityOptions: { id: ThemeIntensity; name: string }[] = [
+    { id: 'light', name: 'Claro' },
+    { id: 'medium', name: 'Médio' },
+    { id: 'dark', name: 'Forte' },
+  ];
+
+  const showIntensity = currentTheme !== 'white' && currentTheme !== 'black';
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <header>
@@ -26,7 +34,7 @@ export const Configuracoes: React.FC = () => {
       <div className="grid gap-6">
         <Card className="p-6">
           <h2 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Aparência</h2>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <h3 className={`font-medium mb-3 ${themeClasses.text}`}>Tema da Interface</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -48,6 +56,29 @@ export const Configuracoes: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {showIntensity && (
+              <div>
+                <h3 className={`font-medium mb-3 ${themeClasses.text}`}>Intensidade da Cor</h3>
+                <div className="flex gap-3">
+                  {intensityOptions.map((opt) => (
+                    <button
+                      key={opt.id}
+                      onClick={() => setIntensity(opt.id)}
+                      className={`
+                        px-4 py-2 rounded-xl border-2 transition-all text-sm font-medium
+                        ${intensity === opt.id 
+                          ? 'border-blue-600 bg-blue-50 text-blue-700' 
+                          : `border-gray-200 text-gray-600 hover:bg-gray-50 ${themeClasses.text}`
+                        }
+                      `}
+                    >
+                      {opt.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </Card>
 

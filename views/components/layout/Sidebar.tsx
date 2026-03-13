@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Map, Repeat, MessageSquare, PenTool, LogOut, GraduationCap, Settings, ChevronDown, ChevronRight, User, Users, Shield, Layout, Book, X, CalendarCheck, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, Map, Repeat, MessageSquare, PenTool, LogOut, GraduationCap, Settings, ChevronDown, ChevronRight, User, Users, Shield, Layout, Book, X, CalendarCheck, ShoppingBag, CreditCard, List } from 'lucide-react';
 import { useTheme } from '../../../controllers/context/ThemeContext';
 import { useStudy } from '../../../controllers/context/StudyContext';
+import { useMenu } from '../../../controllers/context/MenuContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const location = useLocation();
   const { themeClasses } = useTheme();
   const { disciplinas } = useStudy();
+  const { menuVisibility } = useMenu();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
   useEffect(() => {
@@ -27,24 +29,25 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const hasCycle = disciplinas.length > 0;
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-    { name: 'Guia Planeja', path: '/planeja', icon: Map },
-    ...(hasCycle ? [
-      { name: 'Ciclo de Estudos', path: '/ciclo', icon: Repeat },
-      { name: 'Revisões', path: '/revisoes', icon: CalendarCheck },
-    ] : []),
-    { name: 'Guia Responde', path: '/responde', icon: MessageSquare },
-    { name: 'Guia Redige', path: '/redige', icon: PenTool },
-    { name: 'Produtos', path: '/produtos', icon: ShoppingBag },
+    ...(menuVisibility.dashboard ? [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }] : []),
+    ...(menuVisibility.planeja ? [{ name: 'Guia Planeja', path: '/planeja', icon: Map }] : []),
+    ...(hasCycle && menuVisibility.ciclo ? [{ name: 'Ciclo de Estudos', path: '/ciclo', icon: Repeat }] : []),
+    ...(hasCycle && menuVisibility.revisoes ? [{ name: 'Revisões', path: '/revisoes', icon: CalendarCheck }] : []),
+    ...(menuVisibility.responde ? [{ name: 'Guia Responde', path: '/responde', icon: MessageSquare }] : []),
+    ...(menuVisibility.redige ? [{ name: 'Guia Redige', path: '/redige', icon: PenTool }] : []),
+    ...(menuVisibility.produtos ? [{ name: 'Produtos', path: '/produtos', icon: ShoppingBag }] : []),
   ];
 
   const configSubItems = [
     { name: 'Perfil', path: '/configuracoes/perfil', icon: User },
+    { name: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard },
+    { name: 'Menu', path: '/configuracoes/menu', icon: List },
     { name: 'Matérias & Assuntos', path: '/configuracoes/materias', icon: Book },
     { name: 'Usuários', path: '/configuracoes/usuarios', icon: Users },
     { name: 'Dashboard', path: '/configuracoes/dashboard', icon: Layout },
     { name: 'Permissões', path: '/configuracoes/permissoes', icon: Shield },
     { name: 'Produtos', path: '/configuracoes/produtos', icon: ShoppingBag },
+    { name: 'Prompts IA', path: '/configuracoes/prompts', icon: MessageSquare },
   ];
 
   const handleLogout = () => {

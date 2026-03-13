@@ -35,11 +35,11 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
       <div 
         ref={modalRef}
-        className={`${themeClasses.cardBg} w-full max-w-md rounded-2xl shadow-2xl transform transition-all scale-100 border ${themeClasses.borderColor}`}
+        className={`${themeClasses.cardBg} w-full max-w-md rounded-2xl shadow-2xl transform transition-all scale-100 border ${themeClasses.borderColor} max-h-[90vh] flex flex-col`}
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 shrink-0">
           <h3 className={`text-xl font-bold ${themeClasses.text}`}>{title}</h3>
           <button 
             onClick={onClose}
@@ -50,7 +50,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
           </button>
         </div>
         
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto custom-scrollbar">
           {children}
         </div>
       </div>

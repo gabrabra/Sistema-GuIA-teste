@@ -94,9 +94,9 @@ export const Dashboard: React.FC = () => {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Card Tempo Hoje */}
-        <Card title="Tempo Hoje" className="md:col-span-1 relative">
+        <Card title="Tempo Hoje" className="relative">
            {isTimerRunning && (
               <div className="absolute top-6 right-6">
                  <span className="relative flex h-3 w-3">
@@ -105,11 +105,11 @@ export const Dashboard: React.FC = () => {
                 </span>
               </div>
            )}
-          <div className="flex items-end gap-2 mb-2">
-            <span className={`text-3xl font-bold ${isTimerRunning ? 'text-blue-600 font-mono tracking-tight' : 'text-blue-600'}`}>
+          <div className="flex items-baseline flex-wrap gap-x-2 gap-y-1 mb-2">
+            <span className={`text-3xl lg:text-4xl font-bold ${isTimerRunning ? 'text-blue-600 font-mono tracking-tight' : 'text-blue-600'}`}>
               {isTimerRunning ? formatTimeWithSeconds(horasEstudadasHoje) : formatTime(horasEstudadasHoje)}
             </span>
-            <span className="text-gray-400 font-medium mb-1">/ {formatTime(metaDiariaSegundos)}</span>
+            <span className="text-gray-400 font-medium whitespace-nowrap">/ {formatTime(metaDiariaSegundos)}</span>
           </div>
           <ProgressBar progress={progressoDiario} color={isTimerRunning ? "bg-green-500" : "bg-blue-600"} height="h-3" />
           <p className="text-sm text-gray-500 mt-2 text-right">
@@ -118,14 +118,14 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         {/* Card Constancia */}
-        <Card className="md:col-span-1 bg-gradient-to-br from-purple-500 to-indigo-600 text-white border-none">
+        <Card className="bg-gradient-to-br from-purple-500 to-indigo-600 text-white border-none">
           <div className="flex items-start gap-4">
-            <div className="bg-white/20 p-3 rounded-xl">
+            <div className="bg-white/20 p-3 rounded-xl shrink-0">
               <Award size={24} className="text-white" />
             </div>
             <div>
               <h3 className="font-semibold text-white/90">Constância</h3>
-              <p className="mt-2 font-medium">
+              <p className="mt-2 font-medium leading-tight">
                 Você está há <span className="text-yellow-300 font-bold text-lg">{streakDias} dias</span> sem falhar!
               </p>
               <p className="text-sm text-white/70 mt-1">
@@ -136,7 +136,7 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         {/* Card Data Prova */}
-        <Card className="md:col-span-1 relative overflow-hidden">
+        <Card className="md:col-span-2 xl:col-span-1 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Calendar size={64} />
           </div>

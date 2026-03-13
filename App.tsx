@@ -3,6 +3,8 @@ import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-d
 import { StudyProvider } from './controllers/context/StudyContext';
 import { ThemeProvider, useTheme } from './controllers/context/ThemeContext';
 import { ProductProvider } from './controllers/context/ProductContext';
+import { PromptProvider } from './controllers/context/PromptContext';
+import { MenuProvider } from './controllers/context/MenuContext';
 import { Sidebar } from './views/components/layout/Sidebar';
 import { Header } from './views/components/layout/Header';
 import { Dashboard } from './views/pages/Dashboard';
@@ -16,6 +18,9 @@ import { ConfiguracoesMaterias } from './views/pages/ConfiguracoesMaterias';
 import { ConfiguracoesPermissoes } from './views/pages/ConfiguracoesPermissoes';
 import { ConfiguracoesDashboard } from './views/pages/ConfiguracoesDashboard';
 import { ConfiguracoesProdutos } from './views/pages/ConfiguracoesProdutos';
+import { ConfiguracoesPrompts } from './views/pages/ConfiguracoesPrompts';
+import { ConfiguracoesAssinatura } from './views/pages/ConfiguracoesAssinatura';
+import { ConfiguracoesMenu } from './views/pages/ConfiguracoesMenu';
 import { Revisoes } from './views/pages/Revisoes';
 import { Login } from './views/pages/Login';
 import { Menu } from 'lucide-react';
@@ -73,11 +78,14 @@ const AppContent: React.FC = () => {
         <Route path="/produtos" element={<Produtos />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
         <Route path="/configuracoes/perfil" element={<Configuracoes />} />
+        <Route path="/configuracoes/assinatura" element={<ConfiguracoesAssinatura />} />
+        <Route path="/configuracoes/menu" element={<ConfiguracoesMenu />} />
         <Route path="/configuracoes/materias" element={<ConfiguracoesMaterias />} />
         <Route path="/configuracoes/usuarios" element={<Configuracoes />} />
         <Route path="/configuracoes/dashboard" element={<ConfiguracoesDashboard />} />
         <Route path="/configuracoes/permissoes" element={<ConfiguracoesPermissoes />} />
         <Route path="/configuracoes/produtos" element={<ConfiguracoesProdutos />} />
+        <Route path="/configuracoes/prompts" element={<ConfiguracoesPrompts />} />
         {/* Redirect unknown routes to dashboard or login */}
         <Route path="*" element={<Dashboard />} />
       </Routes>
@@ -90,9 +98,13 @@ const App: React.FC = () => {
     <ThemeProvider>
       <StudyProvider>
         <ProductProvider>
-          <Router>
-            <AppContent />
-          </Router>
+          <PromptProvider>
+            <MenuProvider>
+              <Router>
+                <AppContent />
+              </Router>
+            </MenuProvider>
+          </PromptProvider>
         </ProductProvider>
       </StudyProvider>
     </ThemeProvider>
