@@ -5,7 +5,6 @@ export interface PromptOption {
   iconName: string;
   title: string;
   description: string;
-  content?: string;
   color: string;
   iconColor: string;
   category?: string;
@@ -26,10 +25,12 @@ export const PromptProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     fetch('/api/prompts')
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then((data: PromptOption[]) => {
-        setRespondePrompts(data.filter(p => p.category === 'responde'));
-        setRedigePrompts(data.filter(p => p.category === 'redige'));
+        if (Array.isArray(data)) {
+          setRespondePrompts(data.filter(p => p.category === 'responde'));
+          setRedigePrompts(data.filter(p => p.category === 'redige'));
+        }
       })
       .catch(err => console.error('Failed to fetch prompts', err));
   }, []);
@@ -42,11 +43,14 @@ export const PromptProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       // Delete existing
       const existingRes = await fetch('/api/prompts');
-      const existing: PromptOption[] = await existingRes.json();
-      const categoryExisting = existing.filter(p => p.category === category);
+      const existing = await existingRes.json();
       
-      for (const p of categoryExisting) {
-        await fetch(`/api/prompts/${p.id}`, { method: 'DELETE' });
+      if (Array.isArray(existing)) {
+        const categoryExisting = existing.filter(p => p.category === category);
+        
+        for (const p of categoryExisting) {
+          await fetch(`/api/prompts/${p.id}`, { method: 'DELETE' });
+        }
       }
 
       // Insert new

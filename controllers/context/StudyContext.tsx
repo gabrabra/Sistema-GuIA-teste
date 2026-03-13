@@ -45,13 +45,17 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Fetch initial data
   useEffect(() => {
     fetch('/api/disciplinas')
-      .then(res => res.json())
-      .then(data => setDisciplinas(data))
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (Array.isArray(data)) setDisciplinas(data);
+      })
       .catch(err => console.error('Failed to fetch disciplinas', err));
 
     fetch('/api/materias')
-      .then(res => res.json())
-      .then(data => setMaterias(data))
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (Array.isArray(data)) setMaterias(data);
+      })
       .catch(err => console.error('Failed to fetch materias', err));
   }, []);
 
@@ -377,10 +381,14 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setDisciplinas(newDisciplinas);
     try {
       const existingRes = await fetch('/api/disciplinas');
-      const existing: Disciplina[] = await existingRes.json();
-      for (const d of existing) {
-        await fetch(`/api/disciplinas/${d.id}`, { method: 'DELETE' });
+      const existing = await existingRes.json();
+      
+      if (Array.isArray(existing)) {
+        for (const d of existing) {
+          await fetch(`/api/disciplinas/${d.id}`, { method: 'DELETE' });
+        }
       }
+      
       for (const d of newDisciplinas) {
         await fetch('/api/disciplinas', {
           method: 'POST',
@@ -397,10 +405,14 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setMaterias(newMaterias);
     try {
       const existingRes = await fetch('/api/materias');
-      const existing: Materia[] = await existingRes.json();
-      for (const m of existing) {
-        await fetch(`/api/materias/${m.id}`, { method: 'DELETE' });
+      const existing = await existingRes.json();
+      
+      if (Array.isArray(existing)) {
+        for (const m of existing) {
+          await fetch(`/api/materias/${m.id}`, { method: 'DELETE' });
+        }
       }
+      
       for (const m of newMaterias) {
         await fetch('/api/materias', {
           method: 'POST',

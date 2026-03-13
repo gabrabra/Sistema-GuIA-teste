@@ -22,16 +22,18 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   useEffect(() => {
     fetch('/api/produtos')
-      .then(res => res.json())
+      .then(res => res.ok ? res.json() : [])
       .then(data => {
-        const mapped = data.map((p: any) => ({
-          id: p.id,
-          title: p.name,
-          description: p.description,
-          image: p.image,
-          link: p.url
-        }));
-        setProducts(mapped);
+        if (Array.isArray(data)) {
+          const mapped = data.map((p: any) => ({
+            id: p.id,
+            title: p.name,
+            description: p.description,
+            image: p.image,
+            link: p.url
+          }));
+          setProducts(mapped);
+        }
       })
       .catch(err => console.error('Failed to fetch products', err));
   }, []);
