@@ -216,10 +216,10 @@ export const Header: React.FC = () => {
       </div>
 
       {/* Logout Button */}
-      <button
+      <button 
         onClick={handleLogout}
-        className={`p-2 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors`}
-        title="Sair do sistema"
+        className={`p-2 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors ${themeClasses.text}`}
+        title="Sair"
       >
         <LogOut size={24} />
       </button>

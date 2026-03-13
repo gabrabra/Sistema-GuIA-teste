@@ -1,25 +1,27 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, AlertCircle } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError(null);
     setIsLoading(true);
 
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -30,10 +32,10 @@ export const Login: React.FC = () => {
         localStorage.setItem('user', JSON.stringify(data.user));
         navigate('/');
       } else {
-        setError(data.error || 'Email ou senha incorretos');
+        setError(data.error || 'Falha ao entrar. Verifique suas credenciais.');
       }
     } catch (err) {
-      setError('Erro ao conectar com o servidor. Tente novamente.');
+      setError('Erro ao conectar com o servidor. Tente novamente mais tarde.');
     } finally {
       setIsLoading(false);
     }
@@ -54,12 +56,10 @@ export const Login: React.FC = () => {
 
         <Card className="p-8 shadow-lg border-none">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-center gap-3 text-sm animate-in fade-in slide-in-from-top-2 duration-200">
-              <AlertCircle size={18} className="shrink-0" />
+            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100">
               {error}
             </div>
           )}
-
           <form className="space-y-6" onSubmit={handleLogin}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">

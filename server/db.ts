@@ -24,7 +24,6 @@ export async function initDb() {
           id VARCHAR(255) PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
           description TEXT NOT NULL,
-          content TEXT,
           icon_name VARCHAR(100),
           icon_color VARCHAR(100),
           color VARCHAR(100),
@@ -147,9 +146,9 @@ export async function initDb() {
           ('editor', 'Editor', '[]'::jsonb)
         ON CONFLICT (id) DO NOTHING;
 
-        -- Insert default admin user
+        -- Insert default user for login validation
         INSERT INTO users (id, name, email, password_hash, role_id, status) VALUES
-          ('admin-1', 'Administrador', 'admin@guia.com', 'admin123', 'admin', 'active')
+          ('default-user', 'Lua Lima', 'lua.lima@recife.pe.gov.br', 'admin123', 'admin', 'active')
         ON CONFLICT (email) DO NOTHING;
       `);
       console.log('Database tables verified/created successfully.');

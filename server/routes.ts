@@ -3,6 +3,32 @@ import { pool } from './db.js';
 
 export const apiRouter = Router();
 
+// --- Auth ---
+apiRouter.post('/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+
+    if (user && user.password_hash === password) {
+      res.json({ 
+        success: true, 
+        user: { 
+          id: user.id, 
+          name: user.name, 
+          email: user.email,
+          roleId: user.role_id
+        } 
+      });
+    } else {
+      res.status(401).json({ error: 'Email ou senha inválidos' });
+    }
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Erro interno no servidor' });
+  }
+});
+
 // --- Roles ---
 apiRouter.get('/roles', async (req, res) => {
   try {
@@ -59,12 +85,12 @@ apiRouter.get('/users', async (req, res) => {
 });
 
 apiRouter.post('/users', async (req, res) => {
-  const { id, name, email, password, roleId, status, createdAt } = req.body;
+  const { id, name, email, roleId, status, createdAt } = req.body;
   try {
     await pool.query(
       `INSERT INTO users (id, name, email, password_hash, role_id, status, created_at) 
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, name, email, password || 'placeholder_hash', roleId, status, createdAt || new Date().toISOString()]
+      [id, name, email, 'placeholder_hash', roleId, status, createdAt || new Date().toISOString()]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -74,23 +100,14 @@ apiRouter.post('/users', async (req, res) => {
 });
 
 apiRouter.put('/users/:id', async (req, res) => {
-  const { name, email, password, roleId, status } = req.body;
+  const { name, email, roleId, status } = req.body;
   try {
-    if (password) {
-      await pool.query(
-        `UPDATE users 
-         SET name = $1, email = $2, password_hash = $3, role_id = $4, status = $5, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $6`,
-        [name, email, password, roleId, status, req.params.id]
-      );
-    } else {
-      await pool.query(
-        `UPDATE users 
-         SET name = $1, email = $2, role_id = $3, status = $4, updated_at = CURRENT_TIMESTAMP
-         WHERE id = $5`,
-        [name, email, roleId, status, req.params.id]
-      );
-    }
+    await pool.query(
+      `UPDATE users 
+       SET name = $1, email = $2, role_id = $3, status = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $5`,
+      [name, email, roleId, status, req.params.id]
+    );
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update user' });
@@ -106,8 +123,6 @@ apiRouter.delete('/users/:id', async (req, res) => {
   }
 });
 
-// --- Auth ---
-
 // --- Prompts ---
 apiRouter.get('/prompts', async (req, res) => {
   try {
@@ -116,7 +131,6 @@ apiRouter.get('/prompts', async (req, res) => {
       id: row.id,
       title: row.title,
       description: row.description,
-      content: row.content,
       iconName: row.icon_name,
       iconColor: row.icon_color,
       color: row.color,
@@ -130,12 +144,12 @@ apiRouter.get('/prompts', async (req, res) => {
 });
 
 apiRouter.post('/prompts', async (req, res) => {
-  const { id, title, description, content, iconName, iconColor, color, category, isCustom } = req.body;
+  const { id, title, description, iconName, iconColor, color, category, isCustom } = req.body;
   try {
     await pool.query(
-      `INSERT INTO prompts (id, title, description, content, icon_name, icon_color, color, category, is_custom) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [id, title, description, content, iconName, iconColor, color, category, isCustom]
+      `INSERT INTO prompts (id, title, description, icon_name, icon_color, color, category, is_custom) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [id, title, description, iconName, iconColor, color, category, isCustom]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -144,13 +158,13 @@ apiRouter.post('/prompts', async (req, res) => {
 });
 
 apiRouter.put('/prompts/:id', async (req, res) => {
-  const { title, description, content, iconName, iconColor, color, category, isCustom } = req.body;
+  const { title, description, iconName, iconColor, color, category, isCustom } = req.body;
   try {
     await pool.query(
       `UPDATE prompts 
-       SET title = $1, description = $2, content = $3, icon_name = $4, icon_color = $5, color = $6, category = $7, is_custom = $8
-       WHERE id = $9`,
-      [title, description, content, iconName, iconColor, color, category, isCustom, req.params.id]
+       SET title = $1, description = $2, icon_name = $3, icon_color = $4, color = $5, category = $6, is_custom = $7
+       WHERE id = $8`,
+      [title, description, iconName, iconColor, color, category, isCustom, req.params.id]
     );
     res.json({ success: true });
   } catch (err) {
