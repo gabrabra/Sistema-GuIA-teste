@@ -24,8 +24,8 @@ apiRouter.post('/auth/login', async (req, res) => {
       res.status(401).json({ error: 'Email ou senha inválidos' });
     }
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Erro interno no servidor' });
+    console.error('Error in /auth/login:', err);
+    res.status(500).json({ error: 'Erro interno no servidor', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -35,7 +35,8 @@ apiRouter.get('/roles', async (req, res) => {
     const result = await pool.query('SELECT * FROM roles');
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch roles' });
+    console.error('Error in GET /roles:', err);
+    res.status(500).json({ error: 'Failed to fetch roles', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -48,7 +49,8 @@ apiRouter.post('/roles', async (req, res) => {
     );
     res.status(201).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create role' });
+    console.error('Error in POST /roles:', err);
+    res.status(500).json({ error: 'Failed to create role', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -61,7 +63,8 @@ apiRouter.put('/roles/:id', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update role' });
+    console.error('Error in PUT /roles/:id:', err);
+    res.status(500).json({ error: 'Failed to update role', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -70,7 +73,8 @@ apiRouter.delete('/roles/:id', async (req, res) => {
     await pool.query('DELETE FROM roles WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete role' });
+    console.error('Error in DELETE /roles/:id:', err);
+    res.status(500).json({ error: 'Failed to delete role', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -80,7 +84,8 @@ apiRouter.get('/users', async (req, res) => {
     const result = await pool.query('SELECT id, name, email, role_id as "roleId", status, created_at as "createdAt" FROM users');
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch users' });
+    console.error('Error in GET /users:', err);
+    res.status(500).json({ error: 'Failed to fetch users', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -94,8 +99,8 @@ apiRouter.post('/users', async (req, res) => {
     );
     res.status(201).json({ success: true });
   } catch (err) {
-    console.error('Failed to create user:', err);
-    res.status(500).json({ error: 'Failed to create user' });
+    console.error('Error in POST /users:', err);
+    res.status(500).json({ error: 'Failed to create user', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -110,7 +115,8 @@ apiRouter.put('/users/:id', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update user' });
+    console.error('Error in PUT /users/:id:', err);
+    res.status(500).json({ error: 'Failed to update user', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -119,7 +125,8 @@ apiRouter.delete('/users/:id', async (req, res) => {
     await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete user' });
+    console.error('Error in DELETE /users/:id:', err);
+    res.status(500).json({ error: 'Failed to delete user', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -139,7 +146,8 @@ apiRouter.get('/prompts', async (req, res) => {
     }));
     res.json(prompts);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch prompts' });
+    console.error('Error in GET /prompts:', err);
+    res.status(500).json({ error: 'Failed to fetch prompts', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -153,7 +161,8 @@ apiRouter.post('/prompts', async (req, res) => {
     );
     res.status(201).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create prompt' });
+    console.error('Error in POST /prompts:', err);
+    res.status(500).json({ error: 'Failed to create prompt', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -168,7 +177,8 @@ apiRouter.put('/prompts/:id', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update prompt' });
+    console.error('Error in PUT /prompts/:id:', err);
+    res.status(500).json({ error: 'Failed to update prompt', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -177,7 +187,8 @@ apiRouter.delete('/prompts/:id', async (req, res) => {
     await pool.query('DELETE FROM prompts WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete prompt' });
+    console.error('Error in DELETE /prompts/:id:', err);
+    res.status(500).json({ error: 'Failed to delete prompt', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -187,7 +198,8 @@ apiRouter.get('/materias', async (req, res) => {
     const result = await pool.query('SELECT * FROM materias');
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch materias' });
+    console.error('Error in GET /materias:', err);
+    res.status(500).json({ error: 'Failed to fetch materias', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -200,7 +212,8 @@ apiRouter.post('/materias', async (req, res) => {
     );
     res.status(201).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create materia' });
+    console.error('Error in POST /materias:', err);
+    res.status(500).json({ error: 'Failed to create materia', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -213,7 +226,8 @@ apiRouter.put('/materias/:id', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update materia' });
+    console.error('Error in PUT /materias/:id:', err);
+    res.status(500).json({ error: 'Failed to update materia', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -222,7 +236,8 @@ apiRouter.delete('/materias/:id', async (req, res) => {
     await pool.query('DELETE FROM materias WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete materia' });
+    console.error('Error in DELETE /materias/:id:', err);
+    res.status(500).json({ error: 'Failed to delete materia', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -243,7 +258,8 @@ apiRouter.get('/disciplinas', async (req, res) => {
     }));
     res.json(disciplinas);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch disciplinas' });
+    console.error('Error in GET /disciplinas:', err);
+    res.status(500).json({ error: 'Failed to fetch disciplinas', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -257,7 +273,8 @@ apiRouter.post('/disciplinas', async (req, res) => {
     );
     res.status(201).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create disciplina' });
+    console.error('Error in POST /disciplinas:', err);
+    res.status(500).json({ error: 'Failed to create disciplina', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -272,7 +289,8 @@ apiRouter.put('/disciplinas/:id', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update disciplina' });
+    console.error('Error in PUT /disciplinas/:id:', err);
+    res.status(500).json({ error: 'Failed to update disciplina', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -281,7 +299,8 @@ apiRouter.delete('/disciplinas/:id', async (req, res) => {
     await pool.query('DELETE FROM disciplinas WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete disciplina' });
+    console.error('Error in DELETE /disciplinas/:id:', err);
+    res.status(500).json({ error: 'Failed to delete disciplina', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -295,7 +314,8 @@ apiRouter.get('/produtos', async (req, res) => {
     }));
     res.json(produtos);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch produtos' });
+    console.error('Error in GET /produtos:', err);
+    res.status(500).json({ error: 'Failed to fetch produtos', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -308,7 +328,8 @@ apiRouter.post('/produtos', async (req, res) => {
     );
     res.status(201).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create produto' });
+    console.error('Error in POST /produtos:', err);
+    res.status(500).json({ error: 'Failed to create produto', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -321,7 +342,8 @@ apiRouter.put('/produtos/:id', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update produto' });
+    console.error('Error in PUT /produtos/:id:', err);
+    res.status(500).json({ error: 'Failed to update produto', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -330,7 +352,8 @@ apiRouter.delete('/produtos/:id', async (req, res) => {
     await pool.query('DELETE FROM produtos WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete produto' });
+    console.error('Error in DELETE /produtos/:id:', err);
+    res.status(500).json({ error: 'Failed to delete produto', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -340,7 +363,8 @@ apiRouter.get('/roles', async (req, res) => {
     const result = await pool.query('SELECT * FROM roles');
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch roles' });
+    console.error('Error in GET /roles (duplicate):', err);
+    res.status(500).json({ error: 'Failed to fetch roles', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -353,7 +377,8 @@ apiRouter.post('/roles', async (req, res) => {
     );
     res.status(201).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to create role' });
+    console.error('Error in POST /roles (duplicate):', err);
+    res.status(500).json({ error: 'Failed to create role', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -366,7 +391,8 @@ apiRouter.put('/roles/:id', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to update role' });
+    console.error('Error in PUT /roles/:id (duplicate):', err);
+    res.status(500).json({ error: 'Failed to update role', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -375,6 +401,7 @@ apiRouter.delete('/roles/:id', async (req, res) => {
     await pool.query('DELETE FROM roles WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to delete role' });
+    console.error('Error in DELETE /roles/:id (duplicate):', err);
+    res.status(500).json({ error: 'Failed to delete role', details: err instanceof Error ? err.message : String(err) });
   }
 });

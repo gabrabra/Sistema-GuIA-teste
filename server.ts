@@ -16,15 +16,24 @@ async function startServer() {
   app.use(express.json());
 
   // Initialize DB
+  let lastDbError: any = null;
   try {
     await initDb();
   } catch (err) {
+    lastDbError = err;
     console.error('Failed to initialize database connection:', err);
-    console.log('Server will continue to start, but database operations will fail.');
   }
 
   // API Routes
   app.use('/api', apiRouter);
+
+  app.get('/api/debug/db-status', (req, res) => {
+    res.json({
+      connected: !lastDbError,
+      error: lastDbError ? (lastDbError instanceof Error ? lastDbError.message : String(lastDbError)) : null,
+      stack: lastDbError ? (lastDbError instanceof Error ? lastDbError.stack : null) : null
+    });
+  });
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
