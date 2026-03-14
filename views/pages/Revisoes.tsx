@@ -192,9 +192,9 @@ export const Revisoes: React.FC = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <tbody className={`divide-y ${themeClasses.borderColor}`}>
+        <div className="overflow-x-auto rounded-xl border border-gray-200">
+          <table className="w-full text-left text-sm border-collapse">
+            <tbody className="divide-y divide-gray-100">
               {Object.keys(filteredGroupedTopics).length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-6 py-8 text-center text-gray-500">
@@ -205,7 +205,7 @@ export const Revisoes: React.FC = () => {
                 Object.entries(filteredGroupedTopics).map(([materiaNome, topics]) => (
                   <React.Fragment key={materiaNome}>
                     <tr 
-                      className={`cursor-pointer hover:bg-black/5 transition-colors ${themeClasses.bg}`}
+                      className={`cursor-pointer hover:bg-gray-50 transition-colors ${themeClasses.bg}`}
                       onClick={() => toggleDisciplina(materiaNome)}
                     >
                       <td colSpan={10} className="px-6 py-4 font-bold flex items-center gap-2">
@@ -214,7 +214,7 @@ export const Revisoes: React.FC = () => {
                     </tr>
                     {expandedDisciplinas[materiaNome] && (
                       <>
-                        <tr className={`text-xs uppercase ${themeClasses.bg} text-gray-500`}>
+                        <tr className={`text-xs uppercase bg-gray-50 text-gray-500`}>
                           <th className="px-6 py-4 font-medium"></th>
                           <th className="px-6 py-4 font-medium">Tópico</th>
                           <th className="px-6 py-4 font-medium">Data Estudo</th>
@@ -227,7 +227,7 @@ export const Revisoes: React.FC = () => {
                           <th className="px-6 py-4 font-medium text-right">Ações</th>
                         </tr>
                         {topics.map((topic) => (
-                          <tr key={topic.id} className="hover:bg-black/5 transition-colors">
+                          <tr key={topic.id} className="hover:bg-gray-50 transition-colors">
                             <td className={`px-6 py-4 font-medium ${themeClasses.text}`}></td>
                             <td className="px-6 py-4 text-gray-500">{topic.nome}</td>
                             <td className={`px-6 py-4 ${themeClasses.text}`}>
@@ -240,7 +240,7 @@ export const Revisoes: React.FC = () => {
                                     updateAssunto(topic.materiaId, topic.id, { dataEstudo: new Date(newDate).toISOString() });
                                   }
                                 }}
-                                className={`bg-transparent border-b border-gray-700 focus:border-blue-500 outline-none text-sm w-32 ${themeClasses.text}`}
+                                className={`bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none text-sm w-32 ${themeClasses.text}`}
                               />
                             </td>
                             
@@ -252,7 +252,7 @@ export const Revisoes: React.FC = () => {
                                     type="checkbox" 
                                     checked={topic.revisoesConcluidas?.includes(revType) || false}
                                     onChange={() => handleToggleRevision(topic.materiaId, topic.id, revType, topic.revisoesConcluidas, topic.dataEstudo)}
-                                    className={`rounded ${themeClasses.borderColor} text-blue-600 focus:ring-2`} 
+                                    className={`rounded border-gray-300 text-blue-600 focus:ring-2`} 
                                   />
                                 </div>
                               </td>
