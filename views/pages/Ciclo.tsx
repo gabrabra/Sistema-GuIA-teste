@@ -360,7 +360,7 @@ export const Ciclo: React.FC = () => {
                 </div>
 
                 {isDropdownOpen && (
-                  <div className={`absolute z-10 w-full mt-1 max-h-60 overflow-y-auto border rounded-lg shadow-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                  <div className={`absolute z-50 w-full mt-1 border rounded-lg shadow-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                     {linkedMateria.assuntos
                       .filter(a => a.nome.toLowerCase().includes(searchTerm.toLowerCase()))
                       .map((assunto) => (
