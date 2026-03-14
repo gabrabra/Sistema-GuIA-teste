@@ -205,7 +205,7 @@ export const Revisoes: React.FC = () => {
                 Object.entries(filteredGroupedTopics).map(([materiaNome, topics]) => (
                   <React.Fragment key={materiaNome}>
                     <tr 
-                      className={`cursor-pointer hover:bg-gray-50 transition-colors ${themeClasses.bg}`}
+                      className={`cursor-pointer hover:bg-gray-50 transition-colors ${themeClasses.bg} ${expandedDisciplinas[materiaNome] ? 'bg-blue-100' : ''}`}
                       onClick={() => toggleDisciplina(materiaNome)}
                     >
                       <td colSpan={10} className="px-6 py-4 font-bold flex items-center gap-2">
