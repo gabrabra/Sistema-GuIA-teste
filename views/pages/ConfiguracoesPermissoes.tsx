@@ -274,15 +274,23 @@ export const ConfiguracoesPermissoes: React.FC = () => {
               )}
             </div>
             
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-500 flex items-center gap-2">
               {selectedRole.id === 'admin' ? (
                 <span className="flex items-center gap-1 text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
                   <Lock size={14} /> Perfil protegido
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                  <Unlock size={14} /> Editável
-                </span>
+                <>
+                  <span className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                    <Unlock size={14} /> Editável
+                  </span>
+                  <button 
+                    onClick={() => handleDeleteRole(selectedRole.id)}
+                    className="flex items-center gap-1 text-red-600 bg-red-50 px-3 py-1 rounded-full hover:bg-red-100 transition-colors"
+                  >
+                    <Trash2 size={14} /> Excluir Perfil
+                  </button>
+                </>
               )}
             </div>
           </div>
