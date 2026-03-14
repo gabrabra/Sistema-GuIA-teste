@@ -205,16 +205,16 @@ export const Revisoes: React.FC = () => {
                 Object.entries(filteredGroupedTopics).map(([materiaNome, topics]) => (
                   <React.Fragment key={materiaNome}>
                     <tr 
-                      className={`cursor-pointer hover:bg-black/5 transition-colors ${themeClasses.bg}`}
+                      className={`cursor-pointer hover:bg-black/5 transition-colors ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800' : 'bg-gray-50'}`}
                       onClick={() => toggleDisciplina(materiaNome)}
                     >
-                      <td colSpan={10} className="px-6 py-4 font-bold flex items-center gap-2">
+                      <td colSpan={10} className="px-6 py-4 font-bold flex items-center gap-2 text-gray-700">
                         {expandedDisciplinas[materiaNome] ? '▼' : '▶'} {materiaNome} ({topics.length})
                       </td>
                     </tr>
                     {expandedDisciplinas[materiaNome] && (
                       <>
-                        <tr className={`text-xs uppercase ${themeClasses.bg} text-gray-500`}>
+                        <tr className={`text-xs uppercase text-gray-500`}>
                           <th className="px-6 py-4 font-medium"></th>
                           <th className="px-6 py-4 font-medium">Tópico</th>
                           <th className="px-6 py-4 font-medium">Data Estudo</th>
@@ -228,9 +228,9 @@ export const Revisoes: React.FC = () => {
                         </tr>
                         {topics.map((topic) => (
                           <tr key={topic.id} className="hover:bg-black/5 transition-colors">
-                            <td className={`px-6 py-4 font-medium ${themeClasses.text}`}></td>
-                            <td className="px-6 py-4 text-gray-500">{topic.nome}</td>
-                            <td className={`px-6 py-4 ${themeClasses.text}`}>
+                            <td className={`px-6 py-4 font-medium text-gray-700`}></td>
+                            <td className="px-6 py-4 text-gray-600">{topic.nome}</td>
+                            <td className={`px-6 py-4 text-gray-700`}>
                               <input 
                                 type="date" 
                                 value={topic.dataEstudo ? new Date(topic.dataEstudo).toISOString().split('T')[0] : ''}
@@ -240,7 +240,7 @@ export const Revisoes: React.FC = () => {
                                     updateAssunto(topic.materiaId, topic.id, { dataEstudo: new Date(newDate).toISOString() });
                                   }
                                 }}
-                                className={`bg-transparent border-b border-gray-700 focus:border-blue-500 outline-none text-sm w-32 ${themeClasses.text}`}
+                                className={`bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none text-sm w-32 text-gray-700`}
                               />
                             </td>
                             
@@ -267,7 +267,7 @@ export const Revisoes: React.FC = () => {
                                 {topic.revisionStatus}
                               </span>
                             </td>
-                            <td className={`px-6 py-4 ${themeClasses.text}`}>
+                            <td className={`px-6 py-4 text-gray-700`}>
                               {topic.nextRevision ? (
                                 <div className="flex flex-col">
                                   <span className="text-xs text-gray-500">{topic.nextRevision.label}</span>
