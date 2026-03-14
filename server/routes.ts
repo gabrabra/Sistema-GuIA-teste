@@ -311,8 +311,9 @@ apiRouter.delete('/concursos/:id', async (req, res) => {
 
 // --- Materias ---
 apiRouter.get('/materias', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   try {
-    const result = await pool.query('SELECT * FROM materias');
+    const result = await pool.query('SELECT * FROM materias WHERE user_id = $1', [userId]);
     res.json(result.rows);
   } catch (err) {
     console.error('Error in GET /materias:', err);
@@ -321,11 +322,12 @@ apiRouter.get('/materias', async (req, res) => {
 });
 
 apiRouter.post('/materias', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   const { id, nome, assuntos } = req.body;
   try {
     await pool.query(
-      'INSERT INTO materias (id, nome, assuntos) VALUES ($1, $2, $3)',
-      [id, nome, JSON.stringify(assuntos || [])]
+      'INSERT INTO materias (id, user_id, nome, assuntos) VALUES ($1, $2, $3, $4)',
+      [id, userId, nome, JSON.stringify(assuntos || [])]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -335,11 +337,12 @@ apiRouter.post('/materias', async (req, res) => {
 });
 
 apiRouter.put('/materias/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   const { nome, assuntos } = req.body;
   try {
     await pool.query(
-      'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3',
-      [nome, JSON.stringify(assuntos || []), req.params.id]
+      'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3 AND user_id = $4',
+      [nome, JSON.stringify(assuntos || []), req.params.id, userId]
     );
     res.json({ success: true });
   } catch (err) {
@@ -349,8 +352,9 @@ apiRouter.put('/materias/:id', async (req, res) => {
 });
 
 apiRouter.delete('/materias/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   try {
-    await pool.query('DELETE FROM materias WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM materias WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
     res.json({ success: true });
   } catch (err) {
     console.error('Error in DELETE /materias/:id:', err);
@@ -360,8 +364,9 @@ apiRouter.delete('/materias/:id', async (req, res) => {
 
 // --- Disciplinas ---
 apiRouter.get('/disciplinas', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   try {
-    const result = await pool.query('SELECT * FROM disciplinas');
+    const result = await pool.query('SELECT * FROM disciplinas WHERE user_id = $1', [userId]);
     const disciplinas = result.rows.map(row => ({
       id: row.id,
       nome: row.nome,
@@ -381,12 +386,13 @@ apiRouter.get('/disciplinas', async (req, res) => {
 });
 
 apiRouter.post('/disciplinas', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   const { id, nome, peso, horasSemanaMeta, horasEstudadasTotal, horasEstudadasHoje, concluida, materiaId, historico } = req.body;
   try {
     await pool.query(
-      `INSERT INTO disciplinas (id, nome, peso, horas_semana_meta, horas_estudadas_total, horas_estudadas_hoje, concluida, materia_id, historico) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [id, nome, peso || 1, horasSemanaMeta || 0, horasEstudadasTotal || 0, horasEstudadasHoje || 0, concluida || false, materiaId, JSON.stringify(historico || [])]
+      `INSERT INTO disciplinas (id, user_id, nome, peso, horas_semana_meta, horas_estudadas_total, horas_estudadas_hoje, concluida, materia_id, historico) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [id, userId, nome, peso || 1, horasSemanaMeta || 0, horasEstudadasTotal || 0, horasEstudadasHoje || 0, concluida || false, materiaId, JSON.stringify(historico || [])]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -396,13 +402,14 @@ apiRouter.post('/disciplinas', async (req, res) => {
 });
 
 apiRouter.put('/disciplinas/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   const { nome, peso, horasSemanaMeta, horasEstudadasTotal, horasEstudadasHoje, concluida, materiaId, historico } = req.body;
   try {
     await pool.query(
       `UPDATE disciplinas 
        SET nome = $1, peso = $2, horas_semana_meta = $3, horas_estudadas_total = $4, horas_estudadas_hoje = $5, concluida = $6, materia_id = $7, historico = $8
-       WHERE id = $9`,
-      [nome, peso, horasSemanaMeta, horasEstudadasTotal, horasEstudadasHoje, concluida, materiaId, JSON.stringify(historico || []), req.params.id]
+       WHERE id = $9 AND user_id = $10`,
+      [nome, peso, horasSemanaMeta, horasEstudadasTotal, horasEstudadasHoje, concluida, materiaId, JSON.stringify(historico || []), req.params.id, userId]
     );
     res.json({ success: true });
   } catch (err) {
@@ -412,8 +419,9 @@ apiRouter.put('/disciplinas/:id', async (req, res) => {
 });
 
 apiRouter.delete('/disciplinas/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   try {
-    await pool.query('DELETE FROM disciplinas WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM disciplinas WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
     res.json({ success: true });
   } catch (err) {
     console.error('Error in DELETE /disciplinas/:id:', err);
