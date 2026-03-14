@@ -64,12 +64,39 @@ export const Revisoes: React.FC = () => {
     })
   );
 
+  // Group topics by materia
+  const groupedTopics = allTopics.reduce((acc: Record<string, typeof allTopics>, topic) => {
+    if (!acc[topic.materiaNome]) {
+      acc[topic.materiaNome] = [];
+    }
+    acc[topic.materiaNome].push(topic);
+    return acc;
+  }, {});
+
+  const [expandedDisciplinas, setExpandedDisciplinas] = useState<Record<string, boolean>>({});
+
+  const toggleDisciplina = (materiaNome: string) => {
+    setExpandedDisciplinas(prev => ({
+      ...prev,
+      [materiaNome]: !prev[materiaNome]
+    }));
+  };
+
   const filteredTopics = allTopics.filter(topic => {
     if (filter === 'todos') return true;
     if (filter === 'pendente') return topic.revisionStatus === 'Para hoje';
     if (filter === 'atrasado') return topic.revisionStatus === 'Atrasado';
     return true;
   });
+
+  // Re-group filtered topics
+  const filteredGroupedTopics: Record<string, typeof allTopics> = filteredTopics.reduce((acc: Record<string, typeof allTopics>, topic) => {
+    if (!acc[topic.materiaNome]) {
+      acc[topic.materiaNome] = [];
+    }
+    acc[topic.materiaNome].push(topic);
+    return acc;
+  }, {});
 
   const counts = {
     todos: allTopics.length,
@@ -182,71 +209,83 @@ export const Revisoes: React.FC = () => {
               </tr>
             </thead>
             <tbody className={`divide-y ${themeClasses.borderColor}`}>
-              {filteredTopics.length === 0 ? (
+              {Object.keys(filteredGroupedTopics).length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-6 py-8 text-center text-gray-500">
                     Nenhum tópico encontrado.
                   </td>
                 </tr>
               ) : (
-                filteredTopics.map((topic) => (
-                  <tr key={topic.id} className="hover:bg-black/5 transition-colors">
-                    <td className={`px-6 py-4 font-medium ${themeClasses.text}`}>{topic.materiaNome}</td>
-                    <td className="px-6 py-4 text-gray-500">{topic.nome}</td>
-                    <td className={`px-6 py-4 ${themeClasses.text}`}>
-                      <input 
-                        type="date" 
-                        value={topic.dataEstudo ? new Date(topic.dataEstudo).toISOString().split('T')[0] : ''}
-                        onChange={(e) => {
-                          const newDate = e.target.value;
-                          if (newDate) {
-                            updateAssunto(topic.materiaId, topic.id, { dataEstudo: new Date(newDate).toISOString() });
-                          }
-                        }}
-                        className={`bg-transparent border-b border-gray-700 focus:border-blue-500 outline-none text-sm w-32 ${themeClasses.text}`}
-                      />
-                    </td>
-                    
-                    {/* Checkboxes for revisions */}
-                    {['24h', '7d', '30d', 'simulado'].map((revType) => (
-                      <td key={revType} className="px-6 py-4 text-center">
-                        <div className="flex justify-center">
-                          <input 
-                            type="checkbox" 
-                            checked={topic.revisoesConcluidas?.includes(revType) || false}
-                            onChange={() => handleToggleRevision(topic.materiaId, topic.id, revType, topic.revisoesConcluidas, topic.dataEstudo)}
-                            className={`rounded ${themeClasses.borderColor} text-blue-600 focus:ring-2`} 
-                          />
-                        </div>
+                Object.entries(filteredGroupedTopics).map(([materiaNome, topics]) => (
+                  <React.Fragment key={materiaNome}>
+                    <tr 
+                      className={`cursor-pointer hover:bg-black/5 transition-colors ${themeClasses.bg}`}
+                      onClick={() => toggleDisciplina(materiaNome)}
+                    >
+                      <td colSpan={10} className="px-6 py-4 font-bold flex items-center gap-2">
+                        {expandedDisciplinas[materiaNome] ? '▼' : '▶'} {materiaNome} ({topics.length})
                       </td>
-                    ))}
+                    </tr>
+                    {expandedDisciplinas[materiaNome] && topics.map((topic) => (
+                      <tr key={topic.id} className="hover:bg-black/5 transition-colors">
+                        <td className={`px-6 py-4 font-medium ${themeClasses.text}`}></td>
+                        <td className="px-6 py-4 text-gray-500">{topic.nome}</td>
+                        <td className={`px-6 py-4 ${themeClasses.text}`}>
+                          <input 
+                            type="date" 
+                            value={topic.dataEstudo ? new Date(topic.dataEstudo).toISOString().split('T')[0] : ''}
+                            onChange={(e) => {
+                              const newDate = e.target.value;
+                              if (newDate) {
+                                updateAssunto(topic.materiaId, topic.id, { dataEstudo: new Date(newDate).toISOString() });
+                              }
+                            }}
+                            className={`bg-transparent border-b border-gray-700 focus:border-blue-500 outline-none text-sm w-32 ${themeClasses.text}`}
+                          />
+                        </td>
+                        
+                        {/* Checkboxes for revisions */}
+                        {['24h', '7d', '30d', 'simulado'].map((revType) => (
+                          <td key={revType} className="px-6 py-4 text-center">
+                            <div className="flex justify-center">
+                              <input 
+                                type="checkbox" 
+                                checked={topic.revisoesConcluidas?.includes(revType) || false}
+                                onChange={() => handleToggleRevision(topic.materiaId, topic.id, revType, topic.revisoesConcluidas, topic.dataEstudo)}
+                                className={`rounded ${themeClasses.borderColor} text-blue-600 focus:ring-2`} 
+                              />
+                            </div>
+                          </td>
+                        ))}
 
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                        ${topic.revisionStatus === 'Para hoje' ? 'bg-yellow-100 text-yellow-800' : 
-                          topic.revisionStatus === 'Atrasado' ? 'bg-red-100 text-red-800' : 
-                          topic.revisionStatus === 'Concluído' ? 'bg-green-100 text-green-800' :
-                          'bg-blue-100 text-blue-800'}`}>
-                        {topic.revisionStatus}
-                      </span>
-                    </td>
-                    <td className={`px-6 py-4 ${themeClasses.text}`}>
-                      {topic.nextRevision ? (
-                        <div className="flex flex-col">
-                          <span className="text-xs text-gray-500">{topic.nextRevision.label}</span>
-                          <span>{topic.nextRevision.date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span>
-                        </div>
-                      ) : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => handleDelete(topic.materiaId, topic.id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                            ${topic.revisionStatus === 'Para hoje' ? 'bg-yellow-100 text-yellow-800' : 
+                              topic.revisionStatus === 'Atrasado' ? 'bg-red-100 text-red-800' : 
+                              topic.revisionStatus === 'Concluído' ? 'bg-green-100 text-green-800' :
+                              'bg-blue-100 text-blue-800'}`}>
+                            {topic.revisionStatus}
+                          </span>
+                        </td>
+                        <td className={`px-6 py-4 ${themeClasses.text}`}>
+                          {topic.nextRevision ? (
+                            <div className="flex flex-col">
+                              <span className="text-xs text-gray-500">{topic.nextRevision.label}</span>
+                              <span>{topic.nextRevision.date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}</span>
+                            </div>
+                          ) : '-'}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={() => handleDelete(topic.materiaId, topic.id)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
                 ))
               )}
             </tbody>
