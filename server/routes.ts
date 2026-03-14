@@ -138,6 +138,7 @@ apiRouter.get('/prompts', async (req, res) => {
       id: row.id,
       title: row.title,
       description: row.description,
+      promptContent: row.prompt_content,
       iconName: row.icon_name,
       iconColor: row.icon_color,
       color: row.color,
@@ -152,12 +153,12 @@ apiRouter.get('/prompts', async (req, res) => {
 });
 
 apiRouter.post('/prompts', async (req, res) => {
-  const { id, title, description, iconName, iconColor, color, category, isCustom } = req.body;
+  const { id, title, description, promptContent, iconName, iconColor, color, category, isCustom } = req.body;
   try {
     await pool.query(
-      `INSERT INTO prompts (id, title, description, icon_name, icon_color, color, category, is_custom) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [id, title, description, iconName, iconColor, color, category, isCustom]
+      `INSERT INTO prompts (id, title, description, prompt_content, icon_name, icon_color, color, category, is_custom) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [id, title, description, promptContent, iconName, iconColor, color, category, isCustom]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -167,13 +168,13 @@ apiRouter.post('/prompts', async (req, res) => {
 });
 
 apiRouter.put('/prompts/:id', async (req, res) => {
-  const { title, description, iconName, iconColor, color, category, isCustom } = req.body;
+  const { title, description, promptContent, iconName, iconColor, color, category, isCustom } = req.body;
   try {
     await pool.query(
       `UPDATE prompts 
-       SET title = $1, description = $2, icon_name = $3, icon_color = $4, color = $5, category = $6, is_custom = $7
-       WHERE id = $8`,
-      [title, description, iconName, iconColor, color, category, isCustom, req.params.id]
+       SET title = $1, description = $2, prompt_content = $3, icon_name = $4, icon_color = $5, color = $6, category = $7, is_custom = $8
+       WHERE id = $9`,
+      [title, description, promptContent, iconName, iconColor, color, category, isCustom, req.params.id]
     );
     res.json({ success: true });
   } catch (err) {
@@ -189,6 +190,39 @@ apiRouter.delete('/prompts/:id', async (req, res) => {
   } catch (err) {
     console.error('Error in DELETE /prompts/:id:', err);
     res.status(500).json({ error: 'Failed to delete prompt', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// --- Concursos ---
+apiRouter.get('/concursos', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  try {
+    const result = await pool.query('SELECT * FROM concursos WHERE user_id = $1', [userId]);
+    res.json(result.rows.map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      nome: row.nome,
+      possuiEdital: row.possui_edital,
+      dataProva: row.data_prova ? new Date(row.data_prova).toISOString().split('T')[0] : null
+    })));
+  } catch (err) {
+    console.error('Error in GET /concursos:', err);
+    res.status(500).json({ error: 'Failed to fetch concursos', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.post('/concursos', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  const { id, nome, possuiEdital, dataProva } = req.body;
+  try {
+    await pool.query(
+      'INSERT INTO concursos (id, user_id, nome, possui_edital, data_prova) VALUES ($1, $2, $3, $4, $5)',
+      [id, userId, nome, possuiEdital, dataProva]
+    );
+    res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('Error in POST /concursos:', err);
+    res.status(500).json({ error: 'Failed to create concurso', details: err instanceof Error ? err.message : String(err) });
   }
 });
 

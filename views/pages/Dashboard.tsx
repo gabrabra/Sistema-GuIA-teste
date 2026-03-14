@@ -141,26 +141,26 @@ export const Dashboard: React.FC = () => {
             <Calendar size={64} />
           </div>
           <h3 className="font-semibold text-gray-700 mb-2">Contagem Regressiva</h3>
-          {concursoSelecionado?.dataProva && timeLeft ? (
-            <div className="text-center py-2">
-              <div className="text-3xl font-bold text-gray-800">{timeLeft.days} dias</div>
-              <div className="text-gray-500 font-mono text-lg">
-                 {timeLeft.h.toString().padStart(2, '0')}:{timeLeft.m.toString().padStart(2, '0')}:{timeLeft.s.toString().padStart(2, '0')}
+          {concursoSelecionado ? (
+            concursoSelecionado.dataProva && timeLeft ? (
+              <div className="text-center py-2">
+                <div className="text-3xl font-bold text-gray-800">{timeLeft.days} dias</div>
+                <div className="text-gray-500 font-mono text-lg">
+                   {timeLeft.h.toString().padStart(2, '0')}:{timeLeft.m.toString().padStart(2, '0')}:{timeLeft.s.toString().padStart(2, '0')}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500 text-sm">
+                Concurso: {concursoSelecionado.nome}<br/>
+                Data da prova não definida.
+              </div>
+            )
           ) : (
             <div className="flex flex-col items-center justify-center py-4 text-gray-400">
               <span className="block mb-1">Nenhum concurso configurado</span>
-              { !concursoSelecionado && (
-                <button onClick={() => navigate('/planeja')} className="text-xs text-blue-500 underline hover:text-blue-700">
-                  Configurar agora
-                </button>
-              )}
-            </div>
-          )}
-          {concursoSelecionado && (
-            <div className="text-xs text-center text-blue-600 font-semibold mt-1 uppercase tracking-wide">
-              {concursoSelecionado.nome}
+              <button onClick={() => navigate('/planeja')} className="text-xs text-blue-500 underline hover:text-blue-700">
+                Configurar agora
+              </button>
             </div>
           )}
         </Card>

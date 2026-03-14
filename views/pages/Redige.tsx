@@ -40,8 +40,7 @@ export const Redige: React.FC = () => {
   };
 
   const handlePromptClick = (prompt: any) => {
-    const text = prompt.content || `${prompt.title}: `;
-    setInput(text);
+    setInput(prompt.promptContent || '');
   };
 
   const handleClearChat = () => {
@@ -125,7 +124,7 @@ export const Redige: React.FC = () => {
       {/* Input Area - Fixed at Bottom */}
       <div className="bg-white p-2 rounded-3xl border-2 border-blue-100 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm shrink-0">
         <textarea
-          value={input}
+          value={input || ''}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {

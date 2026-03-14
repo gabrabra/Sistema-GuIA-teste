@@ -161,7 +161,7 @@ export const ConfiguracoesProdutos: React.FC = () => {
           <div>
             <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Descrição</label>
             <textarea 
-              value={description}
+              value={description || ''}
               onChange={(e) => setDescription(e.target.value)}
               className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
               placeholder="Breve descrição do produto..."

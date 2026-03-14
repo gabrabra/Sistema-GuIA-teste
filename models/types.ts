@@ -59,6 +59,8 @@ export interface HistoricoEstudo {
 }
 
 export interface Concurso {
+  id?: string;
+  userId: string;
   nome: string;
   possuiEdital: boolean;
   dataProva: string | null;

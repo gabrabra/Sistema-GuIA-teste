@@ -335,7 +335,7 @@ export const ConfiguracoesMaterias: React.FC = () => {
           </p>
           
           <textarea
-            value={importText}
+            value={importText || ''}
             onChange={(e) => setImportText(e.target.value)}
             className={`w-full h-64 p-4 border rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
             placeholder={`Exemplo:

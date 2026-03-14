@@ -116,6 +116,7 @@ export async function initDb() {
 
         CREATE TABLE IF NOT EXISTS concursos (
           id VARCHAR(255) PRIMARY KEY,
+          user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
           nome VARCHAR(255) NOT NULL,
           possui_edital BOOLEAN DEFAULT false,
           data_prova DATE
@@ -132,9 +133,11 @@ export async function initDb() {
 
         -- Add user_id to existing tables for multi-tenancy
         ALTER TABLE prompts ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
+        ALTER TABLE prompts ADD COLUMN IF NOT EXISTS prompt_content TEXT;
         ALTER TABLE materias ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         ALTER TABLE disciplinas ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         ALTER TABLE produtos ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
+        ALTER TABLE concursos ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         
         -- Add status to users
         ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active';

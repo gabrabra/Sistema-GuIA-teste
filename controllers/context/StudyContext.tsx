@@ -17,19 +17,40 @@ const INITIAL_HISTORY: HistoricoEstudo[] = [
 ];
 
 export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [concursoSelecionado, setConcursoSelecionadoState] = useState<Concurso | null>(() => {
-    const saved = localStorage.getItem('concursoSelecionado');
-    return saved ? JSON.parse(saved) : INITIAL_CONCURSO;
-  });
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userId = user.id;
+
+  const fetchWithAuth = useCallback((url: string, options: RequestInit = {}) => {
+    const headers = {
+      ...options.headers,
+      'x-user-id': userId
+    };
+    return fetch(url, { ...options, headers });
+  }, [userId]);
+
+  const [concursoSelecionado, setConcursoSelecionadoState] = useState<Concurso | null>(null);
+
+  useEffect(() => {
+    if (userId) {
+      fetchWithAuth('/api/concursos')
+        .then(res => res.ok ? res.json() : [])
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) setConcursoSelecionadoState(data[0]);
+        })
+        .catch(err => console.error('Failed to fetch concurso', err));
+    }
+  }, [userId, fetchWithAuth]);
 
   const setConcursoSelecionado = useCallback((c: Concurso | null) => {
     setConcursoSelecionadoState(c);
-    if (c) {
-      localStorage.setItem('concursoSelecionado', JSON.stringify(c));
-    } else {
-      localStorage.removeItem('concursoSelecionado');
+    if (c && userId) {
+      fetchWithAuth('/api/concursos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...c, id: c.id || crypto.randomUUID(), userId })
+      }).catch(err => console.error('Failed to save concurso', err));
     }
-  }, []);
+  }, [userId, fetchWithAuth]);
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [horasSemanaMeta, setHorasSemanaMeta] = useState<number>(0); 
@@ -44,14 +65,14 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // Fetch initial data
   useEffect(() => {
-    fetch('/api/disciplinas')
+    fetchWithAuth('/api/disciplinas')
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setDisciplinas(data);
       })
       .catch(err => console.error('Failed to fetch disciplinas', err));
 
-    fetch('/api/materias')
+    fetchWithAuth('/api/materias')
       .then(res => res.ok ? res.json() : [])
       .then(data => {
         if (Array.isArray(data)) setMaterias(data);
@@ -116,7 +137,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             if (changed) {
               const updatedMateria = newMaterias.find(m => m.id === disciplina.materiaId);
               if (updatedMateria) {
-                fetch(`/api/materias/${updatedMateria.id}`, {
+                fetchWithAuth(`/api/materias/${updatedMateria.id}`, {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(updatedMateria)
@@ -154,7 +175,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             const updatedDisciplina = newDisciplinas.find(d => d.id === activeSubjectId);
             if (updatedDisciplina) {
-                fetch(`/api/disciplinas/${updatedDisciplina.id}`, {
+                fetchWithAuth(`/api/disciplinas/${updatedDisciplina.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updatedDisciplina)
@@ -194,7 +215,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       const updatedDisciplina = newDisciplinas.find(d => d.id === disciplinaId);
       if (updatedDisciplina) {
-          fetch(`/api/disciplinas/${updatedDisciplina.id}`, {
+          fetchWithAuth(`/api/disciplinas/${updatedDisciplina.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(updatedDisciplina)
@@ -216,7 +237,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const newDisciplinas = prev.map(d => ({ ...d, horasEstudadasHoje: 0 }));
       // Sync all to backend
       newDisciplinas.forEach(d => {
-        fetch(`/api/disciplinas/${d.id}`, {
+        fetchWithAuth(`/api/disciplinas/${d.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(d)
@@ -233,7 +254,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       assuntos: []
     };
     setMaterias(prev => [...prev, novaMateria]);
-    fetch('/api/materias', {
+    fetchWithAuth('/api/materias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novaMateria)

@@ -42,7 +42,7 @@ export const Planeja: React.FC = () => {
     setConcursoSelecionado({
       nome: concurso.nome,
       possuiEdital: concurso.possuiEdital,
-      dataProva: concurso.dataProva ? new Date(concurso.dataProva).toISOString() : null
+      dataProva: concurso.dataProva || null
     });
 
     // 1. Prepare pool of subjects with their counts based on weight
@@ -359,7 +359,7 @@ export const Planeja: React.FC = () => {
               className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
               rows={6}
               placeholder="Cole aqui a parte do edital com o conteúdo programático..."
-              value={editalContent}
+              value={editalContent || ''}
               onChange={(e) => setEditalContent(e.target.value)}
           />
 

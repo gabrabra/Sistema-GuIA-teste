@@ -33,11 +33,11 @@ export const ConfiguracoesPrompts: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'responde' | 'redige'>('responde');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPrompt, setEditingPrompt] = useState<PromptOption | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<Partial<PromptOption>>({
     title: '',
     description: '',
-    content: '',
     iconName: 'Sparkles',
     color: COLOR_THEMES[0].color,
     iconColor: COLOR_THEMES[0].iconColor
@@ -55,7 +55,7 @@ export const ConfiguracoesPrompts: React.FC = () => {
       setFormData({
         title: '',
         description: '',
-        content: '',
+        promptContent: '',
         iconName: 'Sparkles',
         color: COLOR_THEMES[0].color,
         iconColor: COLOR_THEMES[0].iconColor
@@ -65,7 +65,7 @@ export const ConfiguracoesPrompts: React.FC = () => {
   };
 
   const handleSave = () => {
-    if (!formData.title || !formData.description) return;
+    if (!formData.title || !formData.promptContent) return;
 
     if (editingPrompt) {
       const updated = currentPrompts.map(p => 
@@ -76,8 +76,8 @@ export const ConfiguracoesPrompts: React.FC = () => {
       const newPrompt: PromptOption = {
         id: Date.now().toString(),
         title: formData.title!,
-        description: formData.description!,
-        content: formData.content || '',
+        description: formData.description || '',
+        promptContent: formData.promptContent!,
         iconName: formData.iconName || 'Sparkles',
         color: formData.color || COLOR_THEMES[0].color,
         iconColor: formData.iconColor || COLOR_THEMES[0].iconColor
@@ -88,8 +88,13 @@ export const ConfiguracoesPrompts: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este prompt?')) {
-      updateCurrentPrompts(currentPrompts.filter(p => p.id !== id));
+    setDeleteId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteId) {
+      updateCurrentPrompts(currentPrompts.filter(p => p.id !== deleteId));
+      setDeleteId(null);
     }
   };
 
@@ -132,8 +137,8 @@ export const ConfiguracoesPrompts: React.FC = () => {
         {currentPrompts.map(prompt => {
           const IconComponent = (Icons as any)[prompt.iconName] || Icons.HelpCircle;
           return (
-            <Card key={prompt.id} className="flex flex-col h-full relative group">
-              <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div key={prompt.id} className="flex flex-col h-full relative group p-6 rounded-2xl border shadow-sm bg-white">
+              <div className="absolute top-4 right-4 flex gap-2 transition-opacity z-50">
                 <button 
                   onClick={() => handleOpenModal(prompt)}
                   className="p-1.5 bg-white rounded-md text-gray-500 hover:text-blue-600 shadow-sm border border-gray-100"
@@ -153,7 +158,7 @@ export const ConfiguracoesPrompts: React.FC = () => {
               </div>
               <h3 className={`font-bold mb-2 ${themeClasses.text}`}>{prompt.title}</h3>
               <p className="text-sm text-gray-500 flex-1">{prompt.description}</p>
-            </Card>
+            </div>
           );
         })}
       </div>
@@ -176,24 +181,24 @@ export const ConfiguracoesPrompts: React.FC = () => {
           </div>
 
           <div>
-            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Descrição Curta</label>
+            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Descrição (Resumo)</label>
             <input
               type="text"
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
               className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-              placeholder="Ex: Resume o texto em tópicos"
+              placeholder="Ex: Resumo rápido"
             />
           </div>
 
           <div>
-            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Prompt da IA (Instrução)</label>
+            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Prompt (O que será enviado à IA)</label>
             <textarea
-              value={formData.content}
-              onChange={e => setFormData({ ...formData, content: e.target.value })}
+              value={formData.promptContent}
+              onChange={e => setFormData({ ...formData, promptContent: e.target.value })}
               className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
               rows={4}
-              placeholder="Cole aqui o prompt que você desenvolveu..."
+              placeholder="Ex: Faça um resumo destacando os pontos principais..."
             />
           </div>
 
@@ -236,9 +241,23 @@ export const ConfiguracoesPrompts: React.FC = () => {
 
           <div className="flex justify-end gap-2 mt-6">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!formData.title || !formData.description}>
+            <Button onClick={handleSave} disabled={!formData.title || !formData.promptContent}>
               Salvar Prompt
             </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        title="Confirmar Exclusão"
+      >
+        <div className="space-y-4">
+          <p className={themeClasses.text}>Tem certeza que deseja excluir este prompt? Esta ação não pode ser desfeita.</p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancelar</Button>
+            <Button variant="danger" onClick={confirmDelete}>Excluir</Button>
           </div>
         </div>
       </Modal>

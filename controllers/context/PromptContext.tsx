@@ -5,6 +5,7 @@ export interface PromptOption {
   iconName: string;
   title: string;
   description: string;
+  promptContent: string;
   color: string;
   iconColor: string;
   category?: string;
