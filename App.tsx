@@ -75,48 +75,48 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/planeja" element={<Planeja />} />
-        <Route path="/ciclo" element={<Ciclo />} />
-        <Route path="/revisoes" element={<Revisoes />} />
-        <Route path="/responde" element={<Responde />} />
-        <Route path="/redige" element={<Redige />} />
-        <Route path="/produtos" element={<Produtos />} />
-        <Route path="/configuracoes" element={<Configuracoes />} />
-        <Route path="/configuracoes/perfil" element={<Configuracoes />} />
-        <Route path="/configuracoes/assinatura" element={<ConfiguracoesAssinatura />} />
-        <Route path="/configuracoes/menu" element={<ConfiguracoesMenu />} />
-        <Route path="/configuracoes/materias" element={<ConfiguracoesMaterias />} />
-        <Route path="/configuracoes/usuarios" element={<ConfiguracoesUsuarios />} />
-        <Route path="/configuracoes/dashboard" element={<ConfiguracoesDashboard />} />
-        <Route path="/configuracoes/permissoes" element={<ConfiguracoesPermissoes />} />
-        <Route path="/configuracoes/produtos" element={<ConfiguracoesProdutos />} />
-        <Route path="/configuracoes/prompts" element={<ConfiguracoesPrompts />} />
-        {/* Redirect unknown routes to dashboard or login */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+    <UserSettingsProvider>
+      <StudyProvider>
+        <ProductProvider>
+          <PromptProvider>
+            <MenuProvider>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/planeja" element={<Planeja />} />
+                  <Route path="/ciclo" element={<Ciclo />} />
+                  <Route path="/revisoes" element={<Revisoes />} />
+                  <Route path="/responde" element={<Responde />} />
+                  <Route path="/redige" element={<Redige />} />
+                  <Route path="/produtos" element={<Produtos />} />
+                  <Route path="/configuracoes" element={<Configuracoes />} />
+                  <Route path="/configuracoes/perfil" element={<Configuracoes />} />
+                  <Route path="/configuracoes/assinatura" element={<ConfiguracoesAssinatura />} />
+                  <Route path="/configuracoes/menu" element={<ConfiguracoesMenu />} />
+                  <Route path="/configuracoes/materias" element={<ConfiguracoesMaterias />} />
+                  <Route path="/configuracoes/usuarios" element={<ConfiguracoesUsuarios />} />
+                  <Route path="/configuracoes/dashboard" element={<ConfiguracoesDashboard />} />
+                  <Route path="/configuracoes/permissoes" element={<ConfiguracoesPermissoes />} />
+                  <Route path="/configuracoes/produtos" element={<ConfiguracoesProdutos />} />
+                  <Route path="/configuracoes/prompts" element={<ConfiguracoesPrompts />} />
+                  {/* Redirect unknown routes to dashboard or login */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Layout>
+            </MenuProvider>
+          </PromptProvider>
+        </ProductProvider>
+      </StudyProvider>
+    </UserSettingsProvider>
   );
 };
 
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <UserSettingsProvider>
-        <StudyProvider>
-          <ProductProvider>
-            <PromptProvider>
-              <MenuProvider>
-                <Router>
-                  <AppContent />
-                </Router>
-              </MenuProvider>
-            </PromptProvider>
-          </ProductProvider>
-        </StudyProvider>
-      </UserSettingsProvider>
+      <Router>
+        <AppContent />
+      </Router>
     </ThemeProvider>
   );
 };
