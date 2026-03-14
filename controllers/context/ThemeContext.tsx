@@ -110,24 +110,61 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [intensity, setCurrentIntensity] = useState<ThemeIntensity>('light');
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('app-theme') as ThemeColor;
-    const savedIntensity = localStorage.getItem('app-theme-intensity') as ThemeIntensity;
-    if (savedTheme) {
-      setCurrentTheme(savedTheme);
-    }
-    if (savedIntensity) {
-      setCurrentIntensity(savedIntensity);
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.id) {
+      fetch('/api/user-settings', {
+        headers: { 'x-user-id': user.id }
+      })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) {
+          if (data.theme) {
+            setCurrentTheme(data.theme);
+            localStorage.setItem('app-theme', data.theme);
+          }
+          if (data.themeIntensity) {
+            setCurrentIntensity(data.themeIntensity);
+            localStorage.setItem('app-theme-intensity', data.themeIntensity);
+          }
+        }
+      })
+      .catch(err => console.error('Failed to fetch theme from backend', err));
+    } else {
+      const savedTheme = localStorage.getItem('app-theme') as ThemeColor;
+      const savedIntensity = localStorage.getItem('app-theme-intensity') as ThemeIntensity;
+      if (savedTheme) setCurrentTheme(savedTheme);
+      if (savedIntensity) setCurrentIntensity(savedIntensity);
     }
   }, []);
 
   const setTheme = (theme: ThemeColor) => {
     setCurrentTheme(theme);
     localStorage.setItem('app-theme', theme);
+    syncWithBackend({ theme });
   };
 
   const setIntensity = (newIntensity: ThemeIntensity) => {
     setCurrentIntensity(newIntensity);
     localStorage.setItem('app-theme-intensity', newIntensity);
+    syncWithBackend({ themeIntensity: newIntensity });
+  };
+
+  const syncWithBackend = async (data: any) => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    if (user.id) {
+      try {
+        await fetch('/api/user-settings', {
+          method: 'PUT',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-user-id': user.id
+          },
+          body: JSON.stringify(data)
+        });
+      } catch (err) {
+        console.error('Failed to sync theme with backend', err);
+      }
+    }
   };
 
   return (

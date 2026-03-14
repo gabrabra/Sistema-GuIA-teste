@@ -103,7 +103,9 @@ export async function initDb() {
           theme VARCHAR(50) DEFAULT 'white',
           theme_intensity VARCHAR(50) DEFAULT 'medium',
           menu_visibility JSONB DEFAULT '{}'::jsonb,
-          dashboard_layout JSONB DEFAULT '[]'::jsonb
+          dashboard_layout JSONB DEFAULT '[]'::jsonb,
+          concurso_objetivo VARCHAR(255),
+          preferences JSONB DEFAULT '{}'::jsonb
         );
 
         CREATE TABLE IF NOT EXISTS concursos (
@@ -130,6 +132,10 @@ export async function initDb() {
         ALTER TABLE disciplinas ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         ALTER TABLE produtos ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         ALTER TABLE concursos ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
+        
+        -- Add new columns to user_settings
+        ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS concurso_objetivo VARCHAR(255);
+        ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb;
         
         -- Add status to users
         ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active';

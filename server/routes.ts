@@ -29,6 +29,76 @@ apiRouter.post('/auth/login', async (req, res) => {
   }
 });
 
+// --- User Settings ---
+apiRouter.get('/user-settings', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const result = await pool.query('SELECT * FROM user_settings WHERE user_id = $1', [userId]);
+    if (result.rows.length === 0) {
+      // Return default settings if none exist
+      return res.json({
+        userId,
+        theme: 'white',
+        themeIntensity: 'medium',
+        menuVisibility: {},
+        dashboardLayout: [],
+        concursoObjetivo: null,
+        preferences: {}
+      });
+    }
+    const row = result.rows[0];
+    res.json({
+      userId: row.user_id,
+      theme: row.theme,
+      themeIntensity: row.theme_intensity,
+      menuVisibility: row.menu_visibility,
+      dashboardLayout: row.dashboard_layout,
+      concursoObjetivo: row.concurso_objetivo,
+      preferences: row.preferences
+    });
+  } catch (err) {
+    console.error('Error in GET /user-settings:', err);
+    res.status(500).json({ error: 'Failed to fetch user settings', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.put('/user-settings', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const { theme, themeIntensity, menuVisibility, dashboardLayout, concursoObjetivo, preferences } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO user_settings (user_id, theme, theme_intensity, menu_visibility, dashboard_layout, concurso_objetivo, preferences)
+       VALUES ($1, COALESCE($2, 'white'), COALESCE($3, 'medium'), COALESCE($4, '{}'::jsonb), COALESCE($5, '[]'::jsonb), $6, COALESCE($7, '{}'::jsonb))
+       ON CONFLICT (user_id) DO UPDATE SET
+         theme = COALESCE($2, user_settings.theme),
+         theme_intensity = COALESCE($3, user_settings.theme_intensity),
+         menu_visibility = COALESCE($4, user_settings.menu_visibility),
+         dashboard_layout = COALESCE($5, user_settings.dashboard_layout),
+         concurso_objetivo = COALESCE($6, user_settings.concurso_objetivo),
+         preferences = COALESCE($7, user_settings.preferences)`,
+      [
+        userId, 
+        theme !== undefined ? theme : null, 
+        themeIntensity !== undefined ? themeIntensity : null, 
+        menuVisibility !== undefined ? JSON.stringify(menuVisibility) : null, 
+        dashboardLayout !== undefined ? JSON.stringify(dashboardLayout) : null,
+        concursoObjetivo !== undefined ? concursoObjetivo : null,
+        preferences !== undefined ? JSON.stringify(preferences) : null
+      ]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in PUT /user-settings:', err);
+    res.status(500).json({ error: 'Failed to update user settings', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // --- Roles ---
 apiRouter.get('/roles', async (req, res) => {
   try {

@@ -1,10 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useTheme, ThemeColor, ThemeIntensity } from '../../controllers/context/ThemeContext';
+import { useUserSettings } from '../../controllers/context/UserSettingsContext';
 
 export const Configuracoes: React.FC = () => {
   const { currentTheme, setTheme, intensity, setIntensity, themeClasses } = useTheme();
+  const { settings, updateSettings, isLoading } = useUserSettings();
+  
+  const [concursoObjetivo, setConcursoObjetivo] = useState(settings.concursoObjetivo || '');
+  const [pomodoroEnabled, setPomodoroEnabled] = useState(settings.preferences?.pomodoroEnabled ?? true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setConcursoObjetivo(settings.concursoObjetivo || '');
+    setPomodoroEnabled(settings.preferences?.pomodoroEnabled ?? true);
+  }, [settings]);
+
+  const handleSavePreferences = async () => {
+    setIsSaving(true);
+    await updateSettings({
+      concursoObjetivo,
+      preferences: {
+        ...settings.preferences,
+        pomodoroEnabled
+      }
+    });
+    setIsSaving(false);
+  };
 
   const themeOptions: { id: ThemeColor; name: string; color: string }[] = [
     { id: 'white', name: 'Branco', color: 'bg-white border-gray-200' },
@@ -109,17 +132,38 @@ export const Configuracoes: React.FC = () => {
 
         <Card className="p-6">
           <h2 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Preferências de Estudo</h2>
-          <div className="space-y-4">
+          <div className="space-y-6">
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Concurso Objetivo</label>
+              <input 
+                type="text" 
+                value={concursoObjetivo}
+                onChange={(e) => setConcursoObjetivo(e.target.value)}
+                className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${currentTheme === 'black' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                placeholder="Ex: Polícia Federal, TRT, INSS, etc."
+              />
+              <p className="text-sm text-gray-500 mt-1">Qual é o seu foco principal de estudos?</p>
+            </div>
+
             <div className="flex items-center justify-between">
               <div>
                 <h3 className={`font-medium ${themeClasses.text}`}>Notificações de Pomodoro</h3>
                 <p className="text-sm text-gray-500">Receber alertas quando o tempo acabar</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer" 
+                  checked={pomodoroEnabled}
+                  onChange={(e) => setPomodoroEnabled(e.target.checked)}
+                />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
+
+            <Button onClick={handleSavePreferences} disabled={isSaving}>
+              {isSaving ? 'Salvando...' : 'Salvar Preferências'}
+            </Button>
           </div>
         </Card>
 

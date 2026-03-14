@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { StudyProvider } from './controllers/context/StudyContext';
 import { ThemeProvider, useTheme } from './controllers/context/ThemeContext';
+import { UserSettingsProvider } from './controllers/context/UserSettingsContext';
 import { ProductProvider } from './controllers/context/ProductContext';
 import { PromptProvider } from './controllers/context/PromptContext';
 import { MenuProvider } from './controllers/context/MenuContext';
@@ -103,17 +104,19 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
   return (
     <ThemeProvider>
-      <StudyProvider>
-        <ProductProvider>
-          <PromptProvider>
-            <MenuProvider>
-              <Router>
-                <AppContent />
-              </Router>
-            </MenuProvider>
-          </PromptProvider>
-        </ProductProvider>
-      </StudyProvider>
+      <UserSettingsProvider>
+        <StudyProvider>
+          <ProductProvider>
+            <PromptProvider>
+              <MenuProvider>
+                <Router>
+                  <AppContent />
+                </Router>
+              </MenuProvider>
+            </PromptProvider>
+          </ProductProvider>
+        </StudyProvider>
+      </UserSettingsProvider>
     </ThemeProvider>
   );
 };
