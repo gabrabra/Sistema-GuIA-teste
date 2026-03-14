@@ -311,9 +311,8 @@ apiRouter.delete('/concursos/:id', async (req, res) => {
 
 // --- Materias ---
 apiRouter.get('/materias', async (req, res) => {
-  const userId = req.headers['x-user-id'];
   try {
-    const result = await pool.query('SELECT * FROM materias WHERE user_id = $1', [userId]);
+    const result = await pool.query('SELECT * FROM materias');
     res.json(result.rows);
   } catch (err) {
     console.error('Error in GET /materias:', err);
@@ -322,12 +321,11 @@ apiRouter.get('/materias', async (req, res) => {
 });
 
 apiRouter.post('/materias', async (req, res) => {
-  const userId = req.headers['x-user-id'];
   const { id, nome, assuntos } = req.body;
   try {
     await pool.query(
-      'INSERT INTO materias (id, user_id, nome, assuntos) VALUES ($1, $2, $3, $4)',
-      [id, userId, nome, JSON.stringify(assuntos || [])]
+      'INSERT INTO materias (id, nome, assuntos) VALUES ($1, $2, $3)',
+      [id, nome, JSON.stringify(assuntos || [])]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -337,12 +335,11 @@ apiRouter.post('/materias', async (req, res) => {
 });
 
 apiRouter.put('/materias/:id', async (req, res) => {
-  const userId = req.headers['x-user-id'];
   const { nome, assuntos } = req.body;
   try {
     await pool.query(
-      'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3 AND user_id = $4',
-      [nome, JSON.stringify(assuntos || []), req.params.id, userId]
+      'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3',
+      [nome, JSON.stringify(assuntos || []), req.params.id]
     );
     res.json({ success: true });
   } catch (err) {
@@ -352,9 +349,8 @@ apiRouter.put('/materias/:id', async (req, res) => {
 });
 
 apiRouter.delete('/materias/:id', async (req, res) => {
-  const userId = req.headers['x-user-id'];
   try {
-    await pool.query('DELETE FROM materias WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
+    await pool.query('DELETE FROM materias WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     console.error('Error in DELETE /materias/:id:', err);
@@ -482,51 +478,4 @@ apiRouter.delete('/produtos/:id', async (req, res) => {
   }
 });
 
-// --- Roles ---
-apiRouter.get('/roles', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM roles');
-    res.json(result.rows);
-  } catch (err) {
-    console.error('Error in GET /roles (duplicate):', err);
-    res.status(500).json({ error: 'Failed to fetch roles', details: err instanceof Error ? err.message : String(err) });
-  }
-});
 
-apiRouter.post('/roles', async (req, res) => {
-  const { id, name, permissions } = req.body;
-  try {
-    await pool.query(
-      'INSERT INTO roles (id, name, permissions) VALUES ($1, $2, $3)',
-      [id, name, JSON.stringify(permissions || [])]
-    );
-    res.status(201).json({ success: true });
-  } catch (err) {
-    console.error('Error in POST /roles (duplicate):', err);
-    res.status(500).json({ error: 'Failed to create role', details: err instanceof Error ? err.message : String(err) });
-  }
-});
-
-apiRouter.put('/roles/:id', async (req, res) => {
-  const { name, permissions } = req.body;
-  try {
-    await pool.query(
-      'UPDATE roles SET name = $1, permissions = $2 WHERE id = $3',
-      [name, JSON.stringify(permissions || []), req.params.id]
-    );
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Error in PUT /roles/:id (duplicate):', err);
-    res.status(500).json({ error: 'Failed to update role', details: err instanceof Error ? err.message : String(err) });
-  }
-});
-
-apiRouter.delete('/roles/:id', async (req, res) => {
-  try {
-    await pool.query('DELETE FROM roles WHERE id = $1', [req.params.id]);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Error in DELETE /roles/:id (duplicate):', err);
-    res.status(500).json({ error: 'Failed to delete role', details: err instanceof Error ? err.message : String(err) });
-  }
-});

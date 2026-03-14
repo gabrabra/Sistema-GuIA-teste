@@ -10,12 +10,15 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+import { usePermissions } from '../../../controllers/context/PermissionContext';
+
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { themeClasses } = useTheme();
   const { disciplinas, concursoSelecionado } = useStudy();
   const { menuVisibility } = useMenu();
+  const { hasPermission } = usePermissions();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
   useEffect(() => {
@@ -29,26 +32,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const hasCycle = !!concursoSelecionado || disciplinas.length > 0;
 
   const navItems = [
-    ...(menuVisibility.dashboard ? [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }] : []),
-    ...(menuVisibility.planeja ? [{ name: 'Guia Planeja', path: '/planeja', icon: Map }] : []),
-    ...(hasCycle && menuVisibility.ciclo ? [{ name: 'Ciclo de Estudos', path: '/ciclo', icon: Repeat }] : []),
-    ...(hasCycle && menuVisibility.revisoes ? [{ name: 'Revisões', path: '/revisoes', icon: CalendarCheck }] : []),
-    ...(menuVisibility.responde ? [{ name: 'Guia Responde', path: '/responde', icon: MessageSquare }] : []),
-    ...(menuVisibility.redige ? [{ name: 'Guia Redige', path: '/redige', icon: PenTool }] : []),
-    ...(menuVisibility.produtos ? [{ name: 'Produtos', path: '/produtos', icon: ShoppingBag }] : []),
+    ...(menuVisibility.dashboard && hasPermission('dash_view') ? [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }] : []),
+    ...(menuVisibility.planeja && hasPermission('plan_view') ? [{ name: 'Guia Planeja', path: '/planeja', icon: Map }] : []),
+    ...(hasCycle && menuVisibility.ciclo && hasPermission('cycle_view') ? [{ name: 'Ciclo de Estudos', path: '/ciclo', icon: Repeat }] : []),
+    ...(hasCycle && menuVisibility.revisoes && hasPermission('cycle_view') ? [{ name: 'Revisões', path: '/revisoes', icon: CalendarCheck }] : []),
+    ...(menuVisibility.responde && hasPermission('resp_view') ? [{ name: 'Guia Responde', path: '/responde', icon: MessageSquare }] : []),
+    ...(menuVisibility.redige && hasPermission('red_view') ? [{ name: 'Guia Redige', path: '/redige', icon: PenTool }] : []),
+    ...(menuVisibility.produtos && hasPermission('dash_view') ? [{ name: 'Produtos', path: '/produtos', icon: ShoppingBag }] : []),
   ];
 
   const configSubItems = [
-    { name: 'Perfil', path: '/configuracoes/perfil', icon: User },
-    { name: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard },
-    { name: 'Menu', path: '/configuracoes/menu', icon: List },
-    { name: 'Matérias & Assuntos', path: '/configuracoes/materias', icon: Book },
-    { name: 'Usuários', path: '/configuracoes/usuarios', icon: Users },
-    { name: 'Dashboard', path: '/configuracoes/dashboard', icon: Layout },
-    { name: 'Permissões', path: '/configuracoes/permissoes', icon: Shield },
-    { name: 'Produtos', path: '/configuracoes/produtos', icon: ShoppingBag },
-    { name: 'Prompts IA', path: '/configuracoes/prompts', icon: MessageSquare },
-  ];
+    { name: 'Perfil', path: '/configuracoes/perfil', icon: User, permission: 'conf_profile' },
+    { name: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard, permission: 'conf_profile' },
+    { name: 'Menu', path: '/configuracoes/menu', icon: List, permission: 'conf_perms' },
+    { name: 'Matérias & Assuntos', path: '/configuracoes/materias', icon: Book, permission: 'conf_subjects' },
+    { name: 'Usuários', path: '/configuracoes/usuarios', icon: Users, permission: 'conf_users' },
+    { name: 'Dashboard', path: '/configuracoes/dashboard', icon: Layout, permission: 'dash_view' },
+    { name: 'Permissões', path: '/configuracoes/permissoes', icon: Shield, permission: 'conf_perms' },
+    { name: 'Produtos', path: '/configuracoes/produtos', icon: ShoppingBag, permission: 'dash_view' },
+    { name: 'Prompts IA', path: '/configuracoes/prompts', icon: MessageSquare, permission: 'conf_perms' },
+  ].filter(item => hasPermission(item.permission));
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
