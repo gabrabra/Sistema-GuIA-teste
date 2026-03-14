@@ -192,7 +192,7 @@ export const Revisoes: React.FC = () => {
           </button>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
+        <div className="overflow-x-auto rounded-xl">
           <table className="w-full text-left text-sm border-collapse">
             <tbody className="divide-y divide-gray-100">
               {Object.keys(filteredGroupedTopics).length === 0 ? (
