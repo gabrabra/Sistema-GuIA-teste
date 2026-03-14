@@ -235,62 +235,59 @@ export const Ciclo: React.FC = () => {
                   className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 cursor-pointer"
                   onClick={() => toggleExpand(disc.id)}
                 >
-                  <div className="flex-1 w-full">
-                    <div className="flex justify-between items-start w-full md:block">
+                  <div className="flex-1 w-full flex justify-between items-center">
+                    <div>
                         <h4 className={`font-bold ${themeClasses.text} text-lg flex items-center gap-2`}>
                         {disc.nome}
                         {isActive && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>}
                         </h4>
-                        <div className="md:hidden text-gray-400">
+                        <p className="text-sm text-gray-500 mt-1">
+                          Meta Semanal: {formatTime(disc.horasSemanaMeta * 3600)}
+                        </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-end">
+                            <span className={`text-2xl font-mono font-bold ${isActive ? 'text-blue-600' : 'text-gray-700'}`}>
+                            {formatTimeWithSeconds(disc.horasEstudadasHoje)}
+                            </span>
+                            <span className="text-xs text-gray-400">hoje</span>
+                        </div>
+                        <div className="text-gray-400">
                             {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                         </div>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Meta Semanal: {formatTime(disc.horasSemanaMeta * 3600)}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-1">
-                     <span className="text-sm text-gray-500 md:hidden">Estudado hoje:</span>
-                     <div className="flex flex-col items-end">
-                        <span className={`text-2xl font-mono font-bold ${isActive ? 'text-blue-600' : 'text-gray-700'}`}>
-                        {formatTimeWithSeconds(disc.horasEstudadasHoje)}
-                        </span>
-                        <span className="text-xs text-gray-400 hidden md:block">hoje</span>
-                     </div>
-                  </div>
-
-                  <div className="text-gray-400 hidden md:block">
-                    {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                   </div>
                 </div>
                 
                 {isExpanded && (
                   <div className="mt-4 pt-4 border-t border-gray-100 animate-fadeIn">
-                    <div className="flex flex-wrap gap-2 mb-4 justify-end">
-                      {isActive ? (
-                        <Button variant="danger" onClick={(e) => { e.stopPropagation(); pausarCronometro(); }}>
-                          <Pause size={18} /> Pausar
+                    <div className="flex flex-wrap gap-2 mb-4 justify-between items-center">
+                      <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Total Estudado</span>
+                            <span className="text-sm font-semibold text-gray-700">{formatTime(disc.horasEstudadasTotal)}</span>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500 block mb-1">Peso</span>
+                            <span className="text-sm font-semibold text-gray-700">{disc.peso}</span>
+                          </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        {isActive ? (
+                          <Button variant="danger" onClick={(e) => { e.stopPropagation(); pausarCronometro(); }}>
+                            <Pause size={18} /> Pausar
+                          </Button>
+                        ) : (
+                          <Button variant="primary" onClick={(e) => { e.stopPropagation(); handleOpenModal('study', disc.id); }}>
+                            <Play size={18} /> Estudar
+                          </Button>
+                        )}
+                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleOpenModal('manual', disc.id); }} title="Adicionar tempo manual">
+                          <Plus size={18} />
                         </Button>
-                      ) : (
-                        <Button variant="primary" onClick={(e) => { e.stopPropagation(); handleOpenModal('study', disc.id); }}>
-                          <Play size={18} /> Estudar
-                        </Button>
-                      )}
-                      <Button variant="outline" onClick={(e) => { e.stopPropagation(); handleOpenModal('manual', disc.id); }} title="Adicionar tempo manual">
-                        <Plus size={18} />
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <span className="text-xs text-gray-500 block mb-1">Total Estudado</span>
-                          <span className="text-sm font-semibold text-gray-700">{formatTime(disc.horasEstudadasTotal)}</span>
-                        </div>
-                         <div>
-                          <span className="text-xs text-gray-500 block mb-1">Peso</span>
-                          <span className="text-sm font-semibold text-gray-700">{disc.peso}</span>
-                        </div>
+                      </div>
                     </div>
 
                     {disc.historico && disc.historico.length > 0 && (
