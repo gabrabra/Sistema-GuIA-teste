@@ -43,14 +43,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const configSubItems = [
     { name: 'Perfil', path: '/configuracoes/perfil', icon: User, permission: 'conf_profile' },
-    { name: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard, permission: 'conf_profile' },
-    { name: 'Menu', path: '/configuracoes/menu', icon: List, permission: 'conf_perms' },
+    { name: 'Assinatura', path: '/configuracoes/assinatura', icon: CreditCard, permission: 'conf_assinatura' },
+    { name: 'Menu', path: '/configuracoes/menu', icon: List, permission: 'conf_menu' },
     { name: 'Matérias & Assuntos', path: '/configuracoes/materias', icon: Book, permission: 'conf_subjects' },
     { name: 'Usuários', path: '/configuracoes/usuarios', icon: Users, permission: 'conf_users' },
-    { name: 'Dashboard', path: '/configuracoes/dashboard', icon: Layout, permission: 'dash_view' },
+    { name: 'Dashboard', path: '/configuracoes/dashboard', icon: Layout, permission: 'conf_dash' },
     { name: 'Permissões', path: '/configuracoes/permissoes', icon: Shield, permission: 'conf_perms' },
-    { name: 'Produtos', path: '/configuracoes/produtos', icon: ShoppingBag, permission: 'dash_view' },
-    { name: 'Prompts IA', path: '/configuracoes/prompts', icon: MessageSquare, permission: 'conf_perms' },
+    { name: 'Produtos', path: '/configuracoes/produtos', icon: ShoppingBag, permission: 'conf_produtos' },
+    { name: 'Prompts IA', path: '/configuracoes/prompts', icon: MessageSquare, permission: 'conf_prompts' },
   ].filter(item => hasPermission(item.permission));
 
   const handleLogout = () => {

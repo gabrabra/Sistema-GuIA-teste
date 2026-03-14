@@ -31,9 +31,14 @@ const ALL_PERMISSIONS: Permission[] = [
 
   // Configurações
   { id: 'conf_profile', name: 'Editar Perfil', description: 'Alterar dados pessoais', module: 'configuracoes' },
-  { id: 'conf_users', name: 'Gerenciar Usuários', description: 'Adicionar ou remover usuários', module: 'configuracoes' },
-  { id: 'conf_perms', name: 'Gerenciar Permissões', description: 'Alterar regras de acesso', module: 'configuracoes' },
+  { id: 'conf_assinatura', name: 'Acessar Assinatura', description: 'Gerenciar plano de assinatura', module: 'configuracoes' },
+  { id: 'conf_menu', name: 'Configurar Menu', description: 'Personalizar visibilidade do menu', module: 'configuracoes' },
   { id: 'conf_subjects', name: 'Gerenciar Matérias', description: 'Cadastrar matérias e assuntos', module: 'configuracoes' },
+  { id: 'conf_users', name: 'Gerenciar Usuários', description: 'Adicionar ou remover usuários', module: 'configuracoes' },
+  { id: 'conf_dash', name: 'Configurar Dashboard', description: 'Personalizar layout do dashboard', module: 'configuracoes' },
+  { id: 'conf_perms', name: 'Gerenciar Permissões', description: 'Alterar regras de acesso', module: 'configuracoes' },
+  { id: 'conf_produtos', name: 'Gerenciar Produtos', description: 'Cadastrar produtos', module: 'configuracoes' },
+  { id: 'conf_prompts', name: 'Configurar Prompts IA', description: 'Gerenciar prompts do sistema', module: 'configuracoes' },
 ];
 
 const INITIAL_ROLES: Role[] = [
