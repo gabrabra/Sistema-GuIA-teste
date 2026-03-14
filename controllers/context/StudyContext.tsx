@@ -42,15 +42,33 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [userId, fetchWithAuth]);
 
   const setConcursoSelecionado = useCallback((c: Concurso | null) => {
+    if (c && !c.id) {
+      c.id = crypto.randomUUID();
+    }
     setConcursoSelecionadoState(c);
     if (c && userId) {
       fetchWithAuth('/api/concursos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...c, id: c.id || crypto.randomUUID(), userId })
+        body: JSON.stringify({ ...c, userId })
       }).catch(err => console.error('Failed to save concurso', err));
     }
   }, [userId, fetchWithAuth]);
+
+  const deleteConcurso = useCallback(async () => {
+    if (concursoSelecionado?.id && userId) {
+      try {
+        await fetchWithAuth(`/api/concursos/${concursoSelecionado.id}`, {
+          method: 'DELETE'
+        });
+        setConcursoSelecionadoState(null);
+        setDisciplinas([]); // Clear associated disciplinas
+      } catch (err) {
+        console.error('Failed to delete concurso', err);
+      }
+    }
+  }, [concursoSelecionado, userId, fetchWithAuth]);
+
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
   const [horasSemanaMeta, setHorasSemanaMeta] = useState<number>(0); 
@@ -277,7 +295,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     if (updatedMateria) {
       try {
-        const response = await fetch(`/api/materias/${id}`, {
+        const response = await fetchWithAuth(`/api/materias/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedMateria)
@@ -287,19 +305,19 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         console.error('Failed to update materia', err);
       }
     }
-  }, []);
+  }, [fetchWithAuth]);
 
   const deleteMateria = useCallback(async (id: string) => {
     setMaterias(prev => prev.filter(m => m.id !== id));
     try {
-      const response = await fetch(`/api/materias/${id}`, {
+      const response = await fetchWithAuth(`/api/materias/${id}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete materia');
     } catch (err) {
       console.error('Failed to delete materia', err);
     }
-  }, []);
+  }, [fetchWithAuth]);
 
   const addAssunto = useCallback(async (materiaId: string, nome: string) => {
     let updatedMateria: Materia | undefined;
@@ -320,7 +338,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     if (updatedMateria) {
       try {
-        const response = await fetch(`/api/materias/${materiaId}`, {
+        const response = await fetchWithAuth(`/api/materias/${materiaId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedMateria)
@@ -330,7 +348,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         console.error('Failed to add assunto', err);
       }
     }
-  }, []);
+  }, [fetchWithAuth]);
 
   const updateAssunto = useCallback(async (materiaId: string, assuntoId: string, updates: Partial<Materia['assuntos'][0]>) => {
     let updatedMateria: Materia | undefined;
@@ -352,7 +370,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     if (updatedMateria) {
       try {
-        const response = await fetch(`/api/materias/${materiaId}`, {
+        const response = await fetchWithAuth(`/api/materias/${materiaId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedMateria)
@@ -363,7 +381,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Rollback or notify user
       }
     }
-  }, []);
+  }, [fetchWithAuth]);
 
   const deleteAssunto = useCallback(async (materiaId: string, assuntoId: string) => {
     let updatedMateria: Materia | undefined;
@@ -385,7 +403,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     if (updatedMateria) {
       try {
-        const response = await fetch(`/api/materias/${materiaId}`, {
+        const response = await fetchWithAuth(`/api/materias/${materiaId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedMateria)
@@ -396,22 +414,22 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Rollback or notify user
       }
     }
-  }, []);
+  }, [fetchWithAuth]);
 
   const updateDisciplinas = useCallback(async (newDisciplinas: Disciplina[]) => {
     setDisciplinas(newDisciplinas);
     try {
-      const existingRes = await fetch('/api/disciplinas');
+      const existingRes = await fetchWithAuth('/api/disciplinas');
       const existing = await existingRes.json();
       
       if (Array.isArray(existing)) {
         for (const d of existing) {
-          await fetch(`/api/disciplinas/${d.id}`, { method: 'DELETE' });
+          await fetchWithAuth(`/api/disciplinas/${d.id}`, { method: 'DELETE' });
         }
       }
       
       for (const d of newDisciplinas) {
-        await fetch('/api/disciplinas', {
+        await fetchWithAuth('/api/disciplinas', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(d)
@@ -420,22 +438,22 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (err) {
       console.error('Failed to sync disciplinas', err);
     }
-  }, []);
+  }, [fetchWithAuth]);
 
   const updateMaterias = useCallback(async (newMaterias: Materia[]) => {
     setMaterias(newMaterias);
     try {
-      const existingRes = await fetch('/api/materias');
+      const existingRes = await fetchWithAuth('/api/materias');
       const existing = await existingRes.json();
       
       if (Array.isArray(existing)) {
         for (const m of existing) {
-          await fetch(`/api/materias/${m.id}`, { method: 'DELETE' });
+          await fetchWithAuth(`/api/materias/${m.id}`, { method: 'DELETE' });
         }
       }
       
       for (const m of newMaterias) {
-        await fetch('/api/materias', {
+        await fetchWithAuth('/api/materias', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(m)
@@ -444,7 +462,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     } catch (err) {
       console.error('Failed to sync materias', err);
     }
-  }, []);
+  }, [fetchWithAuth]);
 
   return (
     <StudyContext.Provider value={{
@@ -460,6 +478,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       activeTopic,
       currentSessionSeconds,
       setConcursoSelecionado,
+      deleteConcurso,
       setDisciplinas: updateDisciplinas,
       setMaterias: updateMaterias,
       addMateria,

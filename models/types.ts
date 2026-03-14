@@ -82,6 +82,7 @@ export interface StudyContextType {
 
   // Actions
   setConcursoSelecionado: (c: Concurso) => void;
+  deleteConcurso: () => void;
   setDisciplinas: (d: Disciplina[]) => void;
   setMaterias: (m: Materia[]) => void;
   addMateria: (nome: string, id?: string) => void;

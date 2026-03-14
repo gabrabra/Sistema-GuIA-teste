@@ -296,6 +296,19 @@ apiRouter.post('/concursos', async (req, res) => {
   }
 });
 
+apiRouter.delete('/concursos/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  try {
+    await pool.query('DELETE FROM concursos WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
+    // Also delete associated disciplinas to start fresh
+    await pool.query('DELETE FROM disciplinas WHERE user_id = $1', [userId]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in DELETE /concursos/:id:', err);
+    res.status(500).json({ error: 'Failed to delete concurso', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // --- Materias ---
 apiRouter.get('/materias', async (req, res) => {
   try {

@@ -3,15 +3,16 @@ import { useStudy } from '../../controllers/context/StudyContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { Check, ChevronLeft, ChevronRight, Save, Plus, Settings, Layers, FileText, Upload } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Save, Plus, Settings, Layers, FileText, Upload, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
 
 export const Planeja: React.FC = () => {
-  const { setConcursoSelecionado, setDisciplinas, setMetaSemanal, materias } = useStudy();
+  const { concursoSelecionado, deleteConcurso, setConcursoSelecionado, setDisciplinas, setMetaSemanal, materias } = useStudy();
   const navigate = useNavigate();
   const { themeClasses } = useTheme();
   const [step, setStep] = useState(1);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
   const [concurso, setConcurso] = useState({ nome: '', possuiEdital: true, dataProva: '' });
@@ -22,6 +23,50 @@ export const Planeja: React.FC = () => {
   // Edital Modal State
   const [isEditalModalOpen, setIsEditalModalOpen] = useState(false);
   const [editalContent, setEditalContent] = useState('');
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    await deleteConcurso();
+    setIsDeleting(false);
+    setStep(1);
+    setConcurso({ nome: '', possuiEdital: true, dataProva: '' });
+    setSelectedMateriaIds([]);
+    setDisciplineConfig({});
+    setAvailability({ totalHoras: 20, dias: [] });
+  };
+
+  if (concursoSelecionado && step === 1 && !isDeleting) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className={`text-2xl font-bold ${themeClasses.text}`}>Guia Planeja</h2>
+        </div>
+        <Card className="p-8 text-center space-y-6">
+          <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Layers size={32} />
+          </div>
+          <h3 className={`text-2xl font-semibold ${themeClasses.text}`}>Você já possui um planejamento ativo</h3>
+          <p className="text-gray-500 max-w-md mx-auto">
+            Atualmente você está estudando para o concurso <strong>{concursoSelecionado.nome}</strong>. 
+            Deseja excluir este planejamento e começar um novo? Esta ação apagará seu ciclo atual.
+          </p>
+          <div className="flex gap-4 justify-center pt-4">
+            <Button variant="outline" onClick={() => navigate('/')}>
+              Voltar ao Dashboard
+            </Button>
+            <Button 
+              variant="danger" 
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white border-transparent"
+            >
+              <Trash2 size={18} className="mr-2" />
+              Excluir e Começar Novo
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   const handleNext = () => setStep(prev => prev + 1);
   const handleBack = () => setStep(prev => prev - 1);
