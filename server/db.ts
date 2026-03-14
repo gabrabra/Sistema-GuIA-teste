@@ -3,17 +3,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const pool = new Pool(
-  process.env.DATABASE_URL
-    ? { connectionString: process.env.DATABASE_URL }
-    : {
-        host: process.env.DB_HOST || 'localhost',
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
-        port: parseInt(process.env.DB_PORT || '5432'),
-      }
-);
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL || 'postgres://sistemaguiadm:973574BBA@evolution_sistema-guia-db:5432/sistema-guia-db?sslmode=disable'
+});
 
 export async function initDb() {
   try {
