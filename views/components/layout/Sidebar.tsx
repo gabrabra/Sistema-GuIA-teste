@@ -14,7 +14,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { themeClasses } = useTheme();
-  const { disciplinas } = useStudy();
+  const { disciplinas, concursoSelecionado } = useStudy();
   const { menuVisibility } = useMenu();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
 
@@ -26,7 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     onClose();
   }, [location.pathname]);
   
-  const hasCycle = disciplinas.length > 0;
+  const hasCycle = !!concursoSelecionado || disciplinas.length > 0;
 
   const navItems = [
     ...(menuVisibility.dashboard ? [{ name: 'Dashboard', path: '/', icon: LayoutDashboard }] : []),

@@ -68,7 +68,17 @@ export const Planeja: React.FC = () => {
     );
   }
 
-  const handleNext = () => setStep(prev => prev + 1);
+  const handleNext = () => {
+    if (step === 1 && !concurso.nome.trim()) {
+      alert('Por favor, informe o nome do concurso.');
+      return;
+    }
+    if (step === 2 && selectedMateriaIds.length === 0) {
+      alert('Por favor, selecione pelo menos uma matéria.');
+      return;
+    }
+    setStep(prev => prev + 1);
+  };
   const handleBack = () => setStep(prev => prev - 1);
 
   const toggleMateria = (id: string) => {
@@ -84,6 +94,11 @@ export const Planeja: React.FC = () => {
   };
 
   const handleFinish = () => {
+    if (availability.dias.length === 0 || availability.totalHoras <= 0) {
+      alert('Por favor, defina sua disponibilidade semanal.');
+      return;
+    }
+
     setConcursoSelecionado({
       nome: concurso.nome,
       possuiEdital: concurso.possuiEdital,
