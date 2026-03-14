@@ -50,7 +50,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }
           </button>
         </div>
         
-        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+        <div className="p-6 overflow-visible flex-1">
           {children}
         </div>
       </div>
