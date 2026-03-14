@@ -40,7 +40,7 @@ export const Configuracoes: React.FC = () => {
   ];
 
   const intensityOptions: { id: ThemeIntensity; name: string }[] = [
-    { id: 'light', name: 'Clar' },
+    { id: 'light', name: 'Claro' },
     { id: 'medium', name: 'Médio' },
     { id: 'dark', name: 'Forte' },
   ];
