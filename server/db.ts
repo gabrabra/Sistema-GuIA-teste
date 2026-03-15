@@ -58,6 +58,17 @@ export async function initDb() {
           permissions JSONB DEFAULT '[]'::jsonb
         );
 
+        CREATE TABLE IF NOT EXISTS ai_profiles (
+          id VARCHAR(255) PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          responde_prompts_per_day INTEGER DEFAULT 10,
+          responde_max_chars INTEGER DEFAULT 500,
+          redige_prompts_per_day INTEGER DEFAULT 5,
+          redige_max_chars INTEGER DEFAULT 1000,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS users (
           id VARCHAR(255) PRIMARY KEY,
           name VARCHAR(255) NOT NULL,
@@ -139,6 +150,7 @@ export async function initDb() {
         
         -- Add status to users
         ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active';
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_profile_id VARCHAR(255) REFERENCES ai_profiles(id) ON DELETE SET NULL;
 
         -- Insert default roles
         INSERT INTO roles (id, name, permissions) VALUES 
@@ -147,9 +159,14 @@ export async function initDb() {
           ('editor', 'Editor', '[]'::jsonb)
         ON CONFLICT (id) DO NOTHING;
 
+        -- Insert default AI profile
+        INSERT INTO ai_profiles (id, name, responde_prompts_per_day, responde_max_chars, redige_prompts_per_day, redige_max_chars) VALUES
+          ('default-profile', 'Básico', 10, 500, 5, 1000)
+        ON CONFLICT (id) DO NOTHING;
+
         -- Insert default user for login validation
-        INSERT INTO users (id, name, email, password_hash, role_id, status) VALUES
-          ('default-user', 'Lua Lima', 'lua.lima@recife.pe.gov.br', 'admin123', 'admin', 'active')
+        INSERT INTO users (id, name, email, password_hash, role_id, status, ai_profile_id) VALUES
+          ('default-user', 'Lua Lima', 'lua.lima@recife.pe.gov.br', 'admin123', 'admin', 'active', 'default-profile')
         ON CONFLICT (email) DO NOTHING;
       `);
       console.log('Database tables verified/created successfully.');

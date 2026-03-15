@@ -2,41 +2,48 @@ import React, { useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../../controllers/context/ThemeContext';
+import { useAIProfile } from '../../controllers/context/AIProfileContext';
 import { AIProfile } from '../../models/types';
 
 export const ConfiguracoesAI: React.FC = () => {
   const { themeClasses } = useTheme();
-  const [profiles, setProfiles] = useState<AIProfile[]>([
-    { 
-      id: '1', 
-      name: 'Básico', 
-      responde: { promptsPerDay: 10, maxCharactersPerPrompt: 500 },
-      redige: { promptsPerDay: 5, maxCharactersPerPrompt: 1000 }
-    },
-  ]);
+  const { profiles, addProfile, deleteProfile, isLoading } = useAIProfile();
+  
   const [newProfile, setNewProfile] = useState({ 
     name: '', 
     respondePrompts: 0, respondeChars: 0,
     redigePrompts: 0, redigeChars: 0
   });
 
-  const handleAddProfile = () => {
+  const handleAddProfile = async () => {
     if (newProfile.name && newProfile.respondePrompts > 0 && newProfile.respondeChars > 0 && newProfile.redigePrompts > 0 && newProfile.redigeChars > 0) {
-      setProfiles([...profiles, { 
-        id: crypto.randomUUID(), 
-        name: newProfile.name,
-        responde: { promptsPerDay: newProfile.respondePrompts, maxCharactersPerPrompt: newProfile.respondeChars },
-        redige: { promptsPerDay: newProfile.redigePrompts, maxCharactersPerPrompt: newProfile.redigeChars }
-      }]);
-      setNewProfile({ name: '', respondePrompts: 0, respondeChars: 0, redigePrompts: 0, redigeChars: 0 });
+      try {
+        await addProfile({ 
+          id: crypto.randomUUID(), 
+          name: newProfile.name,
+          responde: { promptsPerDay: newProfile.respondePrompts, maxCharactersPerPrompt: newProfile.respondeChars },
+          redige: { promptsPerDay: newProfile.redigePrompts, maxCharactersPerPrompt: newProfile.redigeChars }
+        });
+        setNewProfile({ name: '', respondePrompts: 0, respondeChars: 0, redigePrompts: 0, redigeChars: 0 });
+      } catch (error) {
+        console.error('Erro ao adicionar perfil', error);
+      }
     } else {
-      alert('Preencha todos os campos corretamente');
+      console.warn('Preencha todos os campos corretamente');
     }
   };
 
-  const handleDeleteProfile = (id: string) => {
-    setProfiles(profiles.filter(p => p.id !== id));
+  const handleDeleteProfile = async (id: string) => {
+    try {
+      await deleteProfile(id);
+    } catch (error) {
+      console.error('Erro ao excluir perfil', error);
+    }
   };
+
+  if (isLoading) {
+    return <div className="p-8 text-center">Carregando perfis...</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
