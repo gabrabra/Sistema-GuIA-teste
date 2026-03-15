@@ -6,7 +6,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 
 export const Revisoes: React.FC = () => {
-  const { materias, updateAssunto, deleteAssunto } = useStudy();
+  const { materias, updateAssunto, deleteAssunto, isTimerRunning, activeTopic } = useStudy();
   const { themeClasses } = useTheme();
   const [filter, setFilter] = useState<'todos' | 'pendente' | 'atrasado'>('todos');
 
@@ -64,8 +64,11 @@ export const Revisoes: React.FC = () => {
     })
   );
 
+  // Filter topics to show only those that have been started
+  const topicsToDisplay = allTopics.filter(t => t.dataEstudo);
+
   // Group topics by materia
-  const groupedTopics = allTopics.reduce((acc: Record<string, typeof allTopics>, topic) => {
+  const groupedTopics = topicsToDisplay.reduce((acc: Record<string, typeof allTopics>, topic) => {
     if (!acc[topic.materiaNome]) {
       acc[topic.materiaNome] = [];
     }
@@ -82,7 +85,7 @@ export const Revisoes: React.FC = () => {
     }));
   };
 
-  const filteredTopics = allTopics.filter(topic => {
+  const filteredTopics = topicsToDisplay.filter(topic => {
     if (filter === 'todos') return true;
     if (filter === 'pendente') return topic.revisionStatus === 'Para hoje';
     if (filter === 'atrasado') return topic.revisionStatus === 'Atrasado';
