@@ -76,6 +76,7 @@ export async function initDb() {
           password_hash VARCHAR(255) NOT NULL,
           role_id VARCHAR(255) REFERENCES roles(id),
           status VARCHAR(50) DEFAULT 'active',
+          ai_profile_id VARCHAR(255) REFERENCES ai_profiles(id) ON DELETE SET NULL,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
