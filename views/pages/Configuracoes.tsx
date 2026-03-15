@@ -169,12 +169,6 @@ export const Configuracoes: React.FC = () => {
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h2 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Configurações de IA</h2>
-          <p className="text-sm text-gray-500 mb-4">Gerencie perfis de uso da IA e limites.</p>
-          <Button onClick={() => navigate('/configuracoes/ai')}>Gerenciar Perfis de IA</Button>
-        </Card>
-
         <Card className="p-6 border-red-100">
           <h2 className="text-xl font-semibold text-red-600 mb-4">Zona de Perigo</h2>
           <p className="text-sm text-gray-500 mb-4">Ações irreversíveis relacionadas à sua conta.</p>

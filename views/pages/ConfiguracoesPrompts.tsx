@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -27,6 +28,7 @@ const ICON_OPTIONS = [
 ];
 
 export const ConfiguracoesPrompts: React.FC = () => {
+  const navigate = useNavigate();
   const { themeClasses } = useTheme();
   const { respondePrompts, redigePrompts, updateRespondePrompts, updateRedigePrompts } = usePrompts();
   
@@ -105,9 +107,14 @@ export const ConfiguracoesPrompts: React.FC = () => {
           <h2 className={`text-2xl font-bold ${themeClasses.text}`}>Configurar Prompts IA</h2>
           <p className="text-gray-500">Personalize os botões de ajuda do Guia Responde e Guia Redige.</p>
         </div>
-        <Button onClick={() => handleOpenModal()} variant="primary">
-          <Plus size={18} className="mr-2" /> Novo Prompt
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/configuracoes/ai')} variant="outline">
+            Gerenciar Perfis de IA
+          </Button>
+          <Button onClick={() => handleOpenModal()} variant="primary">
+            <Plus size={18} className="mr-2" /> Novo Prompt
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-2 border-b border-gray-200">
