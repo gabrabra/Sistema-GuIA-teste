@@ -14,8 +14,14 @@ export interface Role {
 export interface AIProfile {
   id: string;
   name: string;
-  promptsPerDay: number;
-  maxCharactersPerPrompt: number;
+  responde: {
+    promptsPerDay: number;
+    maxCharactersPerPrompt: number;
+  };
+  redige: {
+    promptsPerDay: number;
+    maxCharactersPerPrompt: number;
+  };
 }
 
 export interface User {

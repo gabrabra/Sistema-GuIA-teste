@@ -6,6 +6,7 @@ import { ThemeProvider, useTheme } from './controllers/context/ThemeContext';
 import { UserSettingsProvider } from './controllers/context/UserSettingsContext';
 import { ProductProvider } from './controllers/context/ProductContext';
 import { PromptProvider } from './controllers/context/PromptContext';
+import { AIProfileProvider } from './controllers/context/AIProfileContext';
 import { MenuProvider } from './controllers/context/MenuContext';
 import { Sidebar } from './views/components/layout/Sidebar';
 import { Header } from './views/components/layout/Header';
@@ -79,38 +80,40 @@ const AppContent: React.FC = () => {
   return (
     <PermissionProvider>
       <UserSettingsProvider>
-        <StudyProvider>
-          <ProductProvider>
-            <PromptProvider>
-              <MenuProvider>
-                <Layout>
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/planeja" element={<Planeja />} />
-                    <Route path="/ciclo" element={<Ciclo />} />
-                    <Route path="/revisoes" element={<Revisoes />} />
-                    <Route path="/responde" element={<Responde />} />
-                    <Route path="/redige" element={<Redige />} />
-                    <Route path="/produtos" element={<Produtos />} />
-                    <Route path="/configuracoes" element={<Configuracoes />} />
-                    <Route path="/configuracoes/perfil" element={<Configuracoes />} />
-                    <Route path="/configuracoes/assinatura" element={<ConfiguracoesAssinatura />} />
-                    <Route path="/configuracoes/menu" element={<ConfiguracoesMenu />} />
-                    <Route path="/configuracoes/materias" element={<ConfiguracoesMaterias />} />
-                    <Route path="/configuracoes/usuarios" element={<ConfiguracoesUsuarios />} />
-                    <Route path="/configuracoes/dashboard" element={<ConfiguracoesDashboard />} />
-                    <Route path="/configuracoes/permissoes" element={<ConfiguracoesPermissoes />} />
-                    <Route path="/configuracoes/produtos" element={<ConfiguracoesProdutos />} />
-                    <Route path="/configuracoes/prompts" element={<ConfiguracoesPrompts />} />
-                    <Route path="/configuracoes/ai" element={<ConfiguracoesAI />} />
-                    {/* Redirect unknown routes to dashboard or login */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-                </Layout>
-              </MenuProvider>
-            </PromptProvider>
-          </ProductProvider>
-        </StudyProvider>
+        <AIProfileProvider>
+          <StudyProvider>
+            <ProductProvider>
+              <PromptProvider>
+                <MenuProvider>
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/planeja" element={<Planeja />} />
+                      <Route path="/ciclo" element={<Ciclo />} />
+                      <Route path="/revisoes" element={<Revisoes />} />
+                      <Route path="/responde" element={<Responde />} />
+                      <Route path="/redige" element={<Redige />} />
+                      <Route path="/produtos" element={<Produtos />} />
+                      <Route path="/configuracoes" element={<Configuracoes />} />
+                      <Route path="/configuracoes/perfil" element={<Configuracoes />} />
+                      <Route path="/configuracoes/assinatura" element={<ConfiguracoesAssinatura />} />
+                      <Route path="/configuracoes/menu" element={<ConfiguracoesMenu />} />
+                      <Route path="/configuracoes/materias" element={<ConfiguracoesMaterias />} />
+                      <Route path="/configuracoes/usuarios" element={<ConfiguracoesUsuarios />} />
+                      <Route path="/configuracoes/dashboard" element={<ConfiguracoesDashboard />} />
+                      <Route path="/configuracoes/permissoes" element={<ConfiguracoesPermissoes />} />
+                      <Route path="/configuracoes/produtos" element={<ConfiguracoesProdutos />} />
+                      <Route path="/configuracoes/prompts" element={<ConfiguracoesPrompts />} />
+                      <Route path="/configuracoes/ai" element={<ConfiguracoesAI />} />
+                      {/* Redirect unknown routes to dashboard or login */}
+                      <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                  </Layout>
+                </MenuProvider>
+              </PromptProvider>
+            </ProductProvider>
+          </StudyProvider>
+        </AIProfileProvider>
       </UserSettingsProvider>
     </PermissionProvider>
   );

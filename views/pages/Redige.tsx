@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { usePrompts } from '../../controllers/context/PromptContext';
+import { useAIProfile } from '../../controllers/context/AIProfileContext';
 import * as Icons from 'lucide-react';
 import { 
   PenTool, Sparkles, Eraser, AlignLeft, Maximize2, Minimize2, 
@@ -9,6 +10,11 @@ import {
 
 export const Redige: React.FC = () => {
   const { redigePrompts } = usePrompts();
+  const { getUserProfile } = useAIProfile();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const profile = getUserProfile(user.aiProfileId);
+  const maxChars = profile?.redige.maxCharactersPerPrompt || 1000;
+
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -125,18 +131,24 @@ export const Redige: React.FC = () => {
       <div className="bg-white p-2 rounded-3xl border-2 border-blue-100 focus-within:border-blue-300 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm shrink-0">
         <textarea
           value={input || ''}
-          onChange={e => setInput(e.target.value)}
+          onChange={e => {
+            if (e.target.value.length <= maxChars) {
+              setInput(e.target.value);
+            }
+          }}
           onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleSend();
             }
           }}
-          placeholder="Cole seu texto aqui para correção ou peça ajuda para escrever..."
+          placeholder={`Cole seu texto aqui. Limite: ${maxChars} caracteres.`}
           className="w-full p-3 max-h-32 bg-transparent border-none outline-none resize-none text-gray-700 placeholder-gray-400"
           rows={2}
+          maxLength={maxChars}
         />
         <div className="flex justify-between items-center px-2 pb-1">
+          <span className="text-xs text-gray-400">{input.length}/{maxChars}</span>
           <button className="text-gray-400 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors">
             <Paperclip size={20} />
           </button>

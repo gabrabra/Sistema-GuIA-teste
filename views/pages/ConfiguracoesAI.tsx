@@ -7,14 +7,28 @@ import { AIProfile } from '../../models/types';
 export const ConfiguracoesAI: React.FC = () => {
   const { themeClasses } = useTheme();
   const [profiles, setProfiles] = useState<AIProfile[]>([
-    { id: '1', name: 'Básico', promptsPerDay: 10, maxCharactersPerPrompt: 500 },
+    { 
+      id: '1', 
+      name: 'Básico', 
+      responde: { promptsPerDay: 10, maxCharactersPerPrompt: 500 },
+      redige: { promptsPerDay: 5, maxCharactersPerPrompt: 1000 }
+    },
   ]);
-  const [newProfile, setNewProfile] = useState({ name: '', promptsPerDay: 0, maxCharactersPerPrompt: 0 });
+  const [newProfile, setNewProfile] = useState({ 
+    name: '', 
+    respondePrompts: 0, respondeChars: 0,
+    redigePrompts: 0, redigeChars: 0
+  });
 
   const handleAddProfile = () => {
-    if (newProfile.name && newProfile.promptsPerDay > 0 && newProfile.maxCharactersPerPrompt > 0) {
-      setProfiles([...profiles, { ...newProfile, id: crypto.randomUUID() }]);
-      setNewProfile({ name: '', promptsPerDay: 0, maxCharactersPerPrompt: 0 });
+    if (newProfile.name && newProfile.respondePrompts > 0 && newProfile.respondeChars > 0 && newProfile.redigePrompts > 0 && newProfile.redigeChars > 0) {
+      setProfiles([...profiles, { 
+        id: crypto.randomUUID(), 
+        name: newProfile.name,
+        responde: { promptsPerDay: newProfile.respondePrompts, maxCharactersPerPrompt: newProfile.respondeChars },
+        redige: { promptsPerDay: newProfile.redigePrompts, maxCharactersPerPrompt: newProfile.redigeChars }
+      }]);
+      setNewProfile({ name: '', respondePrompts: 0, respondeChars: 0, redigePrompts: 0, redigeChars: 0 });
     } else {
       alert('Preencha todos os campos corretamente');
     }
@@ -39,23 +53,43 @@ export const ConfiguracoesAI: React.FC = () => {
             placeholder="Nome do Perfil"
             value={newProfile.name}
             onChange={(e) => setNewProfile({...newProfile, name: e.target.value})}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-2 border rounded-lg md:col-span-2"
           />
-          <input 
-            type="number" 
-            placeholder="Prompts por dia"
-            value={newProfile.promptsPerDay || ''}
-            onChange={(e) => setNewProfile({...newProfile, promptsPerDay: parseInt(e.target.value)})}
-            className="px-4 py-2 border rounded-lg"
-          />
-          <input 
-            type="number" 
-            placeholder="Caracteres por prompt"
-            value={newProfile.maxCharactersPerPrompt || ''}
-            onChange={(e) => setNewProfile({...newProfile, maxCharactersPerPrompt: parseInt(e.target.value)})}
-            className="px-4 py-2 border rounded-lg"
-          />
-          <Button onClick={handleAddProfile}>Adicionar Perfil</Button>
+          <div className="p-4 border rounded-lg">
+            <h3 className="font-bold mb-2">Guia Responde</h3>
+            <input 
+              type="number" 
+              placeholder="Prompts/dia"
+              value={newProfile.respondePrompts || ''}
+              onChange={(e) => setNewProfile({...newProfile, respondePrompts: parseInt(e.target.value)})}
+              className="w-full px-4 py-2 border rounded-lg mb-2"
+            />
+            <input 
+              type="number" 
+              placeholder="Caracteres/prompt"
+              value={newProfile.respondeChars || ''}
+              onChange={(e) => setNewProfile({...newProfile, respondeChars: parseInt(e.target.value)})}
+              className="w-full px-4 py-2 border rounded-lg"
+            />
+          </div>
+          <div className="p-4 border rounded-lg">
+            <h3 className="font-bold mb-2">Guia Redige</h3>
+            <input 
+              type="number" 
+              placeholder="Prompts/dia"
+              value={newProfile.redigePrompts || ''}
+              onChange={(e) => setNewProfile({...newProfile, redigePrompts: parseInt(e.target.value)})}
+              className="w-full px-4 py-2 border rounded-lg mb-2"
+            />
+            <input 
+              type="number" 
+              placeholder="Caracteres/prompt"
+              value={newProfile.redigeChars || ''}
+              onChange={(e) => setNewProfile({...newProfile, redigeChars: parseInt(e.target.value)})}
+              className="w-full px-4 py-2 border rounded-lg"
+            />
+          </div>
+          <Button onClick={handleAddProfile} className="md:col-span-2">Adicionar Perfil</Button>
         </div>
       </Card>
 
@@ -66,7 +100,12 @@ export const ConfiguracoesAI: React.FC = () => {
             <div key={profile.id} className="flex justify-between items-center p-4 border rounded-lg">
               <div>
                 <h3 className="font-bold">{profile.name}</h3>
-                <p className="text-sm text-gray-500">{profile.promptsPerDay} prompts/dia, {profile.maxCharactersPerPrompt} caracteres/prompt</p>
+                <p className="text-sm text-gray-500">
+                  Responde: {profile.responde.promptsPerDay} prompts/dia, {profile.responde.maxCharactersPerPrompt} chars/prompt
+                </p>
+                <p className="text-sm text-gray-500">
+                  Redige: {profile.redige.promptsPerDay} prompts/dia, {profile.redige.maxCharactersPerPrompt} chars/prompt
+                </p>
               </div>
               <Button variant="danger" onClick={() => handleDeleteProfile(profile.id)}>Excluir</Button>
             </div>

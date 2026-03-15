@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { usePrompts } from '../../controllers/context/PromptContext';
+import { useAIProfile } from '../../controllers/context/AIProfileContext';
 import * as Icons from 'lucide-react';
 import { 
   Send, Sparkles, BookOpen, Baby, Brain, Table2, Languages, 
@@ -10,6 +11,11 @@ import {
 
 export const Responde: React.FC = () => {
   const { respondePrompts } = usePrompts();
+  const { getUserProfile } = useAIProfile();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const profile = getUserProfile(user.aiProfileId);
+  const maxChars = profile?.responde.maxCharactersPerPrompt || 1000;
+
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -126,18 +132,24 @@ export const Responde: React.FC = () => {
       <div className="bg-white p-2 rounded-3xl border-2 border-purple-100 focus-within:border-purple-300 focus-within:ring-4 focus-within:ring-purple-50 transition-all shadow-sm shrink-0">
         <textarea
           value={input || ''}
-          onChange={e => setInput(e.target.value)}
+          onChange={e => {
+            if (e.target.value.length <= maxChars) {
+              setInput(e.target.value);
+            }
+          }}
           onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleSend();
             }
           }}
-          placeholder="Posso te ajudar a elaborar questão inédita, responder uma existente ou explicar melhor uma questão."
+          placeholder={`Posso te ajudar. Limite: ${maxChars} caracteres.`}
           className="w-full p-3 max-h-32 bg-transparent border-none outline-none resize-none text-gray-700 placeholder-gray-400"
           rows={2}
+          maxLength={maxChars}
         />
         <div className="flex justify-between items-center px-2 pb-1">
+          <span className="text-xs text-gray-400">{input.length}/{maxChars}</span>
           <button className="text-gray-400 hover:text-purple-600 p-2 rounded-full hover:bg-purple-50 transition-colors">
             <Paperclip size={20} />
           </button>
