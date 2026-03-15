@@ -85,8 +85,37 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   useEffect(() => {
     fetchWithAuth('/api/disciplinas')
       .then(res => res.ok ? res.json() : [])
-      .then(data => {
-        if (Array.isArray(data)) setDisciplinas(data);
+      .then(async (data) => {
+        if (Array.isArray(data)) {
+          const now = new Date();
+          let needsUpdate = false;
+          const updatedDisciplinas = data.map(d => {
+            if (d.horasEstudadasHoje > 0 && d.historico && d.historico.length > 0) {
+              const lastSession = new Date(d.historico[d.historico.length - 1].data);
+              const diffInHours = (now.getTime() - lastSession.getTime()) / (1000 * 60 * 60);
+              if (diffInHours >= 24) {
+                needsUpdate = true;
+                return { ...d, horasEstudadasHoje: 0 };
+              }
+            }
+            return d;
+          });
+          
+          const newTotalHorasHoje = updatedDisciplinas.reduce((sum, d) => sum + d.horasEstudadasHoje, 0);
+          setHorasEstudadasHoje(newTotalHorasHoje);
+          setDisciplinas(updatedDisciplinas);
+          
+          if (needsUpdate) {
+            // Sync updated disciplines back to the server
+            for (const d of updatedDisciplinas) {
+              await fetchWithAuth(`/api/disciplinas/${d.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(d)
+              });
+            }
+          }
+        }
       })
       .catch(err => console.error('Failed to fetch disciplinas', err));
 
