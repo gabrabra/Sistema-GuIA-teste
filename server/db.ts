@@ -7,11 +7,12 @@ export const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgres://sistemaguiadm:973574BBA@evolution_sistema-guia-db:5432/sistema-guia-db?sslmode=disable'
 });
 
-export async function initDb() {
-  try {
-    const client = await pool.connect();
+export async function initDb(retries = 5, delay = 5000) {
+  for (let i = 0; i < retries; i++) {
     try {
-      await client.query(`
+      const client = await pool.connect();
+      try {
+        await client.query(`
         CREATE TABLE IF NOT EXISTS prompts (
           id VARCHAR(255) PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
@@ -171,11 +172,17 @@ export async function initDb() {
         ON CONFLICT (email) DO NOTHING;
       `);
       console.log('Database tables verified/created successfully.');
+      return; // Success, exit the retry loop
     } finally {
       client.release();
     }
   } catch (err) {
-    console.error('Error initializing database connection or tables:', err);
-    throw err;
+    console.error(`Error initializing database connection or tables (attempt ${i + 1}/${retries}):`, err);
+    if (i === retries - 1) {
+      throw err; // Throw on last attempt
+    }
+    console.log(`Retrying in ${delay / 1000} seconds...`);
+    await new Promise(resolve => setTimeout(resolve, delay));
   }
+}
 }
