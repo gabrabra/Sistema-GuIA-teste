@@ -151,7 +151,7 @@ apiRouter.delete('/roles/:id', async (req, res) => {
 // --- Users ---
 apiRouter.get('/users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, name, email, role_id as "roleId", status, created_at as "createdAt" FROM users');
+    const result = await pool.query('SELECT id, name, email, role_id as "roleId", status, created_at as "createdAt", ai_profile_id as "aiProfileId" FROM users');
     res.json(result.rows);
   } catch (err) {
     console.error('Error in GET /users:', err);
@@ -160,12 +160,12 @@ apiRouter.get('/users', async (req, res) => {
 });
 
 apiRouter.post('/users', async (req, res) => {
-  const { id, name, email, roleId, status, createdAt } = req.body;
+  const { id, name, email, roleId, status, createdAt, aiProfileId } = req.body;
   try {
     await pool.query(
-      `INSERT INTO users (id, name, email, password_hash, role_id, status, created_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, name, email, 'placeholder_hash', roleId, status, createdAt || new Date().toISOString()]
+      `INSERT INTO users (id, name, email, password_hash, role_id, status, created_at, ai_profile_id) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [id, name, email, 'placeholder_hash', roleId, status, createdAt || new Date().toISOString(), aiProfileId || null]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -175,13 +175,13 @@ apiRouter.post('/users', async (req, res) => {
 });
 
 apiRouter.put('/users/:id', async (req, res) => {
-  const { name, email, roleId, status } = req.body;
+  const { name, email, roleId, status, aiProfileId } = req.body;
   try {
     await pool.query(
       `UPDATE users 
-       SET name = $1, email = $2, role_id = $3, status = $4, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $5`,
-      [name, email, roleId, status, req.params.id]
+       SET name = $1, email = $2, role_id = $3, status = $4, updated_at = CURRENT_TIMESTAMP, ai_profile_id = $5
+       WHERE id = $6`,
+      [name, email, roleId, status, aiProfileId || null, req.params.id]
     );
     res.json({ success: true });
   } catch (err) {

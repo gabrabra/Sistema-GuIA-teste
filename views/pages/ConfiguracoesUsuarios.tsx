@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../controllers/context/ThemeContext';
+import { useAIProfile } from '../../controllers/context/AIProfileContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { User, Role } from '../../models/types';
@@ -14,6 +15,7 @@ const MOCK_ROLES: Role[] = [
 
 export const ConfiguracoesUsuarios: React.FC = () => {
   const { themeClasses } = useTheme();
+  const { profiles } = useAIProfile();
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -352,7 +354,9 @@ export const ConfiguracoesUsuarios: React.FC = () => {
                   className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   <option value="">Sem perfil</option>
-                  <option value="1">Básico</option>
+                  {profiles.map(profile => (
+                    <option key={profile.id} value={profile.id}>{profile.name}</option>
+                  ))}
                 </select>
               </div>
 

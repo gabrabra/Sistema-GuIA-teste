@@ -46,6 +46,9 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
       });
       if (response.ok) {
         setProfiles(prev => [...prev, profile]);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add AI profile');
       }
     } catch (error) {
       console.error('Failed to add AI profile:', error);
@@ -60,6 +63,9 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
       });
       if (response.ok) {
         setProfiles(prev => prev.filter(p => p.id !== id));
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete AI profile');
       }
     } catch (error) {
       console.error('Failed to delete AI profile:', error);
