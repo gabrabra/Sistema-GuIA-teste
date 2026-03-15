@@ -7,12 +7,11 @@ export const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgres://sistemaguiadm:973574BBA@evolution_sistema-guia-db:5432/sistema-guia-db?sslmode=disable'
 });
 
-export async function initDb(retries = 5, delay = 5000) {
-  for (let i = 0; i < retries; i++) {
+export async function initDb() {
+  try {
+    const client = await pool.connect();
     try {
-      const client = await pool.connect();
-      try {
-        await client.query(`
+      await client.query(`
         CREATE TABLE IF NOT EXISTS prompts (
           id VARCHAR(255) PRIMARY KEY,
           title VARCHAR(255) NOT NULL,
@@ -59,17 +58,6 @@ export async function initDb(retries = 5, delay = 5000) {
           permissions JSONB DEFAULT '[]'::jsonb
         );
 
-        CREATE TABLE IF NOT EXISTS ai_profiles (
-          id VARCHAR(255) PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          responde_prompts_per_day INTEGER DEFAULT 10,
-          responde_max_chars INTEGER DEFAULT 500,
-          redige_prompts_per_day INTEGER DEFAULT 5,
-          redige_max_chars INTEGER DEFAULT 1000,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-
         CREATE TABLE IF NOT EXISTS users (
           id VARCHAR(255) PRIMARY KEY,
           name VARCHAR(255) NOT NULL,
@@ -77,7 +65,6 @@ export async function initDb(retries = 5, delay = 5000) {
           password_hash VARCHAR(255) NOT NULL,
           role_id VARCHAR(255) REFERENCES roles(id),
           status VARCHAR(50) DEFAULT 'active',
-          ai_profile_id VARCHAR(255) REFERENCES ai_profiles(id) ON DELETE SET NULL,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
@@ -152,7 +139,6 @@ export async function initDb(retries = 5, delay = 5000) {
         
         -- Add status to users
         ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active';
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_profile_id VARCHAR(255) REFERENCES ai_profiles(id) ON DELETE SET NULL;
 
         -- Insert default roles
         INSERT INTO roles (id, name, permissions) VALUES 
@@ -161,28 +147,17 @@ export async function initDb(retries = 5, delay = 5000) {
           ('editor', 'Editor', '[]'::jsonb)
         ON CONFLICT (id) DO NOTHING;
 
-        -- Insert default AI profile
-        INSERT INTO ai_profiles (id, name, responde_prompts_per_day, responde_max_chars, redige_prompts_per_day, redige_max_chars) VALUES
-          ('default-profile', 'Básico', 10, 500, 5, 1000)
-        ON CONFLICT (id) DO NOTHING;
-
         -- Insert default user for login validation
-        INSERT INTO users (id, name, email, password_hash, role_id, status, ai_profile_id) VALUES
-          ('default-user', 'Lua Lima', 'lua.lima@recife.pe.gov.br', 'admin123', 'admin', 'active', 'default-profile')
+        INSERT INTO users (id, name, email, password_hash, role_id, status) VALUES
+          ('default-user', 'Lua Lima', 'lua.lima@recife.pe.gov.br', 'admin123', 'admin', 'active')
         ON CONFLICT (email) DO NOTHING;
       `);
       console.log('Database tables verified/created successfully.');
-      return; // Success, exit the retry loop
     } finally {
       client.release();
     }
   } catch (err) {
-    console.error(`Error initializing database connection or tables (attempt ${i + 1}/${retries}):`, err);
-    if (i === retries - 1) {
-      throw err; // Throw on last attempt
-    }
-    console.log(`Retrying in ${delay / 1000} seconds...`);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    console.error('Error initializing database connection or tables:', err);
+    throw err;
   }
-}
 }
