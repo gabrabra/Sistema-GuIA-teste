@@ -11,6 +11,13 @@ export interface Role {
   permissions: string[]; // List of Permission IDs
 }
 
+export interface AIProfile {
+  id: string;
+  name: string;
+  promptsPerDay: number;
+  maxCharactersPerPrompt: number;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -18,6 +25,7 @@ export interface User {
   roleId: string;
   status: 'active' | 'inactive';
   createdAt: string;
+  aiProfileId?: string;
 }
 
 export interface Assunto {

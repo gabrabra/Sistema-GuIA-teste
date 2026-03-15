@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useTheme, ThemeColor, ThemeIntensity } from '../../controllers/context/ThemeContext';
 import { useUserSettings } from '../../controllers/context/UserSettingsContext';
 
 export const Configuracoes: React.FC = () => {
+  const navigate = useNavigate();
   const { currentTheme, setTheme, intensity, setIntensity, themeClasses } = useTheme();
   const { settings, updateSettings, isLoading } = useUserSettings();
   
@@ -165,6 +167,12 @@ export const Configuracoes: React.FC = () => {
               {isSaving ? 'Salvando...' : 'Salvar Preferências'}
             </Button>
           </div>
+        </Card>
+
+        <Card className="p-6">
+          <h2 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Configurações de IA</h2>
+          <p className="text-sm text-gray-500 mb-4">Gerencie perfis de uso da IA e limites.</p>
+          <Button onClick={() => navigate('/configuracoes/ai')}>Gerenciar Perfis de IA</Button>
         </Card>
 
         <Card className="p-6 border-red-100">

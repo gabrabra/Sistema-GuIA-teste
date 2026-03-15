@@ -24,6 +24,7 @@ import { ConfiguracoesPrompts } from './views/pages/ConfiguracoesPrompts';
 import { ConfiguracoesAssinatura } from './views/pages/ConfiguracoesAssinatura';
 import { ConfiguracoesMenu } from './views/pages/ConfiguracoesMenu';
 import { ConfiguracoesUsuarios } from './views/pages/ConfiguracoesUsuarios';
+import { ConfiguracoesAI } from './views/pages/ConfiguracoesAI';
 import { Revisoes } from './views/pages/Revisoes';
 import { Login } from './views/pages/Login';
 import { Menu } from 'lucide-react';
@@ -101,6 +102,7 @@ const AppContent: React.FC = () => {
                     <Route path="/configuracoes/permissoes" element={<ConfiguracoesPermissoes />} />
                     <Route path="/configuracoes/produtos" element={<ConfiguracoesProdutos />} />
                     <Route path="/configuracoes/prompts" element={<ConfiguracoesPrompts />} />
+                    <Route path="/configuracoes/ai" element={<ConfiguracoesAI />} />
                     {/* Redirect unknown routes to dashboard or login */}
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>

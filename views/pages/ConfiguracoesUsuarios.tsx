@@ -28,7 +28,8 @@ export const ConfiguracoesUsuarios: React.FC = () => {
     email: '',
     password: '',
     roleId: 'student',
-    status: 'active' as 'active' | 'inactive'
+    status: 'active' as 'active' | 'inactive',
+    aiProfileId: ''
   });
 
   useEffect(() => {
@@ -62,7 +63,8 @@ export const ConfiguracoesUsuarios: React.FC = () => {
         email: user.email,
         password: '', // Don't load password hash for security/simplicity
         roleId: user.roleId,
-        status: user.status
+        status: user.status,
+        aiProfileId: user.aiProfileId || ''
       });
     } else {
       setEditingUser(null);
@@ -71,7 +73,8 @@ export const ConfiguracoesUsuarios: React.FC = () => {
         email: '',
         password: '',
         roleId: 'student',
-        status: 'active'
+        status: 'active',
+        aiProfileId: ''
       });
     }
     setIsModalOpen(true);
@@ -336,6 +339,20 @@ export const ConfiguracoesUsuarios: React.FC = () => {
                 >
                   <option value="active">Ativo</option>
                   <option value="inactive">Inativo</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Perfil de IA
+                </label>
+                <select
+                  value={formData.aiProfileId}
+                  onChange={(e) => setFormData({...formData, aiProfileId: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  <option value="">Sem perfil</option>
+                  <option value="1">Básico</option>
                 </select>
               </div>
 
