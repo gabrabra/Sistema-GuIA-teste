@@ -19,6 +19,7 @@ export const Planeja: React.FC = () => {
   const [selectedMateriaIds, setSelectedMateriaIds] = useState<string[]>([]);
   const [disciplineConfig, setDisciplineConfig] = useState<Record<string, { peso: number, horas: number }>>({});
   const [availability, setAvailability] = useState({ totalHoras: 20, dias: [] as string[] });
+  const [error, setError] = useState<string | null>(null);
 
   // Edital Modal State
   const [isEditalModalOpen, setIsEditalModalOpen] = useState(false);
@@ -33,6 +34,7 @@ export const Planeja: React.FC = () => {
     setSelectedMateriaIds([]);
     setDisciplineConfig({});
     setAvailability({ totalHoras: 20, dias: [] });
+    setError(null);
   };
 
   if (concursoSelecionado && step === 1 && !isDeleting) {
@@ -69,23 +71,28 @@ export const Planeja: React.FC = () => {
   }
 
   const handleNext = () => {
+    setError(null);
     if (step === 1 && !concurso.nome.trim()) {
-      alert('Por favor, informe o nome do concurso.');
+      setError('Por favor, informe o nome do concurso.');
       return;
     }
     if (step === 1 && concurso.possuiEdital && !concurso.dataProva) {
-      alert('Por favor, informe a data da prova, já que o edital já saiu.');
+      setError('Por favor, informe a data da prova, já que o edital já saiu.');
       return;
     }
     if (step === 2 && selectedMateriaIds.length === 0) {
-      alert('Por favor, selecione pelo menos uma matéria.');
+      setError('Por favor, selecione pelo menos uma matéria.');
       return;
     }
     setStep(prev => prev + 1);
   };
-  const handleBack = () => setStep(prev => prev - 1);
+  const handleBack = () => {
+    setError(null);
+    setStep(prev => prev - 1);
+  };
 
   const toggleMateria = (id: string) => {
+    setError(null);
     if (selectedMateriaIds.includes(id)) {
       setSelectedMateriaIds(prev => prev.filter(d => d !== id));
       const newConfig = { ...disciplineConfig };
@@ -98,8 +105,9 @@ export const Planeja: React.FC = () => {
   };
 
   const handleFinish = () => {
+    setError(null);
     if (availability.dias.length === 0 || availability.totalHoras <= 0) {
-      alert('Por favor, defina sua disponibilidade semanal.');
+      setError('Por favor, defina sua disponibilidade semanal.');
       return;
     }
 
@@ -214,7 +222,10 @@ export const Planeja: React.FC = () => {
                 className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
                 placeholder="Ex: Tribunal de Justiça - Técnico"
                 value={concurso.nome}
-                onChange={e => setConcurso({...concurso, nome: e.target.value})}
+                onChange={e => {
+                  setConcurso({...concurso, nome: e.target.value});
+                  setError(null);
+                }}
               />
             </div>
 
@@ -226,7 +237,10 @@ export const Planeja: React.FC = () => {
                     type="radio" 
                     name="edital" 
                     checked={concurso.possuiEdital} 
-                    onChange={() => setConcurso({...concurso, possuiEdital: true})}
+                    onChange={() => {
+                      setConcurso({...concurso, possuiEdital: true});
+                      setError(null);
+                    }}
                     className="text-blue-600" 
                   />
                   <span className={themeClasses.text}>Sim</span>
@@ -236,7 +250,10 @@ export const Planeja: React.FC = () => {
                     type="radio" 
                     name="edital" 
                     checked={!concurso.possuiEdital} 
-                    onChange={() => setConcurso({...concurso, possuiEdital: false, dataProva: ''})}
+                    onChange={() => {
+                      setConcurso({...concurso, possuiEdital: false, dataProva: ''});
+                      setError(null);
+                    }}
                     className="text-blue-600" 
                   />
                   <span className={themeClasses.text}>Não</span>
@@ -250,7 +267,10 @@ export const Planeja: React.FC = () => {
                 type="date" 
                 className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} ${!concurso.possuiEdital ? 'opacity-50 cursor-not-allowed' : ''}`}
                 value={concurso.dataProva}
-                onChange={e => setConcurso({...concurso, dataProva: e.target.value})}
+                onChange={e => {
+                  setConcurso({...concurso, dataProva: e.target.value});
+                  setError(null);
+                }}
                 disabled={!concurso.possuiEdital}
               />
             </div>
@@ -345,7 +365,10 @@ export const Planeja: React.FC = () => {
                 type="number" 
                 className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
                 value={availability.totalHoras}
-                onChange={e => setAvailability({...availability, totalHoras: Number(e.target.value)})}
+                onChange={e => {
+                  setAvailability({...availability, totalHoras: Number(e.target.value)});
+                  setError(null);
+                }}
               />
             </div>
 
@@ -360,6 +383,7 @@ export const Planeja: React.FC = () => {
                           ? availability.dias.filter(d => d !== day)
                           : [...availability.dias, day];
                         setAvailability({...availability, dias});
+                        setError(null);
                      }}
                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                        availability.dias.includes(day)
@@ -372,6 +396,13 @@ export const Planeja: React.FC = () => {
                  ))}
                </div>
             </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm font-medium flex items-center gap-2 animate-fadeIn">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0"></span>
+            {error}
           </div>
         )}
 
