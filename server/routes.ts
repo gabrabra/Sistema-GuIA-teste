@@ -151,7 +151,7 @@ apiRouter.delete('/roles/:id', async (req, res) => {
 // --- Users ---
 apiRouter.get('/users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, name, email, role_id as "roleId", status, created_at as "createdAt" FROM users');
+    const result = await pool.query('SELECT id, name, email, role_id as "roleId", status, created_at as "createdAt", ai_profile_id as "aiProfileId" FROM users');
     res.json(result.rows);
   } catch (err) {
     console.error('Error in GET /users:', err);
@@ -160,12 +160,12 @@ apiRouter.get('/users', async (req, res) => {
 });
 
 apiRouter.post('/users', async (req, res) => {
-  const { id, name, email, roleId, status, createdAt } = req.body;
+  const { id, name, email, roleId, status, createdAt, aiProfileId } = req.body;
   try {
     await pool.query(
-      `INSERT INTO users (id, name, email, password_hash, role_id, status, created_at) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [id, name, email, 'placeholder_hash', roleId, status, createdAt || new Date().toISOString()]
+      `INSERT INTO users (id, name, email, password_hash, role_id, status, created_at, ai_profile_id) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [id, name, email, 'placeholder_hash', roleId, status, createdAt || new Date().toISOString(), aiProfileId || null]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -175,13 +175,13 @@ apiRouter.post('/users', async (req, res) => {
 });
 
 apiRouter.put('/users/:id', async (req, res) => {
-  const { name, email, roleId, status } = req.body;
+  const { name, email, roleId, status, aiProfileId } = req.body;
   try {
     await pool.query(
       `UPDATE users 
-       SET name = $1, email = $2, role_id = $3, status = $4, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $5`,
-      [name, email, roleId, status, req.params.id]
+       SET name = $1, email = $2, role_id = $3, status = $4, updated_at = CURRENT_TIMESTAMP, ai_profile_id = $5
+       WHERE id = $6`,
+      [name, email, roleId, status, aiProfileId || null, req.params.id]
     );
     res.json({ success: true });
   } catch (err) {
@@ -422,6 +422,84 @@ apiRouter.delete('/disciplinas/:id', async (req, res) => {
   } catch (err) {
     console.error('Error in DELETE /disciplinas/:id:', err);
     res.status(500).json({ error: 'Failed to delete disciplina', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// --- AI Profiles ---
+apiRouter.get('/ai-profiles', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ai_profiles ORDER BY created_at ASC');
+    const profiles = result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      responde: {
+        promptsPerDay: row.responde_prompts_per_day,
+        maxCharactersPerPrompt: row.responde_max_chars
+      },
+      redige: {
+        promptsPerDay: row.redige_prompts_per_day,
+        maxCharactersPerPrompt: row.redige_max_chars
+      }
+    }));
+    res.json(profiles);
+  } catch (err) {
+    console.error('Error in GET /ai-profiles:', err);
+    res.status(500).json({ error: 'Failed to fetch AI profiles', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.post('/ai-profiles', async (req, res) => {
+  const { id, name, responde, redige } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO ai_profiles (id, name, responde_prompts_per_day, responde_max_chars, redige_prompts_per_day, redige_max_chars)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        id, 
+        name, 
+        responde?.promptsPerDay || 10, 
+        responde?.maxCharactersPerPrompt || 500,
+        redige?.promptsPerDay || 5,
+        redige?.maxCharactersPerPrompt || 1000
+      ]
+    );
+    res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('Error in POST /ai-profiles:', err);
+    res.status(500).json({ error: 'Failed to create AI profile', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.put('/ai-profiles/:id', async (req, res) => {
+  const { name, responde, redige } = req.body;
+  try {
+    await pool.query(
+      `UPDATE ai_profiles 
+       SET name = $1, responde_prompts_per_day = $2, responde_max_chars = $3, redige_prompts_per_day = $4, redige_max_chars = $5, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $6`,
+      [
+        name,
+        responde?.promptsPerDay || 10, 
+        responde?.maxCharactersPerPrompt || 500,
+        redige?.promptsPerDay || 5,
+        redige?.maxCharactersPerPrompt || 1000,
+        req.params.id
+      ]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in PUT /ai-profiles/:id:', err);
+    res.status(500).json({ error: 'Failed to update AI profile', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.delete('/ai-profiles/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM ai_profiles WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in DELETE /ai-profiles/:id:', err);
+    res.status(500).json({ error: 'Failed to delete AI profile', details: err instanceof Error ? err.message : String(err) });
   }
 });
 

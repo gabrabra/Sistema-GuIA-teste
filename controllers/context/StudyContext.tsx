@@ -130,20 +130,28 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Timer Logic
   useEffect(() => {
     let interval: any;
+    let lastTick = Date.now();
 
     if (isTimerRunning) {
       interval = setInterval(() => {
-        setHorasEstudadasHoje((prev) => prev + 1);
-        setCurrentSessionSeconds((prev) => prev + 1);
+        const now = Date.now();
+        const deltaMs = now - lastTick;
+        const deltaSeconds = Math.floor(deltaMs / 1000);
         
-        if (activeSubjectId) {
-          setDisciplinas((prevDisciplinas) => 
-            prevDisciplinas.map((d) => 
-              d.id === activeSubjectId 
-                ? { ...d, horasEstudadasHoje: d.horasEstudadasHoje + 1, horasEstudadasTotal: d.horasEstudadasTotal + 1 }
-                : d
-            )
-          );
+        if (deltaSeconds > 0) {
+          setHorasEstudadasHoje((prev) => prev + deltaSeconds);
+          setCurrentSessionSeconds((prev) => prev + deltaSeconds);
+          
+          if (activeSubjectId) {
+            setDisciplinas((prevDisciplinas) => 
+              prevDisciplinas.map((d) => 
+                d.id === activeSubjectId 
+                  ? { ...d, horasEstudadasHoje: d.horasEstudadasHoje + deltaSeconds, horasEstudadasTotal: d.horasEstudadasTotal + deltaSeconds }
+                  : d
+              )
+            );
+          }
+          lastTick += deltaSeconds * 1000;
         }
       }, 1000);
     } else {
