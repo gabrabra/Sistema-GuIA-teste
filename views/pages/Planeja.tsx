@@ -17,7 +17,7 @@ export const Planeja: React.FC = () => {
   // Form State
   const [concurso, setConcurso] = useState({ orgao: '', nome: '', possuiEdital: true, dataProva: '' });
   const [selectedMateriaIds, setSelectedMateriaIds] = useState<string[]>([]);
-  const [disciplineConfig, setDisciplineConfig] = useState<Record<string, { peso: number, horas: number }>>({});
+  const [disciplineConfig, setDisciplineConfig] = useState<Record<string, { peso: number | string, horas: number | string }>>({});
   const [availability, setAvailability] = useState({ totalHoras: 20, dias: [] as string[] });
   const [error, setError] = useState<string | null>(null);
 
@@ -126,7 +126,8 @@ export const Planeja: React.FC = () => {
     let pool: { id: string, count: number, originalMateria: any }[] = [];
     
     selectedMateriaIds.forEach(id => {
-      const peso = disciplineConfig[id]?.peso || 1;
+      const configPeso = disciplineConfig[id]?.peso;
+      const peso = configPeso === '' || configPeso === undefined ? 1 : Number(configPeso);
       // Ensure at least 1, handle decimals by flooring
       const count = Math.max(1, Math.floor(peso)); 
       const materia = materias.find(m => m.id === id);
@@ -170,8 +171,10 @@ export const Planeja: React.FC = () => {
         const candidate = pool.find(p => p.count > 0);
 
         if (candidate) {
-            const pesoTotal = Math.max(1, disciplineConfig[candidate.id]?.peso || 1);
-            const horasTotal = disciplineConfig[candidate.id]?.horas || 2;
+            const configPeso = disciplineConfig[candidate.id]?.peso;
+            const configHoras = disciplineConfig[candidate.id]?.horas;
+            const pesoTotal = Math.max(1, configPeso === '' || configPeso === undefined ? 1 : Number(configPeso));
+            const horasTotal = configHoras === '' || configHoras === undefined ? 2 : Number(configHoras);
             
             // Split the weekly goal among the blocks
             const horasPorBloco = horasTotal / pesoTotal;
@@ -346,10 +349,10 @@ export const Planeja: React.FC = () => {
                            <input 
                              type="number" 
                              className={`w-full p-2 text-sm border rounded-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-                             value={disciplineConfig[materia.id]?.peso || 1}
+                             value={disciplineConfig[materia.id]?.peso ?? 1}
                              onChange={(e) => setDisciplineConfig({
                                ...disciplineConfig, 
-                               [materia.id]: { ...disciplineConfig[materia.id], peso: Number(e.target.value) }
+                               [materia.id]: { ...disciplineConfig[materia.id], peso: e.target.value === '' ? '' : Number(e.target.value) }
                              })}
                            />
                          </div>
@@ -358,10 +361,10 @@ export const Planeja: React.FC = () => {
                            <input 
                              type="number" 
                              className={`w-full p-2 text-sm border rounded-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-                             value={disciplineConfig[materia.id]?.horas || 2}
+                             value={disciplineConfig[materia.id]?.horas ?? 2}
                              onChange={(e) => setDisciplineConfig({
                                ...disciplineConfig, 
-                               [materia.id]: { ...disciplineConfig[materia.id], horas: Number(e.target.value) }
+                               [materia.id]: { ...disciplineConfig[materia.id], horas: e.target.value === '' ? '' : Number(e.target.value) }
                              })}
                            />
                          </div>

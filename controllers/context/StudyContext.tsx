@@ -80,6 +80,8 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [activeSubjectId, setActiveSubjectId] = useState<string | null>(null);
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [currentSessionSeconds, setCurrentSessionSeconds] = useState(0);
+  const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
+  const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
 
   // Fetch initial data
   useEffect(() => {
@@ -166,85 +168,14 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setActiveSubjectId(disciplinaId);
       setActiveTopic(topico || null);
       setCurrentSessionSeconds(0);
-
-      // Set dataEstudo to today if it's the first time studying this topic
-      if (topico) {
-        const disciplina = disciplinas.find(d => d.id === disciplinaId);
-        if (disciplina?.materiaId) {
-          setMaterias(prev => {
-            let changed = false;
-            const newMaterias = prev.map(m => {
-              if (m.id === disciplina.materiaId) {
-                return {
-                  ...m,
-                  assuntos: m.assuntos.map(a => {
-                    if (a.nome === topico && !a.dataEstudo) {
-                      changed = true;
-                      return { ...a, dataEstudo: new Date().toISOString() };
-                    }
-                    return a;
-                  })
-                };
-              }
-              return m;
-            });
-
-            if (changed) {
-              const updatedMateria = newMaterias.find(m => m.id === disciplina.materiaId);
-              if (updatedMateria) {
-                fetchWithAuth(`/api/materias/${updatedMateria.id}`, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(updatedMateria)
-                }).catch(err => console.error('Failed to update materia', err));
-              }
-            }
-            return newMaterias;
-          });
-        }
-      }
     }
     setIsTimerRunning(true);
   }, [disciplinas]);
 
   const pausarCronometro = useCallback(() => {
     setIsTimerRunning(false);
-    
-    if (activeSubjectId && currentSessionSeconds > 0) {
-        setDisciplinas(prev => {
-            const newDisciplinas = prev.map(d => {
-                if (d.id === activeSubjectId) {
-                    const newHistory = {
-                        id: crypto.randomUUID(),
-                        data: new Date().toISOString(),
-                        segundos: currentSessionSeconds,
-                        assunto: activeTopic || 'Estudo Livre'
-                    };
-                    return {
-                        ...d,
-                        historico: [...(d.historico || []), newHistory]
-                    };
-                }
-                return d;
-            });
-
-            const updatedDisciplina = newDisciplinas.find(d => d.id === activeSubjectId);
-            if (updatedDisciplina) {
-                fetchWithAuth(`/api/disciplinas/${updatedDisciplina.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedDisciplina)
-                }).catch(err => console.error('Failed to update disciplina', err));
-            }
-
-            return newDisciplinas;
-        });
-    }
-
-    setActiveSubjectId(null);
-    setActiveTopic(null);
-    setCurrentSessionSeconds(0);
-  }, [activeSubjectId, activeTopic, currentSessionSeconds]);
+    setIsPauseModalOpen(true);
+  }, []);
 
   const adicionarHorasManualmente = useCallback((disciplinaId: string, minutos: number, topico?: string) => {
     const segundos = minutos * 60;
@@ -420,6 +351,59 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [fetchWithAuth]);
 
+  const salvarSessaoEstudo = useCallback((concluido: boolean) => {
+    if (activeSubjectId && currentSessionSeconds > 0) {
+        setDisciplinas(prev => {
+            const newDisciplinas = prev.map(d => {
+                if (d.id === activeSubjectId) {
+                    const newHistory = {
+                        id: crypto.randomUUID(),
+                        data: new Date().toISOString(),
+                        segundos: currentSessionSeconds,
+                        assunto: activeTopic || 'Estudo Livre'
+                    };
+                    return {
+                        ...d,
+                        historico: [...(d.historico || []), newHistory]
+                    };
+                }
+                return d;
+            });
+
+            const updatedDisciplina = newDisciplinas.find(d => d.id === activeSubjectId);
+            if (updatedDisciplina) {
+                fetchWithAuth(`/api/disciplinas/${updatedDisciplina.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedDisciplina)
+                }).catch(err => console.error('Failed to update disciplina', err));
+            }
+
+            return newDisciplinas;
+        });
+
+        // Mark topic as finished if requested
+        if (concluido && activeTopic) {
+            const disciplina = disciplinas.find(d => d.id === activeSubjectId);
+            if (disciplina?.materiaId) {
+                const materia = materias.find(m => m.id === disciplina.materiaId);
+                const assunto = materia?.assuntos.find(a => a.nome === activeTopic);
+                if (assunto) {
+                    updateAssunto(disciplina.materiaId, assunto.id, { 
+                        concluido: true,
+                        dataEstudo: assunto.dataEstudo || new Date().toISOString()
+                    });
+                }
+            }
+        }
+    }
+
+    setActiveSubjectId(null);
+    setActiveTopic(null);
+    setCurrentSessionSeconds(0);
+    setIsFinishModalOpen(false);
+  }, [activeSubjectId, activeTopic, currentSessionSeconds, disciplinas, materias, updateAssunto]);
+
   const deleteAssunto = useCallback(async (materiaId: string, assuntoId: string) => {
     let updatedMateria: Materia | undefined;
 
@@ -514,6 +498,8 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       activeSubjectId,
       activeTopic,
       currentSessionSeconds,
+      isPauseModalOpen,
+      isFinishModalOpen,
       setConcursoSelecionado,
       deleteConcurso,
       setDisciplinas: updateDisciplinas,
@@ -527,6 +513,9 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       setMetaSemanal,
       iniciarCronometro,
       pausarCronometro,
+      salvarSessaoEstudo,
+      setIsPauseModalOpen,
+      setIsFinishModalOpen,
       adicionarHorasManualmente,
       resetarDia
     }}>

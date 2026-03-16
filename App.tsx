@@ -29,6 +29,7 @@ import { ConfiguracoesAI } from './views/pages/ConfiguracoesAI';
 import { Revisoes } from './views/pages/Revisoes';
 import { Login } from './views/pages/Login';
 import { Menu } from 'lucide-react';
+import { StudyTimerModal } from './views/components/ui/StudyTimerModal';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { themeClasses } = useTheme();
@@ -36,6 +37,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   
   return (
     <div className={`min-h-screen ${themeClasses.bg} ${themeClasses.text} font-sans flex flex-col md:block transition-colors duration-300`}>
+      <StudyTimerModal />
       {/* Mobile Header */}
       <div className={`md:hidden flex items-center justify-between p-4 border-b sticky top-0 z-30 ${themeClasses.cardBg} ${themeClasses.borderColor}`}>
          <div className="flex items-center gap-2 text-blue-600 font-bold text-xl">

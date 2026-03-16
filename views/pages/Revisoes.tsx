@@ -64,8 +64,8 @@ export const Revisoes: React.FC = () => {
     })
   );
 
-  // Filter topics to show only those that have been started
-  const topicsToDisplay = allTopics.filter(t => t.dataEstudo);
+  // Filter topics to show only those that have been finished
+  const topicsToDisplay = allTopics.filter(t => t.concluido);
 
   // Group topics by materia
   const groupedTopics = topicsToDisplay.reduce((acc: Record<string, typeof allTopics>, topic) => {
@@ -102,9 +102,9 @@ export const Revisoes: React.FC = () => {
   }, {});
 
   const counts = {
-    todos: allTopics.length,
-    pendente: allTopics.filter(t => t.revisionStatus === 'Para hoje').length,
-    atrasado: allTopics.filter(t => t.revisionStatus === 'Atrasado').length
+    todos: topicsToDisplay.length,
+    pendente: topicsToDisplay.filter(t => t.revisionStatus === 'Para hoje').length,
+    atrasado: topicsToDisplay.filter(t => t.revisionStatus === 'Atrasado').length
   };
 
   const handleDelete = (materiaId: string, assuntoId: string) => {

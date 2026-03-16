@@ -94,6 +94,8 @@ export interface StudyContextType {
   activeSubjectId: string | null;
   activeTopic: string | null;
   currentSessionSeconds: number;
+  isPauseModalOpen: boolean;
+  isFinishModalOpen: boolean;
 
   // Actions
   setConcursoSelecionado: (c: Concurso) => void;
@@ -109,6 +111,9 @@ export interface StudyContextType {
   setMetaSemanal: (horas: number, dias: string[]) => void;
   iniciarCronometro: (disciplinaId?: string, topico?: string) => void;
   pausarCronometro: () => void;
+  salvarSessaoEstudo: (concluido: boolean) => void;
+  setIsPauseModalOpen: (open: boolean) => void;
+  setIsFinishModalOpen: (open: boolean) => void;
   adicionarHorasManualmente: (disciplinaId: string, minutos: number, topico?: string) => void;
   resetarDia: () => void;
 }
