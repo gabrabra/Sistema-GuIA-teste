@@ -124,10 +124,14 @@ export async function initDb(retries = 5, delay = 5000) {
         CREATE TABLE IF NOT EXISTS concursos (
           id VARCHAR(255) PRIMARY KEY,
           user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+          orgao VARCHAR(255),
           nome VARCHAR(255) NOT NULL,
           possui_edital BOOLEAN DEFAULT false,
           data_prova DATE
         );
+        
+        -- Add orgao column if it doesn't exist
+        ALTER TABLE concursos ADD COLUMN IF NOT EXISTS orgao VARCHAR(255);
 
         CREATE TABLE IF NOT EXISTS study_sessions (
           id VARCHAR(255) PRIMARY KEY,

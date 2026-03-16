@@ -151,7 +151,7 @@ export const Dashboard: React.FC = () => {
               </div>
             ) : (
               <div className="text-center py-4 text-gray-500 text-sm">
-                Concurso: {concursoSelecionado.nome}<br/>
+                Concurso: {concursoSelecionado.orgao ? `${concursoSelecionado.orgao} - ` : ''}{concursoSelecionado.nome}<br/>
                 Data da prova não definida.
               </div>
             )

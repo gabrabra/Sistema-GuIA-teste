@@ -271,6 +271,7 @@ apiRouter.get('/concursos', async (req, res) => {
     res.json(result.rows.map(row => ({
       id: row.id,
       userId: row.user_id,
+      orgao: row.orgao || '',
       nome: row.nome,
       possuiEdital: row.possui_edital,
       dataProva: row.data_prova ? new Date(row.data_prova).toISOString().split('T')[0] : null
@@ -283,11 +284,11 @@ apiRouter.get('/concursos', async (req, res) => {
 
 apiRouter.post('/concursos', async (req, res) => {
   const userId = req.headers['x-user-id'];
-  const { id, nome, possuiEdital, dataProva } = req.body;
+  const { id, orgao, nome, possuiEdital, dataProva } = req.body;
   try {
     await pool.query(
-      'INSERT INTO concursos (id, user_id, nome, possui_edital, data_prova) VALUES ($1, $2, $3, $4, $5)',
-      [id, userId, nome, possuiEdital, dataProva]
+      'INSERT INTO concursos (id, user_id, orgao, nome, possui_edital, data_prova) VALUES ($1, $2, $3, $4, $5, $6)',
+      [id, userId, orgao, nome, possuiEdital, dataProva]
     );
     res.status(201).json({ success: true });
   } catch (err) {

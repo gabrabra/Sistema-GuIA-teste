@@ -15,7 +15,7 @@ export const Planeja: React.FC = () => {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Form State
-  const [concurso, setConcurso] = useState({ nome: '', possuiEdital: true, dataProva: '' });
+  const [concurso, setConcurso] = useState({ orgao: '', nome: '', possuiEdital: true, dataProva: '' });
   const [selectedMateriaIds, setSelectedMateriaIds] = useState<string[]>([]);
   const [disciplineConfig, setDisciplineConfig] = useState<Record<string, { peso: number, horas: number }>>({});
   const [availability, setAvailability] = useState({ totalHoras: 20, dias: [] as string[] });
@@ -30,7 +30,7 @@ export const Planeja: React.FC = () => {
     await deleteConcurso();
     setIsDeleting(false);
     setStep(1);
-    setConcurso({ nome: '', possuiEdital: true, dataProva: '' });
+    setConcurso({ orgao: '', nome: '', possuiEdital: true, dataProva: '' });
     setSelectedMateriaIds([]);
     setDisciplineConfig({});
     setAvailability({ totalHoras: 20, dias: [] });
@@ -49,7 +49,7 @@ export const Planeja: React.FC = () => {
           </div>
           <h3 className={`text-2xl font-semibold ${themeClasses.text}`}>Você já possui um planejamento ativo</h3>
           <p className="text-gray-500 max-w-md mx-auto">
-            Atualmente você está estudando para o concurso <strong>{concursoSelecionado.nome}</strong>. 
+            Atualmente você está estudando para o concurso <strong>{concursoSelecionado.orgao ? `${concursoSelecionado.orgao} - ` : ''}{concursoSelecionado.nome}</strong>. 
             Deseja excluir este planejamento e começar um novo? Esta ação apagará seu ciclo atual.
           </p>
           <div className="flex gap-4 justify-center pt-4">
@@ -72,8 +72,12 @@ export const Planeja: React.FC = () => {
 
   const handleNext = () => {
     setError(null);
+    if (step === 1 && !concurso.orgao.trim()) {
+      setError('Por favor, informe o órgão do concurso.');
+      return;
+    }
     if (step === 1 && !concurso.nome.trim()) {
-      setError('Por favor, informe o nome do concurso.');
+      setError('Por favor, informe o nome do concurso (cargo).');
       return;
     }
     if (step === 1 && concurso.possuiEdital && !concurso.dataProva) {
@@ -112,6 +116,7 @@ export const Planeja: React.FC = () => {
     }
 
     setConcursoSelecionado({
+      orgao: concurso.orgao,
       nome: concurso.nome,
       possuiEdital: concurso.possuiEdital,
       dataProva: concurso.dataProva || null
@@ -216,11 +221,25 @@ export const Planeja: React.FC = () => {
             <h3 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Informações do Concurso</h3>
             
             <div className="space-y-2">
-              <label className={`block text-sm font-medium ${themeClasses.text}`}>Nome do Concurso</label>
+              <label className={`block text-sm font-medium ${themeClasses.text}`}>Órgão</label>
               <input 
                 type="text" 
                 className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-                placeholder="Ex: Tribunal de Justiça - Técnico"
+                placeholder="Ex: Tribunal de Justiça"
+                value={concurso.orgao}
+                onChange={e => {
+                  setConcurso({...concurso, orgao: e.target.value});
+                  setError(null);
+                }}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className={`block text-sm font-medium ${themeClasses.text}`}>Nome do Concurso (Cargo)</label>
+              <input 
+                type="text" 
+                className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                placeholder="Ex: Técnico Judiciário"
                 value={concurso.nome}
                 onChange={e => {
                   setConcurso({...concurso, nome: e.target.value});
