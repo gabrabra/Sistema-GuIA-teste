@@ -295,13 +295,25 @@ export const Ciclo: React.FC = () => {
                         <h5 className={`text-sm font-semibold mb-2 ${themeClasses.text}`}>Histórico de Hoje</h5>
                         <div className="space-y-2 max-h-40 overflow-y-auto">
                           {[...disc.historico].reverse().map((sessao) => (
-                            <div key={sessao.id} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded-lg">
+                            <div key={sessao.id} className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded-lg group">
                               <span className="text-gray-700 truncate max-w-[200px]" title={sessao.assunto}>
                                 {sessao.assunto}
                               </span>
-                              <span className="font-mono text-gray-500 text-xs">
-                                {formatTimeWithSeconds(sessao.segundos)}
-                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="font-mono text-gray-500 text-xs">
+                                  {formatTimeWithSeconds(sessao.segundos)}
+                                </span>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    iniciarCronometro(disc.id, sessao.assunto !== 'Estudo Livre' ? sessao.assunto : undefined);
+                                  }}
+                                  className="text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Continuar estudando este assunto"
+                                >
+                                  <Play size={14} />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -363,7 +375,7 @@ export const Ciclo: React.FC = () => {
                       .map((assunto) => (
                         <div
                           key={assunto.id}
-                          className={`p-3 cursor-pointer transition-colors ${
+                          className={`p-3 cursor-pointer transition-colors flex justify-between items-center ${
                             topic === assunto.nome 
                               ? 'bg-blue-50 text-blue-700' 
                               : themeClasses.bg === 'bg-gray-950' ? 'hover:bg-gray-700 text-gray-200' : 'hover:bg-gray-50 text-gray-700'
@@ -374,7 +386,8 @@ export const Ciclo: React.FC = () => {
                             setIsDropdownOpen(false);
                           }}
                         >
-                          {assunto.nome}
+                          <span>{assunto.nome}</span>
+                          {assunto.concluido && <CheckCircle size={14} className="text-green-500" />}
                         </div>
                       ))}
                       {linkedMateria.assuntos.filter(a => a.nome.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
