@@ -73,6 +73,10 @@ export const Planeja: React.FC = () => {
       alert('Por favor, informe o nome do concurso.');
       return;
     }
+    if (step === 1 && concurso.possuiEdital && !concurso.dataProva) {
+      alert('Por favor, informe a data da prova, já que o edital já saiu.');
+      return;
+    }
     if (step === 2 && selectedMateriaIds.length === 0) {
       alert('Por favor, selecione pelo menos uma matéria.');
       return;
@@ -232,7 +236,7 @@ export const Planeja: React.FC = () => {
                     type="radio" 
                     name="edital" 
                     checked={!concurso.possuiEdital} 
-                    onChange={() => setConcurso({...concurso, possuiEdital: false})}
+                    onChange={() => setConcurso({...concurso, possuiEdital: false, dataProva: ''})}
                     className="text-blue-600" 
                   />
                   <span className={themeClasses.text}>Não</span>
@@ -241,12 +245,13 @@ export const Planeja: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className={`block text-sm font-medium ${themeClasses.text}`}>Data da Prova</label>
+              <label className={`block text-sm font-medium ${themeClasses.text} ${!concurso.possuiEdital ? 'opacity-50' : ''}`}>Data da Prova</label>
               <input 
                 type="date" 
-                className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} ${!concurso.possuiEdital ? 'opacity-50 cursor-not-allowed' : ''}`}
                 value={concurso.dataProva}
                 onChange={e => setConcurso({...concurso, dataProva: e.target.value})}
+                disabled={!concurso.possuiEdital}
               />
             </div>
           </div>
