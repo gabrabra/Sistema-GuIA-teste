@@ -94,7 +94,7 @@ export const StudyHeatmap: React.FC<StudyHeatmapProps> = ({ disciplinas }) => {
   ];
 
   return (
-    <div className={`p-6 rounded-2xl shadow-sm border ${themeClasses.card} ${themeClasses.borderColor} w-full relative`}>
+    <div className={`p-6 rounded-2xl shadow-sm border bg-white ${themeClasses.borderColor} w-full relative`}>
       <div className="flex items-center justify-between mb-6">
         <h3 className={`text-lg font-semibold ${themeClasses.text}`}>Histórico de Atividade</h3>
         
