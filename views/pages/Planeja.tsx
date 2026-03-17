@@ -198,7 +198,10 @@ export const Planeja: React.FC = () => {
     setDisciplinas(newDisciplinas);
     setMetaSemanal(availability.totalHoras, availability.dias);
     
-    navigate('/ciclo');
+    // Small delay to ensure state propagation before navigation
+    setTimeout(() => {
+      navigate('/ciclo');
+    }, 100);
   };
 
   const handleProcessEdital = () => {
