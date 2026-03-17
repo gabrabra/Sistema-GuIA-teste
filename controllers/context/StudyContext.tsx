@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useRef } from 'react';
 import { StudyContextType, Concurso, Disciplina, HistoricoEstudo, Materia } from '../../models/types';
 
 const StudyContext = createContext<StudyContextType | undefined>(undefined);
@@ -71,6 +71,16 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
+  const disciplinasRef = useRef(disciplinas);
+  const materiasRef = useRef(materias);
+
+  useEffect(() => {
+    disciplinasRef.current = disciplinas;
+  }, [disciplinas]);
+
+  useEffect(() => {
+    materiasRef.current = materias;
+  }, [materias]);
   const [horasSemanaMeta, setHorasSemanaMeta] = useState<number>(0); 
   const [diasDisponiveis, setDiasDisponiveis] = useState<string[]>([]);
   const [horasEstudadasHoje, setHorasEstudadasHoje] = useState<number>(0);
@@ -253,26 +263,25 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       const newMaterias = prev.map(m => {
         if (m.id === id) {
           const newMateria = { ...m, nome };
-          updatedMateria = newMateria;
           return newMateria;
         }
         return m;
       });
-      return newMaterias;
-    });
-
-    if (updatedMateria) {
-      try {
-        const response = await fetchWithAuth(`/api/materias/${id}`, {
+      
+      updatedMateria = newMaterias.find(m => m.id === id);
+      
+      if (updatedMateria) {
+        fetchWithAuth(`/api/materias/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedMateria)
+        }).catch(err => {
+          console.error('Failed to update materia', err);
         });
-        if (!response.ok) throw new Error('Failed to update materia');
-      } catch (err) {
-        console.error('Failed to update materia', err);
       }
-    }
+      
+      return newMaterias;
+    });
   }, [fetchWithAuth]);
 
   const deleteMateria = useCallback(async (id: string) => {
@@ -296,26 +305,25 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             ...m,
             assuntos: [...m.assuntos, { id: crypto.randomUUID(), nome, concluido: false, revisoesConcluidas: [] }]
           };
-          updatedMateria = newMateria;
           return newMateria;
         }
         return m;
       });
-      return newMaterias;
-    });
-
-    if (updatedMateria) {
-      try {
-        const response = await fetchWithAuth(`/api/materias/${materiaId}`, {
+      
+      updatedMateria = newMaterias.find(m => m.id === materiaId);
+      
+      if (updatedMateria) {
+        fetchWithAuth(`/api/materias/${materiaId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedMateria)
+        }).catch(err => {
+          console.error('Failed to add assunto', err);
         });
-        if (!response.ok) throw new Error('Failed to add assunto');
-      } catch (err) {
-        console.error('Failed to add assunto', err);
       }
-    }
+      
+      return newMaterias;
+    });
   }, [fetchWithAuth]);
 
   const updateAssunto = useCallback(async (materiaId: string, assuntoId: string, updates: Partial<Materia['assuntos'][0]>) => {
@@ -328,27 +336,26 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             ...m,
             assuntos: m.assuntos.map(a => a.id === assuntoId ? { ...a, ...updates } : a)
           };
-          updatedMateria = newMateria;
           return newMateria;
         }
         return m;
       });
-      return newMaterias;
-    });
-
-    if (updatedMateria) {
-      try {
-        const response = await fetchWithAuth(`/api/materias/${materiaId}`, {
+      
+      updatedMateria = newMaterias.find(m => m.id === materiaId);
+      
+      // Make the API call asynchronously without blocking the state update
+      if (updatedMateria) {
+        fetchWithAuth(`/api/materias/${materiaId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedMateria)
+        }).catch(err => {
+          console.error('Failed to update assunto', err);
         });
-        if (!response.ok) throw new Error('Failed to update assunto');
-      } catch (err) {
-        console.error('Failed to update assunto', err);
-        // Rollback or notify user
       }
-    }
+      
+      return newMaterias;
+    });
   }, [fetchWithAuth]);
 
   const salvarSessaoEstudo = useCallback((concluido: boolean) => {
@@ -384,9 +391,9 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         // Mark topic as finished if requested
         if (concluido && activeTopic) {
-            const disciplina = disciplinas.find(d => d.id === activeSubjectId);
+            const disciplina = disciplinasRef.current.find(d => d.id === activeSubjectId);
             if (disciplina?.materiaId) {
-                const materia = materias.find(m => m.id === disciplina.materiaId);
+                const materia = materiasRef.current.find(m => m.id === disciplina.materiaId);
                 const assunto = materia?.assuntos.find(a => a.nome === activeTopic);
                 if (assunto) {
                     updateAssunto(disciplina.materiaId, assunto.id, { 
@@ -402,7 +409,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setActiveTopic(null);
     setCurrentSessionSeconds(0);
     setIsFinishModalOpen(false);
-  }, [activeSubjectId, activeTopic, currentSessionSeconds, disciplinas, materias, updateAssunto]);
+  }, [activeSubjectId, activeTopic, currentSessionSeconds, updateAssunto, fetchWithAuth]);
 
   const deleteAssunto = useCallback(async (materiaId: string, assuntoId: string) => {
     let updatedMateria: Materia | undefined;
@@ -414,27 +421,25 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             ...m,
             assuntos: m.assuntos.filter(a => a.id !== assuntoId)
           };
-          updatedMateria = newMateria;
           return newMateria;
         }
         return m;
       });
-      return newMaterias;
-    });
-
-    if (updatedMateria) {
-      try {
-        const response = await fetchWithAuth(`/api/materias/${materiaId}`, {
+      
+      updatedMateria = newMaterias.find(m => m.id === materiaId);
+      
+      if (updatedMateria) {
+        fetchWithAuth(`/api/materias/${materiaId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedMateria)
+        }).catch(err => {
+          console.error('Failed to delete assunto', err);
         });
-        if (!response.ok) throw new Error('Failed to delete assunto');
-      } catch (err) {
-        console.error('Failed to delete assunto', err);
-        // Rollback or notify user
       }
-    }
+      
+      return newMaterias;
+    });
   }, [fetchWithAuth]);
 
   const updateDisciplinas = useCallback(async (newDisciplinas: Disciplina[]) => {
