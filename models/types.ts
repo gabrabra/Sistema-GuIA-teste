@@ -79,6 +79,8 @@ export interface Concurso {
   nome: string;
   possuiEdital: boolean;
   dataProva: string | null;
+  horasSemanaMeta?: number;
+  diasDisponiveis?: string[];
 }
 
 export interface StudyContextType {

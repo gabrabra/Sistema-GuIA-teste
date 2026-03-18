@@ -4,7 +4,7 @@ import { useAIProfile } from '../../controllers/context/AIProfileContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { User, Role } from '../../models/types';
-import { Users, Plus, Edit2, Trash2, Search, Mail, Shield, Calendar, X } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, Search, Mail, Shield, Calendar, X, RotateCcw } from 'lucide-react';
 
 // Mock Data for roles
 const MOCK_ROLES: Role[] = [
@@ -142,6 +142,25 @@ export const ConfiguracoesUsuarios: React.FC = () => {
     }
   };
 
+  const handleResetAccount = async (id: string, name: string) => {
+    if (window.confirm(`Tem certeza que deseja resetar a conta de ${name}? Isso irá apagar todos os concursos, disciplinas, matérias e histórico de estudos deste usuário.`)) {
+      try {
+        const response = await fetch(`/api/users/${id}/reset`, {
+          method: 'POST'
+        });
+        
+        if (response.ok) {
+          alert(`Conta de ${name} resetada com sucesso.`);
+        } else {
+          alert('Erro ao resetar conta do usuário');
+        }
+      } catch (error) {
+        console.error('Error resetting user account:', error);
+        alert('Erro ao resetar conta do usuário');
+      }
+    }
+  };
+
   const getRoleName = (roleId: string) => {
     return MOCK_ROLES.find(r => r.id === roleId)?.name || roleId;
   };
@@ -225,6 +244,13 @@ export const ConfiguracoesUsuarios: React.FC = () => {
                   </td>
                   <td className="py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
+                      <button 
+                        onClick={() => handleResetAccount(user.id, user.name)}
+                        className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                        title="Resetar Conta (Apagar dados de estudo)"
+                      >
+                        <RotateCcw size={18} />
+                      </button>
                       <button 
                         onClick={() => handleOpenModal(user)}
                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

@@ -200,6 +200,23 @@ apiRouter.delete('/users/:id', async (req, res) => {
   }
 });
 
+apiRouter.post('/users/:id/reset', async (req, res) => {
+  const userId = req.params.id;
+  try {
+    // Delete all study-related data for the user
+    await pool.query('DELETE FROM study_sessions WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM disciplinas WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM materias WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM concursos WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM user_settings WHERE user_id = $1', [userId]);
+    
+    res.json({ success: true, message: 'User account reset successfully' });
+  } catch (err) {
+    console.error('Error in POST /users/:id/reset:', err);
+    res.status(500).json({ error: 'Failed to reset user account', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // --- Prompts ---
 apiRouter.get('/prompts', async (req, res) => {
   try {
@@ -274,7 +291,9 @@ apiRouter.get('/concursos', async (req, res) => {
       orgao: row.orgao || '',
       nome: row.nome,
       possuiEdital: row.possui_edital,
-      dataProva: row.data_prova ? new Date(row.data_prova).toISOString().split('T')[0] : null
+      dataProva: row.data_prova ? new Date(row.data_prova).toISOString().split('T')[0] : null,
+      horasSemanaMeta: parseFloat(row.horas_semana_meta || '0'),
+      diasDisponiveis: row.dias_disponiveis || []
     })));
   } catch (err) {
     console.error('Error in GET /concursos:', err);
@@ -284,16 +303,25 @@ apiRouter.get('/concursos', async (req, res) => {
 
 apiRouter.post('/concursos', async (req, res) => {
   const userId = req.headers['x-user-id'];
-  const { id, orgao, nome, possuiEdital, dataProva } = req.body;
+  const { id, orgao, nome, possuiEdital, dataProva, horasSemanaMeta, diasDisponiveis } = req.body;
+  console.log('POST /concursos received:', { id, userId, orgao, nome, possuiEdital, dataProva, horasSemanaMeta, diasDisponiveis });
   try {
     await pool.query(
-      'INSERT INTO concursos (id, user_id, orgao, nome, possui_edital, data_prova) VALUES ($1, $2, $3, $4, $5, $6)',
-      [id, userId, orgao, nome, possuiEdital, dataProva]
+      `INSERT INTO concursos (id, user_id, orgao, nome, possui_edital, data_prova, horas_semana_meta, dias_disponiveis) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (id) DO UPDATE SET
+         orgao = EXCLUDED.orgao,
+         nome = EXCLUDED.nome,
+         possui_edital = EXCLUDED.possui_edital,
+         data_prova = EXCLUDED.data_prova,
+         horas_semana_meta = EXCLUDED.horas_semana_meta,
+         dias_disponiveis = EXCLUDED.dias_disponiveis`,
+      [id, userId, orgao, nome, possuiEdital, dataProva, horasSemanaMeta || 0, JSON.stringify(diasDisponiveis || [])]
     );
     res.status(201).json({ success: true });
   } catch (err) {
     console.error('Error in POST /concursos:', err);
-    res.status(500).json({ error: 'Failed to create concurso', details: err instanceof Error ? err.message : String(err) });
+    res.status(500).json({ error: 'Failed to create/update concurso', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
@@ -301,8 +329,9 @@ apiRouter.delete('/concursos/:id', async (req, res) => {
   const userId = req.headers['x-user-id'];
   try {
     await pool.query('DELETE FROM concursos WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
-    // Also delete associated disciplinas to start fresh
+    // Also delete associated disciplinas and materias to start fresh
     await pool.query('DELETE FROM disciplinas WHERE user_id = $1', [userId]);
+    await pool.query('DELETE FROM materias WHERE user_id = $1', [userId]);
     res.json({ success: true });
   } catch (err) {
     console.error('Error in DELETE /concursos/:id:', err);
@@ -312,8 +341,9 @@ apiRouter.delete('/concursos/:id', async (req, res) => {
 
 // --- Materias ---
 apiRouter.get('/materias', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   try {
-    const result = await pool.query('SELECT * FROM materias');
+    const result = await pool.query('SELECT * FROM materias WHERE user_id = $1', [userId]);
     res.json(result.rows);
   } catch (err) {
     console.error('Error in GET /materias:', err);
@@ -322,11 +352,12 @@ apiRouter.get('/materias', async (req, res) => {
 });
 
 apiRouter.post('/materias', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   const { id, nome, assuntos } = req.body;
   try {
     await pool.query(
-      'INSERT INTO materias (id, nome, assuntos) VALUES ($1, $2, $3)',
-      [id, nome, JSON.stringify(assuntos || [])]
+      'INSERT INTO materias (id, user_id, nome, assuntos) VALUES ($1, $2, $3, $4)',
+      [id, userId, nome, JSON.stringify(assuntos || [])]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -336,11 +367,12 @@ apiRouter.post('/materias', async (req, res) => {
 });
 
 apiRouter.put('/materias/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   const { nome, assuntos } = req.body;
   try {
     await pool.query(
-      'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3',
-      [nome, JSON.stringify(assuntos || []), req.params.id]
+      'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3 AND user_id = $4',
+      [nome, JSON.stringify(assuntos || []), req.params.id, userId]
     );
     res.json({ success: true });
   } catch (err) {
@@ -350,8 +382,9 @@ apiRouter.put('/materias/:id', async (req, res) => {
 });
 
 apiRouter.delete('/materias/:id', async (req, res) => {
+  const userId = req.headers['x-user-id'];
   try {
-    await pool.query('DELETE FROM materias WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM materias WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
     res.json({ success: true });
   } catch (err) {
     console.error('Error in DELETE /materias/:id:', err);

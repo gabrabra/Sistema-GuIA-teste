@@ -127,11 +127,15 @@ export async function initDb(retries = 5, delay = 5000) {
           orgao VARCHAR(255),
           nome VARCHAR(255) NOT NULL,
           possui_edital BOOLEAN DEFAULT false,
-          data_prova DATE
+          data_prova DATE,
+          horas_semana_meta NUMERIC DEFAULT 0,
+          dias_disponiveis JSONB DEFAULT '[]'::jsonb
         );
         
         -- Add orgao column if it doesn't exist
         ALTER TABLE concursos ADD COLUMN IF NOT EXISTS orgao VARCHAR(255);
+        ALTER TABLE concursos ADD COLUMN IF NOT EXISTS horas_semana_meta NUMERIC DEFAULT 0;
+        ALTER TABLE concursos ADD COLUMN IF NOT EXISTS dias_disponiveis JSONB DEFAULT '[]'::jsonb;
 
         CREATE TABLE IF NOT EXISTS study_sessions (
           id VARCHAR(255) PRIMARY KEY,

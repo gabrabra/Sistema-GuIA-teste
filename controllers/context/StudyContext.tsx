@@ -35,13 +35,19 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       fetchWithAuth('/api/concursos')
         .then(res => res.ok ? res.json() : [])
         .then(data => {
-          if (Array.isArray(data) && data.length > 0) setConcursoSelecionadoState(data[0]);
+          if (Array.isArray(data) && data.length > 0) {
+            const concurso = data[0];
+            setConcursoSelecionadoState(concurso);
+            if (concurso.horasSemanaMeta) setHorasSemanaMeta(concurso.horasSemanaMeta);
+            if (concurso.diasDisponiveis) setDiasDisponiveis(concurso.diasDisponiveis);
+          }
         })
         .catch(err => console.error('Failed to fetch concurso', err));
     }
   }, [userId, fetchWithAuth]);
 
   const setConcursoSelecionado = useCallback((c: Concurso | null) => {
+    console.log('setConcursoSelecionado called with:', c, 'userId:', userId);
     if (c && !c.id) {
       c.id = crypto.randomUUID();
     }
@@ -52,6 +58,8 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...c, userId })
       }).catch(err => console.error('Failed to save concurso', err));
+    } else {
+      console.error('Failed to save concurso: no concurso or no userId', { c, userId });
     }
   }, [userId, fetchWithAuth]);
 
@@ -86,23 +94,6 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           method: 'DELETE'
         });
         
-        // Delete associated disciplinas and materias on server
-        const discRes = await fetchWithAuth('/api/disciplinas');
-        const discs = await discRes.json();
-        if (Array.isArray(discs)) {
-          for (const d of discs) {
-            await fetchWithAuth(`/api/disciplinas/${d.id}`, { method: 'DELETE' });
-          }
-        }
-        
-        const matRes = await fetchWithAuth('/api/materias');
-        const mats = await matRes.json();
-        if (Array.isArray(mats)) {
-          for (const m of mats) {
-            await fetchWithAuth(`/api/materias/${m.id}`, { method: 'DELETE' });
-          }
-        }
-
         // Reset local state
         setConcursoSelecionadoState(null);
         setDisciplinas([]);
@@ -468,26 +459,47 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [fetchWithAuth]);
 
   const updateDisciplinas = useCallback(async (newDisciplinas: Disciplina[]) => {
-    setDisciplinas(newDisciplinas);
     try {
       const existingRes = await fetchWithAuth('/api/disciplinas');
-      const existing = await existingRes.json();
+      const existing: Disciplina[] = await existingRes.json();
+      
+      const updatedNewDisciplinas = newDisciplinas.map(newD => {
+        const existingD = Array.isArray(existing) ? existing.find(e => e.materiaId === newD.materiaId) : null;
+        if (existingD) {
+          return {
+            ...newD,
+            id: existingD.id, // Keep the same ID
+            horasEstudadasTotal: existingD.horasEstudadasTotal,
+            horasEstudadasHoje: existingD.horasEstudadasHoje,
+            historico: existingD.historico,
+            concluida: existingD.concluida
+          };
+        }
+        return newD;
+      });
+
+      setDisciplinas(updatedNewDisciplinas);
       
       if (Array.isArray(existing)) {
         for (const d of existing) {
-          await fetchWithAuth(`/api/disciplinas/${d.id}`, { method: 'DELETE' });
+          // If the discipline is no longer in the new plan, delete it
+          if (!updatedNewDisciplinas.find(newD => newD.id === d.id)) {
+            await fetchWithAuth(`/api/disciplinas/${d.id}`, { method: 'DELETE' });
+          }
         }
       }
       
-      for (const d of newDisciplinas) {
-        await fetchWithAuth('/api/disciplinas', {
-          method: 'POST',
+      for (const d of updatedNewDisciplinas) {
+        const isExisting = Array.isArray(existing) && existing.find(e => e.id === d.id);
+        await fetchWithAuth(`/api/disciplinas${isExisting ? `/${d.id}` : ''}`, {
+          method: isExisting ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(d)
         });
       }
     } catch (err) {
       console.error('Failed to sync disciplinas', err);
+      setDisciplinas(newDisciplinas); // Fallback to local state if API fails
     }
   }, [fetchWithAuth]);
 

@@ -163,10 +163,13 @@ export const Planeja: React.FC = () => {
     }
 
     setConcursoSelecionado({
+      id: concursoSelecionado?.id,
       orgao: concurso.orgao,
       nome: concurso.nome,
       possuiEdital: concurso.possuiEdital,
-      dataProva: concurso.dataProva || null
+      dataProva: concurso.dataProva || null,
+      horasSemanaMeta: availability.totalHoras,
+      diasDisponiveis: availability.dias
     });
 
     setIsEditing(false);
