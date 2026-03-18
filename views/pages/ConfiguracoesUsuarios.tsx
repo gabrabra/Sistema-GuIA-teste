@@ -22,6 +22,8 @@ export const ConfiguracoesUsuarios: React.FC = () => {
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [userToReset, setUserToReset] = useState<User | null>(null);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   
   // Form state
@@ -142,22 +144,29 @@ export const ConfiguracoesUsuarios: React.FC = () => {
     }
   };
 
-  const handleResetAccount = async (id: string, name: string) => {
-    if (window.confirm(`Tem certeza que deseja resetar a conta de ${name}? Isso irá apagar todos os concursos, disciplinas, matérias e histórico de estudos deste usuário.`)) {
-      try {
-        const response = await fetch(`/api/users/${id}/reset`, {
-          method: 'POST'
-        });
-        
-        if (response.ok) {
-          alert(`Conta de ${name} resetada com sucesso.`);
-        } else {
-          alert('Erro ao resetar conta do usuário');
-        }
-      } catch (error) {
-        console.error('Error resetting user account:', error);
+  const handleResetAccount = (user: User) => {
+    setUserToReset(user);
+    setIsResetModalOpen(true);
+  };
+
+  const confirmReset = async () => {
+    if (!userToReset) return;
+    try {
+      const response = await fetch(`/api/users/${userToReset.id}/reset`, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        alert(`Conta de ${userToReset.name} resetada com sucesso.`);
+      } else {
         alert('Erro ao resetar conta do usuário');
       }
+    } catch (error) {
+      console.error('Error resetting user account:', error);
+      alert('Erro ao resetar conta do usuário');
+    } finally {
+      setIsResetModalOpen(false);
+      setUserToReset(null);
     }
   };
 
@@ -245,7 +254,7 @@ export const ConfiguracoesUsuarios: React.FC = () => {
                   <td className="py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button 
-                        onClick={() => handleResetAccount(user.id, user.name)}
+                        onClick={() => handleResetAccount(user)}
                         className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                         title="Resetar Conta (Apagar dados de estudo)"
                       >
@@ -395,6 +404,36 @@ export const ConfiguracoesUsuarios: React.FC = () => {
                 </Button>
               </div>
             </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal Resetar Conta */}
+      {isResetModalOpen && userToReset && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
+            <h2 className={`text-xl font-bold ${themeClasses.text} mb-4`}>
+              Resetar Conta de {userToReset.name}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Tem certeza que deseja resetar a conta de <strong>{userToReset.name}</strong>? 
+              Esta ação é irreversível e irá apagar permanentemente todos os dados de estudo deste usuário, incluindo:
+            </p>
+            <ul className="list-disc list-inside text-gray-600 mb-6 space-y-1">
+              <li>Concursos</li>
+              <li>Disciplinas</li>
+              <li>Matérias</li>
+              <li>Histórico de estudos</li>
+              <li>Configurações de usuário</li>
+            </ul>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => { setIsResetModalOpen(false); setUserToReset(null); }}>
+                Cancelar
+              </Button>
+              <Button onClick={confirmReset} className="bg-red-600 hover:bg-red-700 text-white">
+                Confirmar Reset
+              </Button>
+            </div>
           </Card>
         </div>
       )}
