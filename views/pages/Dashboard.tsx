@@ -113,7 +113,12 @@ export const Dashboard: React.FC = () => {
           </div>
           <ProgressBar progress={progressoDiario} color={isTimerRunning ? "bg-green-500" : "bg-blue-600"} height="h-3" />
           <p className="text-sm text-gray-500 mt-2 text-right">
-             {isTimerRunning ? 'Cronômetro em andamento' : `${Math.round(progressoDiario)}% da meta diária`}
+             {isTimerRunning ? (
+                <span className="block truncate">
+                  Estudando: <strong>{disciplinas.find(d => d.id === activeSubjectId)?.nome || '...'}</strong>
+                  {activeTopic && ` - ${activeTopic}`}
+                </span>
+             ) : `${Math.round(progressoDiario)}% da meta diária`}
           </p>
         </Card>
 
