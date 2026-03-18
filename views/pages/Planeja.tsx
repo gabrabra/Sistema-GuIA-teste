@@ -8,11 +8,22 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
 
 export const Planeja: React.FC = () => {
-  const { concursoSelecionado, deleteConcurso, setConcursoSelecionado, setDisciplinas, setMetaSemanal, materias } = useStudy();
+  const { 
+    concursoSelecionado, 
+    deleteConcurso, 
+    setConcursoSelecionado, 
+    setDisciplinas, 
+    setMetaSemanal, 
+    materias,
+    horasSemanaMeta,
+    diasDisponiveis,
+    disciplinas
+  } = useStudy();
   const navigate = useNavigate();
   const { themeClasses } = useTheme();
   const [step, setStep] = useState(1);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Form State
   const [concurso, setConcurso] = useState({ orgao: '', nome: '', possuiEdital: true, dataProva: '' });
@@ -35,9 +46,41 @@ export const Planeja: React.FC = () => {
     setDisciplineConfig({});
     setAvailability({ totalHoras: 20, dias: [] });
     setError(null);
+    setIsEditing(false);
   };
 
-  if (concursoSelecionado && step === 1 && !isDeleting) {
+  const handleEdit = () => {
+    if (!concursoSelecionado) return;
+    
+    setConcurso({
+      orgao: concursoSelecionado.orgao || '',
+      nome: concursoSelecionado.nome || '',
+      possuiEdital: concursoSelecionado.possuiEdital || false,
+      dataProva: concursoSelecionado.dataProva || ''
+    });
+
+    const uniqueMateriaIds = Array.from(new Set(disciplinas.map(d => d.materiaId)));
+    setSelectedMateriaIds(uniqueMateriaIds);
+
+    const newConfig: Record<string, { peso: number | string, horas: number | string }> = {};
+    uniqueMateriaIds.forEach((id: string) => {
+      const disciplina = disciplinas.find(d => d.materiaId === id);
+      if (disciplina) {
+        newConfig[id] = { 
+          peso: disciplina.peso, 
+          horas: disciplina.horasSemanaMeta * disciplina.peso 
+        };
+      }
+    });
+    setDisciplineConfig(newConfig);
+    
+    setAvailability({ totalHoras: horasSemanaMeta, dias: diasDisponiveis });
+    
+    setIsEditing(true);
+    setStep(1);
+  };
+
+  if (concursoSelecionado && step === 1 && !isDeleting && !isEditing) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
@@ -55,6 +98,10 @@ export const Planeja: React.FC = () => {
           <div className="flex gap-4 justify-center pt-4">
             <Button variant="outline" onClick={() => navigate('/')}>
               Voltar ao Dashboard
+            </Button>
+            <Button variant="secondary" onClick={handleEdit}>
+              <Settings size={18} className="mr-2" />
+              Editar Planejamento
             </Button>
             <Button 
               variant="danger" 
@@ -121,6 +168,8 @@ export const Planeja: React.FC = () => {
       possuiEdital: concurso.possuiEdital,
       dataProva: concurso.dataProva || null
     });
+
+    setIsEditing(false);
 
     // 1. Prepare pool of subjects with their counts based on weight
     let pool: { id: string, count: number, originalMateria: any }[] = [];
