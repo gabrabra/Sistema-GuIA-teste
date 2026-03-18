@@ -12,7 +12,10 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  app.use(cors());
+  app.use(cors({
+    origin: 'https://ais-dev-qr754exha6ysjxr2xfehmq-109398870507.us-east1.run.app',
+    credentials: true
+  }));
   app.use(express.json());
 
   // Initialize DB

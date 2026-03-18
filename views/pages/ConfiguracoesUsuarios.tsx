@@ -40,7 +40,7 @@ export const ConfiguracoesUsuarios: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/users');
+      const response = await fetch('/api/users', { credentials: 'include' });
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
