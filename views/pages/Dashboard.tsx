@@ -3,11 +3,13 @@ import { useStudy } from '../../controllers/context/StudyContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { ProgressBar } from '../components/ui/ProgressBar';
+import { Modal } from '../components/ui/Modal';
 import { formatTime, formatTimeWithSeconds } from '../../models/utils/timeUtils';
 import { Play, Pause, Award, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { StudyHeatmap } from '../components/ui/StudyHeatmap';
+import { useTheme } from '../../controllers/context/ThemeContext';
 
 export const Dashboard: React.FC = () => {
   const { 
@@ -18,11 +20,20 @@ export const Dashboard: React.FC = () => {
     isTimerRunning, 
     iniciarCronometro, 
     pausarCronometro,
-    disciplinas
+    disciplinas,
+    materias,
+    activeSubjectId,
+    activeTopic
   } = useStudy();
   const navigate = useNavigate();
+  const { themeClasses } = useTheme();
 
   const [timeLeft, setTimeLeft] = useState<{days: number, h: number, m: number, s: number} | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [topic, setTopic] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Daily Goal (Mocked as 3 hours for demo, but could be dynamic)
   const metaDiariaSegundos = 3 * 3600; 
@@ -70,12 +81,118 @@ export const Dashboard: React.FC = () => {
     if (!concursoSelecionado) {
       navigate('/planeja');
     } else {
-      iniciarCronometro();
+      setIsModalOpen(true);
     }
   };
 
+  const handleConfirmStudy = () => {
+    if (selectedSubjectId) {
+      iniciarCronometro(selectedSubjectId, topic);
+      setIsModalOpen(false);
+      setSelectedSubjectId(null);
+      setTopic('');
+    }
+  };
+
+  const getLinkedMateria = () => {
+    if (!selectedSubjectId) return null;
+    const disciplina = disciplinas.find(d => d.id === selectedSubjectId);
+    if (!disciplina?.materiaId) return null;
+    return materias.find(m => m.id === disciplina.materiaId);
+  };
+
+  const linkedMateria = getLinkedMateria();
+
   return (
     <div className="space-y-6">
+      {/* Modal for selecting subject and topic */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Iniciar Sessão de Estudo"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>
+              Disciplina
+            </label>
+            <select
+              className={`w-full p-2 border rounded-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+              value={selectedSubjectId || ''}
+              onChange={(e) => {
+                setSelectedSubjectId(e.target.value);
+                setTopic('');
+                setSearchTerm('');
+              }}
+            >
+              <option value="">Selecione uma disciplina</option>
+              {disciplinas.map(d => (
+                <option key={d.id} value={d.id}>{d.nome}</option>
+              ))}
+            </select>
+          </div>
+          
+          {selectedSubjectId && (
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>
+                Assunto / Tópico
+              </label>
+            {linkedMateria && linkedMateria.assuntos.length > 0 ? (
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setIsDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsDropdownOpen(true)}
+                    className={`w-full p-2 border rounded-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                    placeholder="Pesquisar assunto..."
+                  />
+                  {isDropdownOpen && (
+                    <div className={`absolute z-50 w-full mt-1 border rounded-lg shadow-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                      {linkedMateria.assuntos
+                        .filter(a => a.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map((assunto) => (
+                          <div
+                            key={assunto.id}
+                            className={`p-3 cursor-pointer ${topic === assunto.nome ? 'bg-blue-50 text-blue-700' : ''}`}
+                            onClick={() => {
+                              setTopic(assunto.nome);
+                              setSearchTerm(assunto.nome);
+                              setIsDropdownOpen(false);
+                            }}
+                          >
+                            {assunto.nome}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  className={`w-full p-2 border rounded-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                  placeholder="O que você vai estudar?"
+                />
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirmStudy} disabled={!selectedSubjectId}>
+              Iniciar Cronômetro
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
