@@ -55,20 +55,6 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
   }, [userId, fetchWithAuth]);
 
-  const deleteConcurso = useCallback(async () => {
-    if (concursoSelecionado?.id && userId) {
-      try {
-        await fetchWithAuth(`/api/concursos/${concursoSelecionado.id}`, {
-          method: 'DELETE'
-        });
-        setConcursoSelecionadoState(null);
-        setDisciplinas([]); // Clear associated disciplinas
-      } catch (err) {
-        console.error('Failed to delete concurso', err);
-      }
-    }
-  }, [concursoSelecionado, userId, fetchWithAuth]);
-
   const [disciplinas, setDisciplinas] = useState<Disciplina[]>([]);
   const [materias, setMaterias] = useState<Materia[]>([]);
   const disciplinasRef = useRef(disciplinas);
@@ -92,6 +78,45 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [currentSessionSeconds, setCurrentSessionSeconds] = useState(0);
   const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
+
+  const deleteConcurso = useCallback(async () => {
+    if (concursoSelecionado?.id && userId) {
+      try {
+        await fetchWithAuth(`/api/concursos/${concursoSelecionado.id}`, {
+          method: 'DELETE'
+        });
+        
+        // Delete associated disciplinas and materias on server
+        const discRes = await fetchWithAuth('/api/disciplinas');
+        const discs = await discRes.json();
+        if (Array.isArray(discs)) {
+          for (const d of discs) {
+            await fetchWithAuth(`/api/disciplinas/${d.id}`, { method: 'DELETE' });
+          }
+        }
+        
+        const matRes = await fetchWithAuth('/api/materias');
+        const mats = await matRes.json();
+        if (Array.isArray(mats)) {
+          for (const m of mats) {
+            await fetchWithAuth(`/api/materias/${m.id}`, { method: 'DELETE' });
+          }
+        }
+
+        // Reset local state
+        setConcursoSelecionadoState(null);
+        setDisciplinas([]);
+        setMaterias([]);
+        setHorasSemanaMeta(0);
+        setDiasDisponiveis([]);
+        setHorasEstudadasHoje(0);
+        setHistoricoEstudos(INITIAL_HISTORY);
+      } catch (err) {
+        console.error('Failed to delete concurso', err);
+      }
+    }
+  }, [concursoSelecionado, userId, fetchWithAuth, setDisciplinas, setMaterias, setHorasSemanaMeta, setDiasDisponiveis, setHorasEstudadasHoje, setHistoricoEstudos]);
+
 
   // Fetch initial data
   useEffect(() => {
