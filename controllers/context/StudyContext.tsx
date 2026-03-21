@@ -86,6 +86,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [currentSessionSeconds, setCurrentSessionSeconds] = useState(0);
   const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
+  const sessionStartTime = useRef<number | null>(null);
 
   const deleteConcurso = useCallback(async () => {
     if (concursoSelecionado?.id && userId) {
@@ -97,7 +98,6 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Reset local state
         setConcursoSelecionadoState(null);
         setDisciplinas([]);
-        setMaterias([]);
         setHorasSemanaMeta(0);
         setDiasDisponiveis([]);
         setHorasEstudadasHoje(0);
@@ -158,36 +158,26 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Timer Logic
   useEffect(() => {
     let interval: any;
-    let lastTick = Date.now();
 
     if (isTimerRunning) {
+      sessionStartTime.current = Date.now();
       interval = setInterval(() => {
         const now = Date.now();
-        const deltaMs = now - lastTick;
+        const deltaMs = now - (sessionStartTime.current || now);
         const deltaSeconds = Math.floor(deltaMs / 1000);
         
         if (deltaSeconds > 0) {
-          setHorasEstudadasHoje((prev) => prev + deltaSeconds);
           setCurrentSessionSeconds((prev) => prev + deltaSeconds);
-          
-          if (activeSubjectId) {
-            setDisciplinas((prevDisciplinas) => 
-              prevDisciplinas.map((d) => 
-                d.id === activeSubjectId 
-                  ? { ...d, horasEstudadasHoje: d.horasEstudadasHoje + deltaSeconds, horasEstudadasTotal: d.horasEstudadasTotal + deltaSeconds }
-                  : d
-              )
-            );
-          }
-          lastTick += deltaSeconds * 1000;
+          sessionStartTime.current = now;
         }
       }, 1000);
     } else {
       clearInterval(interval);
+      sessionStartTime.current = null;
     }
 
     return () => clearInterval(interval);
-  }, [isTimerRunning, activeSubjectId]);
+  }, [isTimerRunning]);
 
   const iniciarCronometro = useCallback((disciplinaId?: string, topico?: string) => {
     if (disciplinaId) {
@@ -387,6 +377,8 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                     };
                     return {
                         ...d,
+                        horasEstudadasHoje: d.horasEstudadasHoje + currentSessionSeconds,
+                        horasEstudadasTotal: d.horasEstudadasTotal + currentSessionSeconds,
                         historico: [...(d.historico || []), newHistory]
                     };
                 }
@@ -395,6 +387,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             const updatedDisciplina = newDisciplinas.find(d => d.id === activeSubjectId);
             if (updatedDisciplina) {
+                setHorasEstudadasHoje((prev) => prev + currentSessionSeconds);
                 fetchWithAuth(`/api/disciplinas/${updatedDisciplina.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
