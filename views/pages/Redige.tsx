@@ -88,13 +88,13 @@ export const Redige: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => handlePromptClick(prompt)}
-                  className={`flex flex-col items-start p-4 rounded-2xl border transition-all duration-300 text-left w-full min-h-[140px] hover:scale-[1.01] hover:shadow-md ${prompt.color}`}
+                  className={`flex flex-col items-start p-3 rounded-xl border transition-all duration-300 text-left w-full min-h-[100px] hover:scale-[1.01] hover:shadow-md ${prompt.color}`}
                 >
-                  <div className={`p-2 rounded-xl bg-white/60 mb-2 ${prompt.iconColor}`}>
-                    <IconComponent size={20} />
+                  <div className={`p-1.5 rounded-lg bg-white/60 mb-1.5 ${prompt.iconColor}`}>
+                    <IconComponent size={16} />
                   </div>
-                  <h3 className="font-bold text-gray-800 mb-1 text-sm lg:text-base">{prompt.title}</h3>
-                  <p className="text-xs lg:text-sm text-gray-600 leading-relaxed line-clamp-3">{prompt.description}</p>
+                  <h3 className="font-bold text-gray-800 mb-0.5 text-xs lg:text-sm">{prompt.title}</h3>
+                  <p className="text-[11px] lg:text-xs text-gray-600 leading-snug line-clamp-2">{prompt.description}</p>
                 </button>
               );
             })}
@@ -143,15 +143,12 @@ export const Redige: React.FC = () => {
             }
           }}
           placeholder={`Cole seu texto aqui. Limite: ${maxChars} caracteres.`}
-          className="w-full p-3 max-h-32 bg-transparent border-none outline-none resize-none text-gray-700 placeholder-gray-400"
-          rows={2}
+          className="w-full p-3 max-h-48 bg-transparent border-none outline-none resize-none text-gray-700 placeholder-gray-400"
+          rows={4}
           maxLength={maxChars}
         />
         <div className="flex justify-between items-center px-2 pb-1">
           <span className="text-xs text-gray-400">{input.length}/{maxChars}</span>
-          <button className="text-gray-400 hover:text-blue-600 p-2 rounded-full hover:bg-blue-50 transition-colors">
-            <Paperclip size={20} />
-          </button>
           <button 
             onClick={() => handleSend()} 
             disabled={isLoading || !input.trim()}
