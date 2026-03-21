@@ -12,8 +12,7 @@ let client: OpenAI;
 function getClient() {
   if (!client) {
     client = new OpenAI({ 
-      apiKey: process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || 'dummy_key_to_prevent_crash',
-      baseURL: process.env.GEMINI_API_KEY ? 'https://generativelanguage.googleapis.com/v1beta/openai/' : undefined
+      apiKey: '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',
     });
   }
   return client;
@@ -21,8 +20,8 @@ function getClient() {
 
 const provider = new OpenAIProvider({ openAIClient: getClient() });
 
-const defaultModel = process.env.GEMINI_API_KEY ? "gemini-2.5-flash" : "gpt-4o-mini";
-const reasoningModel = process.env.GEMINI_API_KEY ? "gemini-2.5-flash" : "o3-mini";
+const defaultModel = "gpt-4o-mini";
+const reasoningModel = "o3-mini";
 
 // Classify definitions
 const ClassifySchema = z.object({ category: z.enum(["portugues", "geral"]) });
@@ -429,7 +428,7 @@ Antes de responder, verificar:
 FIM DO SYSTEM PROMPT`,
   model: reasoningModel,
   modelSettings: {
-    reasoning: process.env.GEMINI_API_KEY ? undefined : {
+    reasoning: {
       effort: "medium"
     },
     store: true
