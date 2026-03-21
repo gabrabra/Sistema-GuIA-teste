@@ -304,8 +304,8 @@ export const Ciclo: React.FC = () => {
                               <span className="text-gray-700 truncate max-w-[200px]" title={sessao.assunto}>
                                 {sessao.assunto}
                               </span>
-                              <div className="flex items-center gap-3">
-                                <span className="font-mono text-gray-500 text-xs">
+                              <div className="flex items-center gap-1">
+                                <span className="font-mono text-gray-500 text-xs mr-2">
                                   {formatTimeWithSeconds(sessao.segundos)}
                                 </span>
                                 <button 
@@ -313,7 +313,7 @@ export const Ciclo: React.FC = () => {
                                     e.stopPropagation();
                                     iniciarCronometro(disc.id, sessao.assunto !== 'Estudo Livre' ? sessao.assunto : undefined);
                                   }}
-                                  className="text-blue-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="p-1.5 rounded-md text-blue-500 hover:bg-blue-100 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-all"
                                   title="Continuar estudando este assunto"
                                 >
                                   <Play size={14} />
@@ -325,7 +325,7 @@ export const Ciclo: React.FC = () => {
                                       excluirSessaoEstudo(disc.id, sessao.id);
                                     }
                                   }}
-                                  className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="p-1.5 rounded-md text-red-400 hover:bg-red-100 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all"
                                   title="Excluir este registro"
                                 >
                                   <Trash2 size={14} />

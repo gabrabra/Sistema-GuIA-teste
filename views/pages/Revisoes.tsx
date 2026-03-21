@@ -237,13 +237,8 @@ export const Revisoes: React.FC = () => {
                               <input 
                                 type="date" 
                                 value={topic.dataEstudo ? new Date(topic.dataEstudo).toISOString().split('T')[0] : ''}
-                                onChange={(e) => {
-                                  const newDate = e.target.value;
-                                  if (newDate) {
-                                    updateAssunto(topic.materiaId, topic.id, { dataEstudo: new Date(newDate).toISOString() });
-                                  }
-                                }}
-                                className={`bg-transparent border-b border-gray-200 focus:border-blue-500 outline-none text-sm w-32 ${themeClasses.text}`}
+                                disabled
+                                className={`bg-transparent outline-none text-sm w-32 cursor-not-allowed text-gray-500`}
                               />
                             </td>
                             
