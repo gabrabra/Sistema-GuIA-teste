@@ -11,10 +11,16 @@ const fileSearch = fileSearchTool([
 let client: OpenAI;
 function getClient() {
   if (!client) {
-    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'dummy_key_to_prevent_crash' });
+    client = new OpenAI({ 
+      apiKey: process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || 'dummy_key_to_prevent_crash',
+      baseURL: process.env.GEMINI_API_KEY ? 'https://generativelanguage.googleapis.com/v1beta/openai/' : undefined
+    });
   }
   return client;
 }
+
+const defaultModel = process.env.GEMINI_API_KEY ? "gemini-2.5-flash" : "gpt-4o-mini";
+const reasoningModel = process.env.GEMINI_API_KEY ? "gemini-2.5-flash" : "o3-mini";
 
 // Classify definitions
 const ClassifySchema = z.object({ category: z.enum(["portugues", "geral"]) });
@@ -119,7 +125,7 @@ Example 15:
 Input:
 Explique o conceito de governança pública.
 Category: geral`,
-  model: "gpt-4o-mini",
+  model: defaultModel,
   outputType: ClassifySchema,
   modelSettings: {
     temperature: 0
@@ -203,7 +209,7 @@ Não houve repetição de resposta anterior.
 Respeita limite de linhas e palavras.
 Não houve vazamento de processo interno.
 🚫 Nunca exibir verificações internas ao usuário.`,
-  model: "gpt-4o-mini",
+  model: defaultModel,
   tools: [
     fileSearch
   ],
@@ -419,9 +425,9 @@ Antes de responder, verificar:
 • todos os blocos obrigatórios presentes
 
 FIM DO SYSTEM PROMPT`,
-  model: "o4-mini",
+  model: reasoningModel,
   modelSettings: {
-    reasoning: {
+    reasoning: process.env.GEMINI_API_KEY ? undefined : {
       effort: "medium"
     },
     store: true
@@ -443,7 +449,8 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
     const runner = new Runner({
       traceMetadata: {
         __trace_source__: "agent-builder",
-        workflow_id: "wf_69b053fd5a2c8190a39f249a4ece65060af2a944fc0a98fe"
+        workflow_id: "wf_69b053fd5a2c8190a39f249a4ece65060af2a944fc0a98fe",
+        version: "6"
       }
     });
 

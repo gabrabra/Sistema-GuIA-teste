@@ -45,20 +45,26 @@ export const Responde: React.FC = () => {
         body: JSON.stringify({ message: text }),
       });
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error(`Server returned ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Network response was not ok');
+      }
+
       setMessages(prev => [...prev, { 
         role: 'ai', 
         text: data.response || 'Desculpe, não consegui processar sua solicitação.' 
       }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error calling Guia Responde:', error);
       setMessages(prev => [...prev, { 
         role: 'ai', 
-        text: 'Ocorreu um erro ao conectar com o GuIA. Por favor, tente novamente.' 
+        text: `Ocorreu um erro: ${error.message || 'Falha ao conectar'}. Verifique as chaves de API.` 
       }]);
     } finally {
       setIsLoading(false);
