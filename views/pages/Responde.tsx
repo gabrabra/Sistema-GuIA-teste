@@ -53,7 +53,8 @@ export const Responde: React.FC = () => {
       }
 
       if (!response.ok) {
-        throw new Error(data.error || data.details || 'Network response was not ok');
+        const errorMsg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Network response was not ok');
+        throw new Error(errorMsg);
       }
 
       setMessages(prev => [...prev, { 

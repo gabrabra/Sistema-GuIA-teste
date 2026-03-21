@@ -1,4 +1,4 @@
-import { fileSearchTool, Agent, AgentInputItem, Runner, withTrace } from "@openai/agents";
+import { fileSearchTool, Agent, AgentInputItem, Runner, withTrace, OpenAIProvider } from "@openai/agents";
 import { OpenAI } from "openai";
 import { z } from "zod";
 
@@ -18,6 +18,8 @@ function getClient() {
   }
   return client;
 }
+
+const provider = new OpenAIProvider({ openAIClient: getClient() });
 
 const defaultModel = process.env.GEMINI_API_KEY ? "gemini-2.5-flash" : "gpt-4o-mini";
 const reasoningModel = process.env.GEMINI_API_KEY ? "gemini-2.5-flash" : "o3-mini";
@@ -447,6 +449,7 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
       { role: "user", content: [{ type: "input_text", text: workflow.input_as_text }] }
     ];
     const runner = new Runner({
+      modelProvider: provider,
       traceMetadata: {
         __trace_source__: "agent-builder",
         workflow_id: "wf_69b053fd5a2c8190a39f249a4ece65060af2a944fc0a98fe",
@@ -483,12 +486,18 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
       return resultTemp.finalOutput;
     } else {
       const classifyInput = workflow.input_as_text;
-      const classifyResultTemp = await runner.run(
-        classify,
-        [
-          { role: "user", content: [{ type: "input_text", text: classifyInput }] }
-        ]
-      );
+      let classifyResultTemp;
+      try {
+        classifyResultTemp = await runner.run(
+          classify,
+          [
+            { role: "user", content: [{ type: "input_text", text: classifyInput }] }
+          ]
+        );
+      } catch (err) {
+        console.error("Error running classify agent:", err);
+        throw err;
+      }
 
       if (!classifyResultTemp.finalOutput) {
           throw new Error("Agent result is undefined");
