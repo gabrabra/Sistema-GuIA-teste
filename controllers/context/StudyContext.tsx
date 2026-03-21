@@ -86,7 +86,6 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [currentSessionSeconds, setCurrentSessionSeconds] = useState(0);
   const [isPauseModalOpen, setIsPauseModalOpen] = useState(false);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
-  const sessionStartTime = useRef<number | null>(null);
 
   const deleteConcurso = useCallback(async () => {
     if (concursoSelecionado?.id && userId) {
@@ -98,6 +97,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Reset local state
         setConcursoSelecionadoState(null);
         setDisciplinas([]);
+        setMaterias([]);
         setHorasSemanaMeta(0);
         setDiasDisponiveis([]);
         setHorasEstudadasHoje(0);
@@ -158,26 +158,36 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Timer Logic
   useEffect(() => {
     let interval: any;
+    let lastTick = Date.now();
 
     if (isTimerRunning) {
-      sessionStartTime.current = Date.now();
       interval = setInterval(() => {
         const now = Date.now();
-        const deltaMs = now - (sessionStartTime.current || now);
+        const deltaMs = now - lastTick;
         const deltaSeconds = Math.floor(deltaMs / 1000);
         
         if (deltaSeconds > 0) {
+          setHorasEstudadasHoje((prev) => prev + deltaSeconds);
           setCurrentSessionSeconds((prev) => prev + deltaSeconds);
-          sessionStartTime.current = now;
+          
+          if (activeSubjectId) {
+            setDisciplinas((prevDisciplinas) => 
+              prevDisciplinas.map((d) => 
+                d.id === activeSubjectId 
+                  ? { ...d, horasEstudadasHoje: d.horasEstudadasHoje + deltaSeconds, horasEstudadasTotal: d.horasEstudadasTotal + deltaSeconds }
+                  : d
+              )
+            );
+          }
+          lastTick += deltaSeconds * 1000;
         }
       }, 1000);
     } else {
       clearInterval(interval);
-      sessionStartTime.current = null;
     }
 
     return () => clearInterval(interval);
-  }, [isTimerRunning]);
+  }, [isTimerRunning, activeSubjectId]);
 
   const iniciarCronometro = useCallback((disciplinaId?: string, topico?: string) => {
     if (disciplinaId) {
@@ -365,50 +375,55 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [fetchWithAuth]);
 
   const salvarSessaoEstudo = useCallback((concluido: boolean) => {
-    if (activeSubjectId && currentSessionSeconds > 0) {
-        setDisciplinas(prev => {
-            const newDisciplinas = prev.map(d => {
-                if (d.id === activeSubjectId) {
-                    const newHistory = {
-                        id: crypto.randomUUID(),
-                        data: new Date().toISOString(),
-                        segundos: currentSessionSeconds,
-                        assunto: activeTopic || 'Estudo Livre'
-                    };
-                    return {
-                        ...d,
-                        horasEstudadasHoje: d.horasEstudadasHoje + currentSessionSeconds,
-                        horasEstudadasTotal: d.horasEstudadasTotal + currentSessionSeconds,
-                        historico: [...(d.historico || []), newHistory]
-                    };
+    if (activeSubjectId) {
+        if (currentSessionSeconds > 0) {
+            setDisciplinas(prev => {
+                const newDisciplinas = prev.map(d => {
+                    if (d.id === activeSubjectId) {
+                        const newHistory = {
+                            id: crypto.randomUUID(),
+                            data: new Date().toISOString(),
+                            segundos: currentSessionSeconds,
+                            assunto: activeTopic || 'Estudo Livre'
+                        };
+                        return {
+                            ...d,
+                            historico: [...(d.historico || []), newHistory]
+                        };
+                    }
+                    return d;
+                });
+
+                const updatedDisciplina = newDisciplinas.find(d => d.id === activeSubjectId);
+                if (updatedDisciplina) {
+                    fetchWithAuth(`/api/disciplinas/${updatedDisciplina.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedDisciplina)
+                    }).catch(err => console.error('Failed to update disciplina', err));
                 }
-                return d;
+
+                return newDisciplinas;
             });
-
-            const updatedDisciplina = newDisciplinas.find(d => d.id === activeSubjectId);
-            if (updatedDisciplina) {
-                setHorasEstudadasHoje((prev) => prev + currentSessionSeconds);
-                fetchWithAuth(`/api/disciplinas/${updatedDisciplina.id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedDisciplina)
-                }).catch(err => console.error('Failed to update disciplina', err));
-            }
-
-            return newDisciplinas;
-        });
+        }
 
         // Mark topic as finished if requested
         if (concluido && activeTopic) {
+            console.log('salvarSessaoEstudo - concluido:', concluido, 'activeTopic:', activeTopic);
             const disciplina = disciplinasRef.current.find(d => d.id === activeSubjectId);
+            console.log('disciplina:', disciplina);
             if (disciplina?.materiaId) {
                 const materia = materiasRef.current.find(m => m.id === disciplina.materiaId);
+                console.log('materia:', materia);
                 const assunto = materia?.assuntos.find(a => a.nome === activeTopic);
+                console.log('assunto:', assunto);
                 if (assunto) {
                     updateAssunto(disciplina.materiaId, assunto.id, { 
                         concluido: true,
                         dataEstudo: assunto.dataEstudo || new Date().toISOString()
                     });
+                } else {
+                    console.log('Assunto not found:', activeTopic);
                 }
             }
         }
