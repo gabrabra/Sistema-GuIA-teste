@@ -511,22 +511,7 @@ export const Planeja: React.FC = () => {
         title="Anexar Edital do Concurso"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">Cole o conteúdo do edital ou faça upload do arquivo PDF para análise automática das disciplinas.</p>
-          
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer">
-              <Upload size={32} className="mx-auto text-gray-400 mb-2" />
-              <p className="text-sm font-medium text-gray-700">Clique para fazer upload do PDF</p>
-              <p className="text-xs text-gray-400">ou arraste e solte aqui</p>
-          </div>
-
-          <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-gray-200" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Ou cole o texto</span>
-              </div>
-          </div>
+          <p className="text-sm text-gray-500">Cole o conteúdo do edital para análise automática das disciplinas.</p>
 
           <textarea
               className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none resize-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
