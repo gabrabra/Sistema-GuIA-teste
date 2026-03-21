@@ -28,21 +28,47 @@ export const Redige: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = (text: string = input) => {
+  const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
     
     setMessages(prev => [...prev, { role: 'user', text: text }]);
     setInput('');
     setIsLoading(true);
 
-    // Mock Response
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/redige', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: text }),
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error(`Server returned ${response.status} ${response.statusText}`);
+      }
+
+      if (!response.ok) {
+        const errorMsg = data.details ? `${data.error}: ${data.details}` : (data.error || 'Network response was not ok');
+        throw new Error(errorMsg);
+      }
+
       setMessages(prev => [...prev, { 
         role: 'ai', 
-        text: 'Entendido. Vou analisar seu texto com foco na escrita discursiva. Como posso ajudar a aprimorar sua redação hoje?' 
+        text: data.response || 'Desculpe, não consegui processar sua solicitação.' 
       }]);
+    } catch (error: any) {
+      console.error('Error calling Guia Redige:', error);
+      setMessages(prev => [...prev, { 
+        role: 'ai', 
+        text: `Ocorreu um erro: ${error.message || 'Falha ao conectar'}. Verifique as chaves de API.` 
+      }]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handlePromptClick = (prompt: any) => {
