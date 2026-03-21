@@ -46,10 +46,10 @@ export const Ciclo: React.FC = () => {
   const studyStreak = horasEstudadasHoje > 0 ? 1 : 0; 
 
   const guides = [
-    { id: 'padrao', label: 'Ciclo Padrão', icon: Layers, desc: 'Foco equilibrado em teoria e prática' },
-    { id: 'reta-final', label: 'Reta Final', icon: Zap, desc: 'Alta intensidade pós-edital' },
-    { id: 'questoes', label: 'Só Questões', icon: Target, desc: 'Baterias de exercícios' },
-    { id: 'revisao', label: 'Revisão Turbo', icon: BookOpen, desc: 'Consolidação de memória' },
+    { id: 'padrao', label: 'Ciclo Padrão', icon: Layers, desc: 'Foco equilibrado em teoria e prática', disabled: false },
+    { id: 'reta-final', label: 'Reta Final', icon: Zap, desc: 'Alta intensidade pós-edital', disabled: true },
+    { id: 'questoes', label: 'Só Questões', icon: Target, desc: 'Baterias de exercícios', disabled: true },
+    { id: 'revisao', label: 'Revisão Turbo', icon: BookOpen, desc: 'Consolidação de memória', disabled: true },
   ];
 
   const indicators = [
@@ -141,25 +141,29 @@ export const Ciclo: React.FC = () => {
           return (
             <button
               key={guide.id}
-              onClick={() => setSelectedGuide(guide.id)}
+              onClick={() => !guide.disabled && setSelectedGuide(guide.id)}
+              disabled={guide.disabled}
+              title={guide.disabled ? 'Essa função será liberada nas próximas atualizações' : ''}
               className={`p-3 rounded-xl border-2 text-left transition-all duration-200 flex flex-col gap-2 relative overflow-hidden ${
-                isSelected 
-                  ? 'border-blue-500 bg-blue-50' 
-                  : 'border-white bg-white hover:border-blue-200 text-gray-600'
+                guide.disabled
+                  ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                  : isSelected 
+                    ? 'border-blue-500 bg-blue-50' 
+                    : 'border-white bg-white hover:border-blue-200 text-gray-600'
               }`}
             >
-              <div className={`p-2 rounded-lg w-fit ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
+              <div className={`p-2 rounded-lg w-fit ${isSelected && !guide.disabled ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-500'}`}>
                 <guide.icon size={20} />
               </div>
               <div>
-                <span className={`block font-bold text-sm ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}>
+                <span className={`block font-bold text-sm ${isSelected && !guide.disabled ? 'text-blue-700' : 'text-gray-700'}`}>
                   {guide.label}
                 </span>
                 <span className="text-xs text-gray-400 leading-tight block mt-1">
-                  {guide.desc}
+                  {guide.disabled ? 'Em breve nas próximas atualizações' : guide.desc}
                 </span>
               </div>
-              {isSelected && (
+              {isSelected && !guide.disabled && (
                 <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
               )}
             </button>
