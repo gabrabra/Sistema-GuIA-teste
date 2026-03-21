@@ -64,10 +64,18 @@ export const StudyTimerModal: React.FC = () => {
 
         {isFinishModalOpen && (
           <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">Finalizar Tópico</h2>
-              <p className="text-gray-500">Você concluiu o estudo do tópico <strong>{activeTopic || 'Estudo Livre'}</strong>?</p>
-              <p className="text-sm text-gray-400 mt-2">Ao marcar como concluído, ele entrará no seu ciclo de revisões.</p>
+            <div className="space-y-4">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold mb-2">Finalizar Tópico</h2>
+                <p className="text-gray-500">Você concluiu o estudo do tópico <strong>{activeTopic || 'Estudo Livre'}</strong>?</p>
+              </div>
+              
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl text-sm text-amber-800">
+                <p className="flex items-start gap-2">
+                  <span className="text-lg">⚠️</span>
+                  <span><strong>Atenção!</strong> Só marque como "sim, concluí" se você finalizou a teoria de todo esse tópico, assim ele automaticamente será programado nas suas revisões. Então se você não finalizou todo o estudo teórico, marque como "ainda não" para continuar depois.</span>
+                </p>
+              </div>
             </div>
             
             <div className="flex gap-3">
