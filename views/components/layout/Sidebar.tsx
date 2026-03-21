@@ -135,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               </button>
 
               {isConfigOpen && (
-                <div className="mt-1 ml-4 space-y-1 border-l-2 border-gray-100 pl-2">
+                <div className={`mt-1 ml-4 space-y-1 border-l-2 ${themeClasses.sidebarBorder} pl-2`}>
                   {configSubItems.map((subItem) => (
                     <NavLink
                       key={subItem.path}
@@ -143,8 +143,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
                           isActive
-                            ? `${themeClasses.sidebarActiveText} font-medium bg-gray-50`
-                            : `${themeClasses.sidebarText} hover:text-gray-900`
+                            ? `${themeClasses.sidebarActiveBg} ${themeClasses.sidebarActiveText} font-medium`
+                            : `${themeClasses.sidebarText} hover:bg-gray-50 hover:text-gray-900`
                         }`
                       }
                     >
@@ -158,7 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           </nav>
         </div>
 
-        <div className="p-6 border-t border-gray-50">
+        <div className={`p-6 border-t ${themeClasses.sidebarBorder}`}>
           <button 
             onClick={handleLogout}
             className={`flex items-center gap-3 ${themeClasses.sidebarText} hover:text-red-500 transition-colors w-full px-4 py-2`}
