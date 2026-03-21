@@ -131,6 +131,14 @@ export const Planeja: React.FC = () => {
       setError('Por favor, informe a data da prova, já que o edital já saiu.');
       return;
     }
+    if (step === 1 && concurso.possuiEdital && concurso.dataProva) {
+      const todayDate = new Date();
+      const minDate = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+      if (concurso.dataProva < minDate) {
+        setError('A data da prova não pode ser no passado.');
+        return;
+      }
+    }
     if (step === 2 && selectedMateriaIds.length === 0) {
       setError('Por favor, selecione pelo menos uma matéria.');
       return;
@@ -263,6 +271,9 @@ export const Planeja: React.FC = () => {
     setIsEditalModalOpen(false);
   };
 
+  const todayDate = new Date();
+  const minDate = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
@@ -343,6 +354,7 @@ export const Planeja: React.FC = () => {
               <label className={`block text-sm font-medium ${themeClasses.text} ${!concurso.possuiEdital ? 'opacity-50' : ''}`}>Data da Prova</label>
               <input 
                 type="date" 
+                min={minDate}
                 className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'} ${!concurso.possuiEdital ? 'opacity-50 cursor-not-allowed' : ''}`}
                 value={concurso.dataProva}
                 onChange={e => {
