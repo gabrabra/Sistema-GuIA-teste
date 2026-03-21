@@ -8,7 +8,13 @@ const fileSearch = fileSearchTool([
 ]);
 
 // Shared client for guardrails and file search
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let client: OpenAI;
+function getClient() {
+  if (!client) {
+    client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || 'dummy_key_to_prevent_crash' });
+  }
+  return client;
+}
 
 // Classify definitions
 const ClassifySchema = z.object({ category: z.enum(["portugues", "geral"]) });
@@ -450,7 +456,7 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
       const rag_query = "[NOVA QUESTÃO - IGNORE TODO O HISTÓRICO ANTERIOR]\\n\\n" + state.ultima_questao;
       
       try {
-        await client.vectorStores.search("vs_69a3098120f48191aa372a865ddb5398", {
+        await getClient().vectorStores.search("vs_69a3098120f48191aa372a865ddb5398", {
           query: rag_query,
           max_num_results: 8
         });
@@ -488,7 +494,7 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
         const rag_query = "[NOVA QUESTÃO - IGNORE TODO O HISTÓRICO ANTERIOR]\\n\\n" + state.ultima_questao;
         
         try {
-          await client.vectorStores.search("vs_69a3098120f48191aa372a865ddb5398", {
+          await getClient().vectorStores.search("vs_69a3098120f48191aa372a865ddb5398", {
             query: rag_query,
             max_num_results: 8
           });
