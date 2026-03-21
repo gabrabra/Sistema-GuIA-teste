@@ -29,21 +29,40 @@ export const Responde: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = (text: string = input) => {
+  const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
     
     setMessages(prev => [...prev, { role: 'user', text: text }]);
     setInput('');
     setIsLoading(true);
 
-    // Mock Response
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/responde', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: text }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
       setMessages(prev => [...prev, { 
         role: 'ai', 
-        text: 'Essa é uma resposta simulada do GuIA. Estou processando sua solicitação baseada no contexto do seu estudo para concurso público. Como posso detalhar mais?' 
+        text: data.response || 'Desculpe, não consegui processar sua solicitação.' 
       }]);
+    } catch (error) {
+      console.error('Error calling Guia Responde:', error);
+      setMessages(prev => [...prev, { 
+        role: 'ai', 
+        text: 'Ocorreu um erro ao conectar com o GuIA. Por favor, tente novamente.' 
+      }]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const handlePromptClick = (prompt: any) => {

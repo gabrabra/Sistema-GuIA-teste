@@ -1,7 +1,24 @@
 import { Router } from 'express';
 import { pool } from './db.js';
+import { runWorkflow } from './agents/guiaResponde.js';
 
 export const apiRouter = Router();
+
+// --- AI Agents ---
+apiRouter.post('/responde', async (req, res) => {
+  const { message } = req.body;
+  if (!message) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+  
+  try {
+    const response = await runWorkflow({ input_as_text: message });
+    res.json({ response });
+  } catch (err) {
+    console.error('Error in /responde:', err);
+    res.status(500).json({ error: 'Failed to process request', details: err instanceof Error ? err.message : String(err) });
+  }
+});
 
 // --- Auth ---
 apiRouter.post('/auth/login', async (req, res) => {
