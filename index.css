@@ -14,3 +14,12 @@ body {
   font-family: var(--font-sans);
   background-color: var(--background);
 }
+
+/* Accessibility */
+html.high-contrast {
+  filter: contrast(1.25) saturate(1.2) brightness(0.95);
+}
+
+html.large-font {
+  font-size: 110%;
+}

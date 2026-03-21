@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Map, Repeat, MessageSquare, PenTool, LogOut, GraduationCap, Settings, ChevronDown, ChevronRight, User, Users, Shield, Layout, Book, X, CalendarCheck, ShoppingBag, CreditCard, List } from 'lucide-react';
+import { LayoutDashboard, Map, Repeat, MessageSquare, PenTool, LogOut, GraduationCap, Settings, ChevronDown, ChevronRight, User, Users, Shield, Layout, Book, X, CalendarCheck, ShoppingBag, CreditCard, List, Accessibility, Eye, Type, Languages } from 'lucide-react';
 import { useTheme } from '../../../controllers/context/ThemeContext';
 import { useStudy } from '../../../controllers/context/StudyContext';
 import { useMenu } from '../../../controllers/context/MenuContext';
@@ -20,6 +20,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { menuVisibility } = useMenu();
   const { hasPermission } = usePermissions();
   const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [isA11yOpen, setIsA11yOpen] = useState(false);
+
+  // Accessibility states
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem('a11y_contrast') === 'true');
+  const [largeFont, setLargeFont] = useState(() => localStorage.getItem('a11y_font') === 'true');
+  const [librasEnabled, setLibrasEnabled] = useState(() => localStorage.getItem('a11y_libras') === 'true');
 
   useEffect(() => {
     if (location.pathname.startsWith('/configuracoes')) {
@@ -28,6 +34,60 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     // Close sidebar on route change (mobile)
     onClose();
   }, [location.pathname]);
+
+  // Apply Accessibility settings
+  useEffect(() => {
+    localStorage.setItem('a11y_contrast', String(highContrast));
+    if (highContrast) {
+      document.documentElement.classList.add('high-contrast');
+    } else {
+      document.documentElement.classList.remove('high-contrast');
+    }
+  }, [highContrast]);
+
+  useEffect(() => {
+    localStorage.setItem('a11y_font', String(largeFont));
+    if (largeFont) {
+      document.documentElement.classList.add('large-font');
+    } else {
+      document.documentElement.classList.remove('large-font');
+    }
+  }, [largeFont]);
+
+  useEffect(() => {
+    localStorage.setItem('a11y_libras', String(librasEnabled));
+    if (librasEnabled) {
+      if (!document.getElementById('vlibras-script')) {
+        const widgetDiv = document.createElement('div');
+        widgetDiv.id = 'vlibras-widget';
+        widgetDiv.setAttribute('vw', '');
+        widgetDiv.className = 'enabled';
+        widgetDiv.innerHTML = `
+          <div vw-access-button class="active"></div>
+          <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+          </div>
+        `;
+        document.body.appendChild(widgetDiv);
+
+        const script = document.createElement('script');
+        script.id = 'vlibras-script';
+        script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
+        script.onload = () => {
+          if ((window as any).VLibras) {
+            new (window as any).VLibras.Widget('https://vlibras.gov.br/app');
+          }
+        };
+        document.body.appendChild(script);
+      } else {
+        const widget = document.getElementById('vlibras-widget');
+        if (widget) widget.style.display = 'block';
+      }
+    } else {
+      const widget = document.getElementById('vlibras-widget');
+      if (widget) widget.style.display = 'none';
+    }
+  }, [librasEnabled]);
   
   const hasCycle = !!concursoSelecionado || disciplinas.length > 0;
 
@@ -116,6 +176,65 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 {item.name}
               </NavLink>
             ))}
+
+            {/* Acessibilidade Menu Item */}
+            <div>
+              <button
+                onClick={() => setIsA11yOpen(!isA11yOpen)}
+                className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${
+                  isA11yOpen
+                    ? `${themeClasses.sidebarActiveBg} ${themeClasses.sidebarActiveText} font-semibold`
+                    : `${themeClasses.sidebarText} hover:bg-gray-50 hover:text-gray-900`
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Accessibility size={20} />
+                  <span>Acessibilidade</span>
+                </div>
+                {isA11yOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </button>
+
+              {isA11yOpen && (
+                <div className={`mt-1 ml-4 space-y-1 border-l-2 ${themeClasses.sidebarBorder} pl-2`}>
+                  <button 
+                    onClick={() => setHighContrast(!highContrast)}
+                    className={`w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors ${themeClasses.sidebarText} hover:bg-gray-50 hover:text-gray-900`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Eye size={16} />
+                      <span>Alto Contraste</span>
+                    </div>
+                    <div className={`w-8 h-4 rounded-full transition-colors ${highContrast ? 'bg-blue-600' : 'bg-gray-300'} relative`}>
+                      <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform ${highContrast ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => setLargeFont(!largeFont)}
+                    className={`w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors ${themeClasses.sidebarText} hover:bg-gray-50 hover:text-gray-900`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Type size={16} />
+                      <span>Fonte Maior</span>
+                    </div>
+                    <div className={`w-8 h-4 rounded-full transition-colors ${largeFont ? 'bg-blue-600' : 'bg-gray-300'} relative`}>
+                      <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform ${largeFont ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </div>
+                  </button>
+                  <button 
+                    onClick={() => setLibrasEnabled(!librasEnabled)}
+                    className={`w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm transition-colors ${themeClasses.sidebarText} hover:bg-gray-50 hover:text-gray-900`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Languages size={16} />
+                      <span>Libras (VLibras)</span>
+                    </div>
+                    <div className={`w-8 h-4 rounded-full transition-colors ${librasEnabled ? 'bg-blue-600' : 'bg-gray-300'} relative`}>
+                      <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform ${librasEnabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Configurações Menu Item */}
             <div>
