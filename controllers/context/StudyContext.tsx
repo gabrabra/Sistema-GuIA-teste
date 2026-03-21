@@ -97,7 +97,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         // Reset local state
         setConcursoSelecionadoState(null);
         setDisciplinas([]);
-        setMaterias([]);
+        // Do not clear materias so user doesn't lose registered subjects
         setHorasSemanaMeta(0);
         setDiasDisponiveis([]);
         setHorasEstudadasHoje(0);
@@ -106,7 +106,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         console.error('Failed to delete concurso', err);
       }
     }
-  }, [concursoSelecionado, userId, fetchWithAuth, setDisciplinas, setMaterias, setHorasSemanaMeta, setDiasDisponiveis, setHorasEstudadasHoje, setHistoricoEstudos]);
+  }, [concursoSelecionado, userId, fetchWithAuth, setDisciplinas, setHorasSemanaMeta, setDiasDisponiveis, setHorasEstudadasHoje, setHistoricoEstudos]);
 
 
   // Fetch initial data

@@ -329,9 +329,8 @@ apiRouter.delete('/concursos/:id', async (req, res) => {
   const userId = req.headers['x-user-id'];
   try {
     await pool.query('DELETE FROM concursos WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
-    // Also delete associated disciplinas and materias to start fresh
+    // Also delete associated disciplinas to start fresh, but KEEP materias
     await pool.query('DELETE FROM disciplinas WHERE user_id = $1', [userId]);
-    await pool.query('DELETE FROM materias WHERE user_id = $1', [userId]);
     res.json({ success: true });
   } catch (err) {
     console.error('Error in DELETE /concursos/:id:', err);
