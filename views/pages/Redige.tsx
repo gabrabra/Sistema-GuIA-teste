@@ -81,20 +81,22 @@ export const Redige: React.FC = () => {
       <div className="flex-1 min-h-0 overflow-hidden">
         {!hasMessages ? (
           /* Prompts Grid - Responsive layout */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 h-full overflow-y-auto pb-2 pr-1 custom-scrollbar">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 h-full overflow-y-auto pb-2 pr-1 custom-scrollbar">
             {redigePrompts.map((prompt, idx) => {
               const IconComponent = (Icons as any)[prompt.iconName] || Icons.HelpCircle;
               return (
                 <button
                   key={idx}
                   onClick={() => handlePromptClick(prompt)}
-                  className={`flex flex-col items-start p-3 rounded-xl border transition-all duration-300 text-left w-full min-h-[100px] hover:scale-[1.01] hover:shadow-md ${prompt.color}`}
+                  className={`flex flex-col items-start p-2 rounded-lg border transition-all duration-300 text-left w-full hover:scale-[1.01] hover:shadow-sm ${prompt.color}`}
                 >
-                  <div className={`p-1.5 rounded-lg bg-white/60 mb-1.5 ${prompt.iconColor}`}>
-                    <IconComponent size={16} />
+                  <div className="flex items-center gap-1.5 mb-0.5 w-full">
+                    <div className={`p-1 rounded bg-white/60 shrink-0 ${prompt.iconColor}`}>
+                      <IconComponent size={12} />
+                    </div>
+                    <h3 className="font-bold text-gray-800 text-[10px] lg:text-[11px] leading-tight truncate">{prompt.title}</h3>
                   </div>
-                  <h3 className="font-bold text-gray-800 mb-0.5 text-xs lg:text-sm">{prompt.title}</h3>
-                  <p className="text-[11px] lg:text-xs text-gray-600 leading-snug line-clamp-2">{prompt.description}</p>
+                  <p className="text-[9px] lg:text-[10px] text-gray-600 leading-tight line-clamp-2">{prompt.description}</p>
                 </button>
               );
             })}
@@ -143,8 +145,8 @@ export const Redige: React.FC = () => {
             }
           }}
           placeholder={`Cole seu texto aqui. Limite: ${maxChars} caracteres.`}
-          className="w-full p-3 max-h-48 bg-transparent border-none outline-none resize-none text-gray-700 placeholder-gray-400"
-          rows={4}
+          className="w-full p-3 min-h-[160px] max-h-72 bg-transparent border-none outline-none resize-none text-gray-700 placeholder-gray-400"
+          rows={6}
           maxLength={maxChars}
         />
         <div className="flex justify-between items-center px-2 pb-1">
