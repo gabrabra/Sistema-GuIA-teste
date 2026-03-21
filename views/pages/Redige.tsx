@@ -88,22 +88,28 @@ export const Redige: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => handlePromptClick(prompt)}
-                  className={`flex flex-col items-start p-2 rounded-lg border transition-all duration-300 text-left w-full hover:scale-[1.01] hover:shadow-sm ${prompt.color}`}
+                  aria-label={`Usar prompt: ${prompt.title}`}
+                  className={`flex flex-col items-start p-2.5 rounded-lg border transition-all duration-300 text-left w-full hover:scale-[1.01] hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 ${prompt.color}`}
                 >
-                  <div className="flex items-center gap-1.5 mb-0.5 w-full">
+                  <div className="flex items-center gap-1.5 mb-1 w-full">
                     <div className={`p-1 rounded bg-white/60 shrink-0 ${prompt.iconColor}`}>
-                      <IconComponent size={12} />
+                      <IconComponent size={14} aria-hidden="true" />
                     </div>
-                    <h3 className="font-bold text-gray-800 text-[10px] lg:text-[11px] leading-tight truncate">{prompt.title}</h3>
+                    <h3 className="font-bold text-gray-800 text-xs lg:text-[13px] leading-tight truncate">{prompt.title}</h3>
                   </div>
-                  <p className="text-[9px] lg:text-[10px] text-gray-600 leading-tight line-clamp-2">{prompt.description}</p>
+                  <p className="text-[11px] lg:text-xs text-gray-600 leading-tight line-clamp-2">{prompt.description}</p>
                 </button>
               );
             })}
           </div>
         ) : (
           /* Chat History */
-          <div className="h-full overflow-y-auto pr-2 custom-scrollbar space-y-6 pb-4">
+          <div 
+            className="h-full overflow-y-auto pr-2 custom-scrollbar space-y-6 pb-4"
+            role="log"
+            aria-live="polite"
+            aria-atomic="false"
+          >
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[80%] p-5 rounded-3xl ${
@@ -116,7 +122,7 @@ export const Redige: React.FC = () => {
               </div>
             ))}
             {isLoading && (
-              <div className="flex justify-start">
+              <div className="flex justify-start" aria-label="Carregando resposta" role="status">
                 <div className="bg-white border border-gray-100 p-4 rounded-3xl rounded-bl-none flex gap-2 shadow-sm">
                   <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" />
                   <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce delay-100" />
@@ -145,16 +151,18 @@ export const Redige: React.FC = () => {
             }
           }}
           placeholder={`Cole seu texto aqui. Limite: ${maxChars} caracteres.`}
-          className="w-full p-3 min-h-[160px] max-h-72 bg-transparent border-none outline-none resize-none text-gray-700 placeholder-gray-400"
+          aria-label="Texto para o GuIA Redige"
+          className="w-full p-3 min-h-[160px] max-h-72 bg-transparent border-none outline-none resize-none text-gray-700 placeholder-gray-400 focus:ring-0"
           rows={6}
           maxLength={maxChars}
         />
         <div className="flex justify-between items-center px-2 pb-1">
-          <span className="text-xs text-gray-400">{input.length}/{maxChars}</span>
+          <span className="text-xs text-gray-400" aria-live="polite">{input.length}/{maxChars}</span>
           <button 
             onClick={() => handleSend()} 
             disabled={isLoading || !input.trim()}
-            className="bg-blue-200 text-blue-800 hover:bg-blue-600 hover:text-white px-6 py-2 rounded-xl font-bold text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Enviar texto"
+            className="bg-blue-200 text-blue-800 hover:bg-blue-600 hover:text-white px-6 py-2 rounded-xl font-bold text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
           >
             ENVIAR
           </button>
