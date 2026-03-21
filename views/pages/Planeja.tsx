@@ -29,7 +29,7 @@ export const Planeja: React.FC = () => {
   const [concurso, setConcurso] = useState({ orgao: '', nome: '', possuiEdital: true, dataProva: '' });
   const [selectedMateriaIds, setSelectedMateriaIds] = useState<string[]>([]);
   const [disciplineConfig, setDisciplineConfig] = useState<Record<string, { peso: number | string, horas: number | string }>>({});
-  const [availability, setAvailability] = useState({ totalHoras: 20, dias: [] as string[] });
+  const [availability, setAvailability] = useState<{ totalHoras: number | string, dias: string[] }>({ totalHoras: 20, dias: [] });
   const [error, setError] = useState<string | null>(null);
 
   // Edital Modal State
@@ -157,7 +157,8 @@ export const Planeja: React.FC = () => {
 
   const handleFinish = () => {
     setError(null);
-    if (availability.dias.length === 0 || availability.totalHoras <= 0) {
+    const totalHorasNum = Number(availability.totalHoras);
+    if (availability.dias.length === 0 || totalHorasNum <= 0) {
       setError('Por favor, defina sua disponibilidade semanal.');
       return;
     }
@@ -168,7 +169,7 @@ export const Planeja: React.FC = () => {
       nome: concurso.nome,
       possuiEdital: concurso.possuiEdital,
       dataProva: concurso.dataProva || null,
-      horasSemanaMeta: availability.totalHoras,
+      horasSemanaMeta: totalHorasNum,
       diasDisponiveis: availability.dias
     });
 
@@ -248,7 +249,7 @@ export const Planeja: React.FC = () => {
     }
 
     setDisciplinas(newDisciplinas);
-    setMetaSemanal(availability.totalHoras, availability.dias);
+    setMetaSemanal(totalHorasNum, availability.dias);
     
     // Small delay to ensure state propagation before navigation
     setTimeout(() => {
@@ -443,7 +444,8 @@ export const Planeja: React.FC = () => {
                 className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
                 value={availability.totalHoras}
                 onChange={e => {
-                  setAvailability({...availability, totalHoras: Number(e.target.value)});
+                  const val = e.target.value;
+                  setAvailability({...availability, totalHoras: val === '' ? '' : Number(val)});
                   setError(null);
                 }}
               />
