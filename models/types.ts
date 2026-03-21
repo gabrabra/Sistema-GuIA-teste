@@ -114,6 +114,7 @@ export interface StudyContextType {
   iniciarCronometro: (disciplinaId?: string, topico?: string) => void;
   pausarCronometro: () => void;
   salvarSessaoEstudo: (concluido: boolean) => void;
+  excluirSessaoEstudo: (disciplinaId: string, sessaoId: string) => void;
   setIsPauseModalOpen: (open: boolean) => void;
   setIsFinishModalOpen: (open: boolean) => void;
   adicionarHorasManualmente: (disciplinaId: string, minutos: number, topico?: string) => void;

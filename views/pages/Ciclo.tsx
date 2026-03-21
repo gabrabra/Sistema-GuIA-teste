@@ -4,7 +4,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { formatTime, formatTimeWithSeconds } from '../../models/utils/timeUtils';
-import { Play, Pause, Plus, Flame, Zap, Target, BookOpen, Layers, PlusCircle, Clock, Book, Search, X, ChevronDown, ChevronUp, CheckCircle, Trophy, Activity } from 'lucide-react';
+import { Play, Pause, Plus, Flame, Zap, Target, BookOpen, Layers, PlusCircle, Clock, Book, Search, X, ChevronDown, ChevronUp, CheckCircle, Trophy, Activity, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
 
@@ -16,7 +16,8 @@ export const Ciclo: React.FC = () => {
     iniciarCronometro, 
     pausarCronometro, 
     horasEstudadasHoje,
-    adicionarHorasManualmente
+    adicionarHorasManualmente,
+    excluirSessaoEstudo
   } = useStudy();
   const navigate = useNavigate();
   const { themeClasses } = useTheme();
@@ -316,6 +317,18 @@ export const Ciclo: React.FC = () => {
                                   title="Continuar estudando este assunto"
                                 >
                                   <Play size={14} />
+                                </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm('Tem certeza que deseja excluir este registro de estudo?')) {
+                                      excluirSessaoEstudo(disc.id, sessao.id);
+                                    }
+                                  }}
+                                  className="text-red-500 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  title="Excluir este registro"
+                                >
+                                  <Trash2 size={14} />
                                 </button>
                               </div>
                             </div>

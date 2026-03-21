@@ -435,6 +435,38 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setIsFinishModalOpen(false);
   }, [activeSubjectId, activeTopic, currentSessionSeconds, updateAssunto, fetchWithAuth]);
 
+  const excluirSessaoEstudo = useCallback((disciplinaId: string, sessaoId: string) => {
+    setDisciplinas(prev => {
+      const newDisciplinas = prev.map(d => {
+        if (d.id === disciplinaId && d.historico) {
+          const sessaoToDelete = d.historico.find(s => s.id === sessaoId);
+          if (sessaoToDelete) {
+            setHorasEstudadasHoje(prevHoras => Math.max(0, prevHoras - sessaoToDelete.segundos));
+            const newHistory = d.historico.filter(s => s.id !== sessaoId);
+            return {
+              ...d,
+              historico: newHistory,
+              horasEstudadasHoje: Math.max(0, d.horasEstudadasHoje - sessaoToDelete.segundos),
+              horasEstudadasTotal: Math.max(0, d.horasEstudadasTotal - sessaoToDelete.segundos)
+            };
+          }
+        }
+        return d;
+      });
+
+      const updatedDisciplina = newDisciplinas.find(d => d.id === disciplinaId);
+      if (updatedDisciplina) {
+        fetchWithAuth(`/api/disciplinas/${updatedDisciplina.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedDisciplina)
+        }).catch(err => console.error('Failed to update disciplina after deleting session', err));
+      }
+
+      return newDisciplinas;
+    });
+  }, [fetchWithAuth]);
+
   const deleteAssunto = useCallback(async (materiaId: string, assuntoId: string) => {
     let updatedMateria: Materia | undefined;
 
@@ -564,6 +596,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       iniciarCronometro,
       pausarCronometro,
       salvarSessaoEstudo,
+      excluirSessaoEstudo,
       setIsPauseModalOpen,
       setIsFinishModalOpen,
       adicionarHorasManualmente,
