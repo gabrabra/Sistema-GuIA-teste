@@ -56,36 +56,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   useEffect(() => {
     localStorage.setItem('a11y_libras', String(librasEnabled));
-    if (librasEnabled) {
-      if (!document.getElementById('vlibras-script')) {
-        const widgetDiv = document.createElement('div');
-        widgetDiv.id = 'vlibras-widget';
-        widgetDiv.setAttribute('vw', '');
-        widgetDiv.className = 'enabled';
-        widgetDiv.innerHTML = `
-          <div vw-access-button class="active"></div>
-          <div vw-plugin-wrapper>
-            <div class="vw-plugin-top-wrapper"></div>
-          </div>
-        `;
-        document.body.appendChild(widgetDiv);
-
-        const script = document.createElement('script');
-        script.id = 'vlibras-script';
-        script.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
-        script.onload = () => {
-          if ((window as any).VLibras) {
-            new (window as any).VLibras.Widget('https://vlibras.gov.br/app');
-          }
-        };
-        document.body.appendChild(script);
-      } else {
-        const widget = document.getElementById('vlibras-widget');
-        if (widget) widget.style.display = 'block';
-      }
-    } else {
-      const widget = document.getElementById('vlibras-widget');
-      if (widget) widget.style.display = 'none';
+    const widget = document.getElementById('vlibras-widget');
+    if (widget) {
+      widget.style.display = librasEnabled ? 'block' : 'none';
     }
   }, [librasEnabled]);
   
