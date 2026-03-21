@@ -16,8 +16,35 @@ body {
 }
 
 /* Accessibility */
-html.high-contrast {
-  filter: contrast(1.25) saturate(1.2) brightness(0.95);
+html.high-contrast,
+html.high-contrast * {
+  background-color: #000000 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Ensure interactive elements have visible boundaries */
+html.high-contrast button,
+html.high-contrast input,
+html.high-contrast textarea,
+html.high-contrast select,
+html.high-contrast [role="button"] {
+  border: 1px solid #ffffff !important;
+}
+
+/* Preserve transparency for media, icons, and VLibras */
+html.high-contrast img,
+html.high-contrast video,
+html.high-contrast svg,
+html.high-contrast svg *,
+html.high-contrast canvas,
+html.high-contrast [vw-plugin-wrapper],
+html.high-contrast [vw-plugin-wrapper] *,
+html.high-contrast [vw-access-button],
+html.high-contrast [vw-access-button] * {
+  background-color: transparent !important;
 }
 
 html.large-font {
