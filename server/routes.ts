@@ -6,31 +6,81 @@ import { runWorkflow as runRedigeWorkflow } from './agents/guiaRedige.js';
 export const apiRouter = Router();
 
 // --- AI Agents ---
+async function checkAndLogPrompt(userId: string, module: 'responde' | 'redige') {
+  // 1. Get user profile
+  const userResult = await pool.query('SELECT ai_profile_id FROM users WHERE id = $1', [userId]);
+  const aiProfileId = userResult.rows[0]?.ai_profile_id;
+  
+  if (!aiProfileId) throw new Error('User profile not found');
+
+  // 2. Get limits
+  const profileResult = await pool.query(
+    module === 'responde' 
+      ? 'SELECT responde_prompts_per_day as max_prompts FROM ai_profiles WHERE id = $1'
+      : 'SELECT redige_prompts_per_day as max_prompts FROM ai_profiles WHERE id = $1',
+    [aiProfileId]
+  );
+  const maxPrompts = profileResult.rows[0]?.max_prompts;
+
+  // 3. Count today's prompts
+  const countResult = await pool.query(
+    'SELECT COUNT(*) FROM ai_prompt_logs WHERE user_id = $1 AND module = $2 AND created_at >= CURRENT_DATE',
+    [userId, module]
+  );
+  const currentCount = parseInt(countResult.rows[0].count);
+
+  if (currentCount >= maxPrompts) {
+    throw new Error('LIMIT_REACHED');
+  }
+
+  return { maxPrompts, currentCount };
+}
+
+async function logPrompt(userId: string, module: 'responde' | 'redige', input: string, output: string, inputTokens: number, outputTokens: number) {
+  await pool.query(
+    'INSERT INTO ai_prompt_logs (id, user_id, module, prompt_input, ai_output, input_tokens, output_tokens, total_tokens) VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7)',
+    [userId, module, input, output, inputTokens, outputTokens, inputTokens + outputTokens]
+  );
+}
+
 apiRouter.post('/responde', async (req, res) => {
+  const userId = req.headers['x-user-id'] as string;
   const { message } = req.body;
-  if (!message) {
-    return res.status(400).json({ error: 'Message is required' });
+  if (!message || !userId) {
+    return res.status(400).json({ error: 'Message and User ID are required' });
   }
   
   try {
+    await checkAndLogPrompt(userId, 'responde');
     const response = await runWorkflow({ input_as_text: message });
+    // Note: Assuming token counts are 0 for now as they aren't returned by runWorkflow
+    await logPrompt(userId, 'responde', message, response, 0, 0);
     res.json({ response });
   } catch (err) {
+    if (err instanceof Error && err.message === 'LIMIT_REACHED') {
+      return res.status(429).json({ error: 'Daily limit reached' });
+    }
     console.error('Error in /responde:', err);
     res.status(500).json({ error: 'Failed to process request', details: err instanceof Error ? err.message : String(err) });
   }
 });
 
 apiRouter.post('/redige', async (req, res) => {
+  const userId = req.headers['x-user-id'] as string;
   const { message } = req.body;
-  if (!message) {
-    return res.status(400).json({ error: 'Message is required' });
+  if (!message || !userId) {
+    return res.status(400).json({ error: 'Message and User ID are required' });
   }
   
   try {
+    await checkAndLogPrompt(userId, 'redige');
     const response = await runRedigeWorkflow({ input_as_text: message });
+    await logPrompt(userId, 'redige', message, response, 0, 0);
     res.json({ response });
   } catch (err) {
+    if (err instanceof Error && err.message === 'LIMIT_REACHED') {
+      return res.status(429).json({ error: 'Daily limit reached' });
+    }
     console.error('Error in /redige:', err);
     res.status(500).json({ error: 'Failed to process request', details: err instanceof Error ? err.message : String(err) });
   }
@@ -141,6 +191,25 @@ apiRouter.get('/roles', async (req, res) => {
   } catch (err) {
     console.error('Error in GET /roles:', err);
     res.status(500).json({ error: 'Failed to fetch roles', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.get('/usage/:module', async (req, res) => {
+  const userId = req.headers['x-user-id'] as string;
+  const { module } = req.params;
+  if (!userId || (module !== 'responde' && module !== 'redige')) {
+    return res.status(400).json({ error: 'User ID and valid module are required' });
+  }
+
+  try {
+    const countResult = await pool.query(
+      'SELECT COUNT(*) FROM ai_prompt_logs WHERE user_id = $1 AND module = $2 AND created_at >= CURRENT_DATE',
+      [userId, module]
+    );
+    res.json({ count: parseInt(countResult.rows[0].count) });
+  } catch (err) {
+    console.error('Error in GET /usage/:module:', err);
+    res.status(500).json({ error: 'Failed to fetch usage', details: err instanceof Error ? err.message : String(err) });
   }
 });
 

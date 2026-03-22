@@ -6,22 +6,25 @@ export function usePromptLimit(module: 'responde' | 'redige', maxPrompts: number
   const userId = user.id || 'anonymous';
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `ai_usage_${userId}_${module}_${today}`;
-    const stored = localStorage.getItem(key);
-    if (stored) {
-      setUsedPrompts(parseInt(stored, 10));
-    } else {
-      setUsedPrompts(0);
-    }
+    const fetchUsage = async () => {
+      try {
+        const response = await fetch(`/api/usage/${module}`, {
+          headers: { 'x-user-id': userId }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setUsedPrompts(data.count);
+        }
+      } catch (err) {
+        console.error('Error fetching usage:', err);
+      }
+    };
+    fetchUsage();
   }, [module, userId]);
 
   const incrementUsage = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const key = `ai_usage_${userId}_${module}_${today}`;
-    const newCount = usedPrompts + 1;
-    localStorage.setItem(key, newCount.toString());
-    setUsedPrompts(newCount);
+    // The backend now handles the logging and counting, so we just update locally for UI
+    setUsedPrompts(prev => prev + 1);
   };
 
   const hasReachedLimit = usedPrompts >= maxPrompts;
