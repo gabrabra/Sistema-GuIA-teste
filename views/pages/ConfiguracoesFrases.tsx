@@ -232,7 +232,8 @@ export const ConfiguracoesFrases: React.FC = () => {
                       style={{
                         fontWeight: phrase.style?.bold ? 'bold' : 'normal',
                         fontStyle: phrase.style?.italic ? 'italic' : 'normal',
-                        color: phrase.style?.color || 'inherit'
+                        color: phrase.style?.color || 'inherit',
+                        whiteSpace: 'pre-wrap'
                       }}
                     >
                       "{phrase.phrase}"

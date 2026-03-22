@@ -230,20 +230,7 @@ export const Dashboard: React.FC = () => {
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className={`text-2xl font-bold ${themeClasses.text}`}>Dashboard</h2>
-          {dailyPhrase ? (
-            <p 
-              className="mt-1"
-              style={{
-                fontWeight: dailyPhrase.style?.bold ? 'bold' : 'normal',
-                fontStyle: dailyPhrase.style?.italic ? 'italic' : 'normal',
-                color: dailyPhrase.style?.color || '#6b7280' // text-gray-500 default
-              }}
-            >
-              "{dailyPhrase.phrase}" {dailyPhrase.author && <span className="text-sm opacity-80">— {dailyPhrase.author}</span>}
-            </p>
-          ) : (
-            <p className="text-gray-500">Bem-vindo de volta! Vamos bater a meta hoje?</p>
-          )}
+          <p className="text-gray-500">Bem-vindo de volta! Vamos bater a meta hoje?</p>
         </div>
         <div className="flex gap-4 w-full sm:w-auto">
            {isTimerRunning ? (
@@ -366,13 +353,31 @@ export const Dashboard: React.FC = () => {
         </Card>
 
         {/* Card Motivacional */}
-        <Card className="md:col-span-1 flex flex-col justify-center items-center bg-blue-50 border-blue-100">
-          <div className="text-center italic text-gray-700 space-y-2 font-medium">
-            <p>"Você não está atrasado."</p>
-            <p>"Você está resistindo."</p>
-            <p>"Cansar faz parte."</p>
-            <p className="text-blue-600 font-bold">"Desistir é opcional."</p>
-          </div>
+        <Card className="md:col-span-1 flex flex-col justify-center items-center bg-blue-50 border-blue-100 p-6">
+          {dailyPhrase ? (
+            <div 
+              className="text-center space-y-2"
+              style={{
+                fontWeight: dailyPhrase.style?.bold ? 'bold' : 'normal',
+                fontStyle: dailyPhrase.style?.italic ? 'italic' : 'normal',
+                color: dailyPhrase.style?.color || '#374151', // text-gray-700
+              }}
+            >
+              {dailyPhrase.phrase.split('\n').map((line, i) => (
+                <p key={i}>{line}</p>
+              ))}
+              {dailyPhrase.author && (
+                <p className="text-sm opacity-80 mt-4">— {dailyPhrase.author}</p>
+              )}
+            </div>
+          ) : (
+            <div className="text-center italic text-gray-700 space-y-2 font-medium">
+              <p>"Você não está atrasado."</p>
+              <p>"Você está resistindo."</p>
+              <p>"Cansar faz parte."</p>
+              <p className="text-blue-600 font-bold">"Desistir é opcional."</p>
+            </div>
+          )}
         </Card>
       </div>
 
