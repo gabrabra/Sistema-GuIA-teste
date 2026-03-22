@@ -34,6 +34,40 @@ export const Dashboard: React.FC = () => {
   const [topic, setTopic] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dailyPhrase, setDailyPhrase] = useState<{phrase: string, author: string | null} | null>(null);
+
+  useEffect(() => {
+    const fetchPhrase = async () => {
+      try {
+        const res = await fetch('/api/motivational-phrases');
+        if (res.ok) {
+          const phrases = await res.json();
+          if (phrases.length > 0) {
+            // Find a phrase for today, or just pick a random one
+            const today = new Date().toISOString().split('T')[0];
+            const todayPhrase = phrases.find((p: any) => p.showDate === today);
+            if (todayPhrase) {
+              setDailyPhrase(todayPhrase);
+            } else {
+              // Pick a random phrase that doesn't have a specific date
+              const generalPhrases = phrases.filter((p: any) => !p.showDate);
+              if (generalPhrases.length > 0) {
+                const randomPhrase = generalPhrases[Math.floor(Math.random() * generalPhrases.length)];
+                setDailyPhrase(randomPhrase);
+              } else {
+                // If no general phrases, pick any random phrase
+                const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+                setDailyPhrase(randomPhrase);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch daily phrase', err);
+      }
+    };
+    fetchPhrase();
+  }, []);
 
   // Daily Goal (Mocked as 3 hours for demo, but could be dynamic)
   const metaDiariaSegundos = 3 * 3600; 
@@ -195,8 +229,12 @@ export const Dashboard: React.FC = () => {
 
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Dashboard</h2>
-          <p className="text-gray-500">Bem-vindo de volta! Vamos bater a meta hoje?</p>
+          <h2 className={`text-2xl font-bold ${themeClasses.text}`}>Dashboard</h2>
+          {dailyPhrase ? (
+            <p className="text-gray-500 italic mt-1">"{dailyPhrase.phrase}" {dailyPhrase.author && <span className="text-sm">— {dailyPhrase.author}</span>}</p>
+          ) : (
+            <p className="text-gray-500">Bem-vindo de volta! Vamos bater a meta hoje?</p>
+          )}
         </div>
         <div className="flex gap-4 w-full sm:w-auto">
            {isTimerRunning ? (

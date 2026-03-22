@@ -39,6 +39,7 @@ const ALL_PERMISSIONS: Permission[] = [
   { id: 'conf_perms', name: 'Gerenciar Permissões', description: 'Alterar regras de acesso', module: 'configuracoes' },
   { id: 'conf_produtos', name: 'Gerenciar Produtos', description: 'Cadastrar produtos', module: 'configuracoes' },
   { id: 'conf_prompts', name: 'Configurar Prompts IA', description: 'Gerenciar prompts do sistema', module: 'configuracoes' },
+  { id: 'conf_phrases', name: 'Gerenciar Frases', description: 'Configurar frases motivacionais do dashboard', module: 'configuracoes' },
 ];
 
 const INITIAL_ROLES: Role[] = [

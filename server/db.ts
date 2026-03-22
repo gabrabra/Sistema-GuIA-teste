@@ -146,6 +146,23 @@ export async function initDb(retries = 5, delay = 5000) {
           segundos INTEGER NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS motivational_phrases (
+          id VARCHAR(255) PRIMARY KEY,
+          phrase TEXT NOT NULL,
+          author VARCHAR(255),
+          show_date DATE,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- Insert default phrase if none exists
+        const phrasesResult = await client.query('SELECT COUNT(*) FROM motivational_phrases');
+        if (parseInt(phrasesResult.rows[0].count) === 0) {
+          await client.query(
+            \`INSERT INTO motivational_phrases (id, phrase, author) VALUES ($1, $2, $3)\`,
+            ['default_phrase_1', 'O sucesso é a soma de pequenos esforços repetidos dia após dia.', 'Robert Collier']
+          );
+        }
+
         -- Add user_id to existing tables for multi-tenancy
         ALTER TABLE prompts ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         ALTER TABLE prompts ADD COLUMN IF NOT EXISTS prompt_content TEXT;

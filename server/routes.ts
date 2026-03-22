@@ -569,7 +569,65 @@ apiRouter.delete('/ai-profiles/:id', async (req, res) => {
   }
 });
 
-// --- Produtos ---
+// --- Motivational Phrases ---
+apiRouter.get('/motivational-phrases', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM motivational_phrases ORDER BY created_at DESC');
+    const phrases = result.rows.map(row => ({
+      id: row.id,
+      phrase: row.phrase,
+      author: row.author,
+      showDate: row.show_date ? new Date(row.show_date).toISOString().split('T')[0] : null,
+      createdAt: row.created_at
+    }));
+    res.json(phrases);
+  } catch (err) {
+    console.error('Error in GET /motivational-phrases:', err);
+    res.status(500).json({ error: 'Failed to fetch motivational phrases', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.post('/motivational-phrases', async (req, res) => {
+  const { id, phrase, author, showDate } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO motivational_phrases (id, phrase, author, show_date) 
+       VALUES ($1, $2, $3, $4)`,
+      [id, phrase, author, showDate || null]
+    );
+    res.status(201).json({ success: true });
+  } catch (err) {
+    console.error('Error in POST /motivational-phrases:', err);
+    res.status(500).json({ error: 'Failed to create motivational phrase', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.put('/motivational-phrases/:id', async (req, res) => {
+  const { phrase, author, showDate } = req.body;
+  try {
+    await pool.query(
+      `UPDATE motivational_phrases 
+       SET phrase = $1, author = $2, show_date = $3
+       WHERE id = $4`,
+      [phrase, author, showDate || null, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in PUT /motivational-phrases/:id:', err);
+    res.status(500).json({ error: 'Failed to update motivational phrase', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.delete('/motivational-phrases/:id', async (req, res) => {
+  try {
+    await pool.query('DELETE FROM motivational_phrases WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in DELETE /motivational-phrases/:id:', err);
+    res.status(500).json({ error: 'Failed to delete motivational phrase', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 apiRouter.get('/produtos', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM produtos');
