@@ -151,8 +151,11 @@ export async function initDb(retries = 5, delay = 5000) {
           phrase TEXT NOT NULL,
           author VARCHAR(255),
           show_date DATE,
+          style JSONB DEFAULT '{}'::jsonb,
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
+
+        ALTER TABLE motivational_phrases ADD COLUMN IF NOT EXISTS style JSONB DEFAULT '{}'::jsonb;
 
         -- Insert default phrase if none exists
         const phrasesResult = await client.query('SELECT COUNT(*) FROM motivational_phrases');

@@ -34,7 +34,7 @@ export const Dashboard: React.FC = () => {
   const [topic, setTopic] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [dailyPhrase, setDailyPhrase] = useState<{phrase: string, author: string | null} | null>(null);
+  const [dailyPhrase, setDailyPhrase] = useState<{phrase: string, author: string | null, style?: {color?: string, bold?: boolean, italic?: boolean}} | null>(null);
 
   useEffect(() => {
     const fetchPhrase = async () => {
@@ -231,7 +231,16 @@ export const Dashboard: React.FC = () => {
         <div>
           <h2 className={`text-2xl font-bold ${themeClasses.text}`}>Dashboard</h2>
           {dailyPhrase ? (
-            <p className="text-gray-500 italic mt-1">"{dailyPhrase.phrase}" {dailyPhrase.author && <span className="text-sm">— {dailyPhrase.author}</span>}</p>
+            <p 
+              className="mt-1"
+              style={{
+                fontWeight: dailyPhrase.style?.bold ? 'bold' : 'normal',
+                fontStyle: dailyPhrase.style?.italic ? 'italic' : 'normal',
+                color: dailyPhrase.style?.color || '#6b7280' // text-gray-500 default
+              }}
+            >
+              "{dailyPhrase.phrase}" {dailyPhrase.author && <span className="text-sm opacity-80">— {dailyPhrase.author}</span>}
+            </p>
           ) : (
             <p className="text-gray-500">Bem-vindo de volta! Vamos bater a meta hoje?</p>
           )}

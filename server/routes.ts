@@ -578,6 +578,7 @@ apiRouter.get('/motivational-phrases', async (req, res) => {
       phrase: row.phrase,
       author: row.author,
       showDate: row.show_date ? new Date(row.show_date).toISOString().split('T')[0] : null,
+      style: row.style || {},
       createdAt: row.created_at
     }));
     res.json(phrases);
@@ -588,12 +589,12 @@ apiRouter.get('/motivational-phrases', async (req, res) => {
 });
 
 apiRouter.post('/motivational-phrases', async (req, res) => {
-  const { id, phrase, author, showDate } = req.body;
+  const { id, phrase, author, showDate, style } = req.body;
   try {
     await pool.query(
-      `INSERT INTO motivational_phrases (id, phrase, author, show_date) 
-       VALUES ($1, $2, $3, $4)`,
-      [id, phrase, author, showDate || null]
+      `INSERT INTO motivational_phrases (id, phrase, author, show_date, style) 
+       VALUES ($1, $2, $3, $4, $5)`,
+      [id, phrase, author, showDate || null, style || {}]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -603,13 +604,13 @@ apiRouter.post('/motivational-phrases', async (req, res) => {
 });
 
 apiRouter.put('/motivational-phrases/:id', async (req, res) => {
-  const { phrase, author, showDate } = req.body;
+  const { phrase, author, showDate, style } = req.body;
   try {
     await pool.query(
       `UPDATE motivational_phrases 
-       SET phrase = $1, author = $2, show_date = $3
-       WHERE id = $4`,
-      [phrase, author, showDate || null, req.params.id]
+       SET phrase = $1, author = $2, show_date = $3, style = $4
+       WHERE id = $5`,
+      [phrase, author, showDate || null, style || {}, req.params.id]
     );
     res.json({ success: true });
   } catch (err) {

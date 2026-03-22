@@ -2,13 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../controllers/context/ThemeContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Plus, Edit2, Trash2, Save, X, Quote } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Quote, Bold, Italic, Palette } from 'lucide-react';
+
+interface PhraseStyle {
+  color?: string;
+  bold?: boolean;
+  italic?: boolean;
+}
 
 interface Phrase {
   id: string;
   phrase: string;
   author: string;
   showDate: string | null;
+  style?: PhraseStyle;
   createdAt: string;
 }
 
@@ -16,7 +23,7 @@ export const ConfiguracoesFrases: React.FC = () => {
   const { themeClasses } = useTheme();
   const [phrases, setPhrases] = useState<Phrase[]>([]);
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Phrase>>({});
+  const [editForm, setEditForm] = useState<Partial<Phrase>>({ style: {} });
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
@@ -43,6 +50,7 @@ export const ConfiguracoesFrases: React.FC = () => {
           phrase: editForm.phrase,
           author: editForm.author || '',
           showDate: editForm.showDate || null,
+          style: editForm.style || {},
         };
         await fetch('/api/motivational-phrases', {
           method: 'POST',
@@ -57,13 +65,14 @@ export const ConfiguracoesFrases: React.FC = () => {
             phrase: editForm.phrase,
             author: editForm.author || '',
             showDate: editForm.showDate || null,
+            style: editForm.style || {},
           }),
         });
       }
       await fetchPhrases();
       setIsEditing(null);
       setIsAdding(false);
-      setEditForm({});
+      setEditForm({ style: {} });
     } catch (err) {
       console.error('Failed to save phrase', err);
     }
@@ -81,6 +90,26 @@ export const ConfiguracoesFrases: React.FC = () => {
     }
   };
 
+  const toggleStyle = (key: keyof PhraseStyle) => {
+    setEditForm(prev => ({
+      ...prev,
+      style: {
+        ...prev.style,
+        [key]: !prev.style?.[key]
+      }
+    }));
+  };
+
+  const updateColor = (color: string) => {
+    setEditForm(prev => ({
+      ...prev,
+      style: {
+        ...prev.style,
+        color
+      }
+    }));
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <header className="flex justify-between items-center">
@@ -91,7 +120,7 @@ export const ConfiguracoesFrases: React.FC = () => {
         <Button 
           onClick={() => {
             setIsAdding(true);
-            setEditForm({});
+            setEditForm({ style: {} });
           }}
           className="flex items-center gap-2"
         >
@@ -107,11 +136,45 @@ export const ConfiguracoesFrases: React.FC = () => {
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Frase</label>
+              <div className="flex justify-between items-end mb-1">
+                <label className="block text-sm font-medium text-gray-700">Frase</label>
+                <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-md border">
+                  <button
+                    onClick={() => toggleStyle('bold')}
+                    className={`p-1.5 rounded ${editForm.style?.bold ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-200'}`}
+                    title="Negrito"
+                  >
+                    <Bold className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => toggleStyle('italic')}
+                    className={`p-1.5 rounded ${editForm.style?.italic ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-200'}`}
+                    title="Itálico"
+                  >
+                    <Italic className="w-4 h-4" />
+                  </button>
+                  <div className="h-4 w-px bg-gray-300 mx-1"></div>
+                  <div className="relative flex items-center">
+                    <Palette className="w-4 h-4 text-gray-500 mr-1" />
+                    <input
+                      type="color"
+                      value={editForm.style?.color || '#000000'}
+                      onChange={(e) => updateColor(e.target.value)}
+                      className="w-6 h-6 p-0 border-0 rounded cursor-pointer"
+                      title="Cor do texto"
+                    />
+                  </div>
+                </div>
+              </div>
               <textarea
                 value={editForm.phrase || ''}
                 onChange={(e) => setEditForm({ ...editForm, phrase: e.target.value })}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                style={{
+                  fontWeight: editForm.style?.bold ? 'bold' : 'normal',
+                  fontStyle: editForm.style?.italic ? 'italic' : 'normal',
+                  color: editForm.style?.color || 'inherit'
+                }}
                 rows={3}
                 placeholder="Digite a frase motivacional..."
               />
@@ -164,7 +227,16 @@ export const ConfiguracoesFrases: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Quote className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-1" />
                   <div>
-                    <p className={`text-lg font-medium ${themeClasses.text}`}>"{phrase.phrase}"</p>
+                    <p 
+                      className="text-lg"
+                      style={{
+                        fontWeight: phrase.style?.bold ? 'bold' : 'normal',
+                        fontStyle: phrase.style?.italic ? 'italic' : 'normal',
+                        color: phrase.style?.color || 'inherit'
+                      }}
+                    >
+                      "{phrase.phrase}"
+                    </p>
                     {phrase.author && (
                       <p className="text-sm text-gray-500 mt-1">— {phrase.author}</p>
                     )}
@@ -180,7 +252,10 @@ export const ConfiguracoesFrases: React.FC = () => {
                 <button
                   onClick={() => {
                     setIsEditing(phrase.id);
-                    setEditForm(phrase);
+                    setEditForm({
+                      ...phrase,
+                      style: phrase.style || {}
+                    });
                     setIsAdding(false);
                   }}
                   className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
