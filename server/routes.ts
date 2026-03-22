@@ -50,7 +50,8 @@ apiRouter.post('/auth/login', async (req, res) => {
           id: user.id, 
           name: user.name, 
           email: user.email,
-          roleId: user.role_id
+          roleId: user.role_id,
+          aiProfileId: user.ai_profile_id
         } 
       });
     } else {

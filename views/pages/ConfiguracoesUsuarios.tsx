@@ -102,6 +102,11 @@ export const ConfiguracoesUsuarios: React.FC = () => {
         
         if (response.ok) {
           setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...formData } : u));
+          
+          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+          if (currentUser.id === editingUser.id) {
+            localStorage.setItem('user', JSON.stringify({ ...currentUser, ...formData }));
+          }
         }
       } else {
         const newUser = {
