@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { usePrompts } from '../../controllers/context/PromptContext';
 import { useAIProfile } from '../../controllers/context/AIProfileContext';
+import { usePromptLimit } from '../hooks/usePromptLimit';
 import * as Icons from 'lucide-react';
 import { 
   PenTool, Sparkles, Eraser, AlignLeft, Maximize2, Minimize2, 
@@ -14,6 +15,9 @@ export const Redige: React.FC = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const profile = getUserProfile(user.aiProfileId);
   const maxChars = profile?.redige.maxCharactersPerPrompt || 1000;
+  const maxPrompts = profile?.redige.promptsPerDay || 10;
+  
+  const { usedPrompts, hasReachedLimit, incrementUsage } = usePromptLimit('redige', maxPrompts);
 
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{role: 'user' | 'ai', text: string}[]>([]);
@@ -30,10 +34,15 @@ export const Redige: React.FC = () => {
 
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
+    if (hasReachedLimit) {
+      setMessages(prev => [...prev, { role: 'ai', text: `Você atingiu o limite diário de ${maxPrompts} prompts para o Guia Redige.` }]);
+      return;
+    }
     
     setMessages(prev => [...prev, { role: 'user', text: text }]);
     setInput('');
     setIsLoading(true);
+    incrementUsage();
 
     try {
       const response = await fetch('/api/redige', {
@@ -183,10 +192,15 @@ export const Redige: React.FC = () => {
           maxLength={maxChars}
         />
         <div className="flex justify-between items-center px-2 pb-1">
-          <span className="text-xs text-gray-400" aria-live="polite">{input.length}/{maxChars}</span>
+          <div className="flex flex-col">
+            <span className="text-xs text-gray-400" aria-live="polite">{input.length}/{maxChars} caracteres</span>
+            <span className={`text-xs ${hasReachedLimit ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+              {usedPrompts}/{maxPrompts} prompts diários
+            </span>
+          </div>
           <button 
             onClick={() => handleSend()} 
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !input.trim() || hasReachedLimit}
             aria-label="Enviar texto"
             className="bg-blue-200 text-blue-800 hover:bg-blue-600 hover:text-white px-6 py-2 rounded-xl font-bold text-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
           >
