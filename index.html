@@ -22,6 +22,16 @@
 </head>
   <body>
     <div id="root"></div>
+    
+    <!-- VLibras Widget -->
+    <div vw class="enabled" style="display: none;">
+      <div vw-access-button class="active"></div>
+      <div vw-plugin-wrapper>
+        <div class="vw-plugin-top-wrapper"></div>
+      </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js" onload="if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app');"></script>
+
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>
