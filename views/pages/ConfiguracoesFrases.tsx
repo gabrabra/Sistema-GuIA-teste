@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../controllers/context/ThemeContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Plus, Edit2, Trash2, Save, X, Quote, Bold, Italic, Palette } from 'lucide-react';
+import { Plus, Edit2, Trash2, Save, X, Quote, Bold, Italic, Palette, FileSpreadsheet } from 'lucide-react';
 
 interface PhraseStyle {
   color?: string;
@@ -25,6 +25,8 @@ export const ConfiguracoesFrases: React.FC = () => {
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Phrase>>({ style: {} });
   const [isAdding, setIsAdding] = useState(false);
+  const [isBulkAdding, setIsBulkAdding] = useState(false);
+  const [bulkText, setBulkText] = useState('');
 
   useEffect(() => {
     fetchPhrases();
@@ -78,6 +80,46 @@ export const ConfiguracoesFrases: React.FC = () => {
     }
   };
 
+  const handleBulkSave = async () => {
+    try {
+      if (!bulkText.trim()) return;
+
+      const rows = bulkText.split('\n').filter(row => row.trim() !== '');
+      const newPhrases = rows.map((row, index) => {
+        const columns = row.split('\t');
+        const phrase = columns[0]?.trim();
+        const author = columns[1]?.trim() || '';
+        const showDate = columns[2]?.trim() || null;
+
+        return {
+          id: `phrase_${Date.now()}_${index}`,
+          phrase,
+          author,
+          showDate,
+          style: {}
+        };
+      }).filter(p => p.phrase); // Only keep rows that have at least a phrase
+
+      if (newPhrases.length === 0) {
+        alert('Nenhuma frase válida encontrada. Verifique o formato.');
+        return;
+      }
+
+      await fetch('/api/motivational-phrases/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phrases: newPhrases }),
+      });
+
+      await fetchPhrases();
+      setIsBulkAdding(false);
+      setBulkText('');
+    } catch (err) {
+      console.error('Failed to bulk save phrases', err);
+      alert('Erro ao importar frases. Verifique o console para mais detalhes.');
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir esta frase?')) return;
     try {
@@ -117,19 +159,70 @@ export const ConfiguracoesFrases: React.FC = () => {
           <h1 className={`text-3xl font-bold ${themeClasses.text}`}>Frases do Dashboard</h1>
           <p className="text-gray-500 mt-2">Gerencie as frases motivacionais exibidas no painel principal</p>
         </div>
-        <Button 
-          onClick={() => {
-            setIsAdding(true);
-            setEditForm({ style: {} });
-          }}
-          className="flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Nova Frase
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            variant="outline"
+            onClick={() => {
+              setIsBulkAdding(true);
+              setIsAdding(false);
+              setIsEditing(null);
+              setBulkText('');
+            }}
+            className="flex items-center gap-2"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Importar Planilha
+          </Button>
+          <Button 
+            onClick={() => {
+              setIsAdding(true);
+              setIsBulkAdding(false);
+              setEditForm({ style: {} });
+            }}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nova Frase
+          </Button>
+        </div>
       </header>
 
-      {(isAdding || isEditing) && (
+      {isBulkAdding && (
+        <Card className="p-6 border-indigo-200 bg-indigo-50/30">
+          <h2 className={`text-xl font-semibold mb-2 ${themeClasses.text}`}>
+            Importação em Lote
+          </h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Copie os dados do Excel ou Google Sheets e cole na caixa abaixo. 
+            A planilha deve ter as colunas na seguinte ordem: <strong>Frase</strong> | <strong>Autor</strong> (opcional) | <strong>Data de Exibição</strong> (opcional, formato YYYY-MM-DD).
+          </p>
+          <div className="space-y-4">
+            <textarea
+              value={bulkText}
+              onChange={(e) => setBulkText(e.target.value)}
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+              rows={8}
+              placeholder="Exemplo:&#10;O sucesso é a soma de pequenos esforços...&#9;Robert Collier&#9;2024-12-25&#10;Acredite em você mesmo.&#9;&#9;"
+            />
+            <div className="flex justify-end gap-2 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsBulkAdding(false);
+                  setBulkText('');
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button onClick={handleBulkSave} disabled={!bulkText.trim()}>
+                Importar Frases
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {(isAdding || isEditing) && !isBulkAdding && (
         <Card className="p-6">
           <h2 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>
             {isAdding ? 'Adicionar Nova Frase' : 'Editar Frase'}

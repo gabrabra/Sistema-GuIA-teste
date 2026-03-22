@@ -603,6 +603,31 @@ apiRouter.post('/motivational-phrases', async (req, res) => {
   }
 });
 
+apiRouter.post('/motivational-phrases/bulk', async (req, res) => {
+  const { phrases } = req.body;
+  
+  if (!Array.isArray(phrases)) {
+    return res.status(400).json({ error: 'Expected an array of phrases' });
+  }
+
+  try {
+    await pool.query('BEGIN');
+    for (const p of phrases) {
+      await pool.query(
+        `INSERT INTO motivational_phrases (id, phrase, author, show_date, style) 
+         VALUES ($1, $2, $3, $4, $5)`,
+        [p.id, p.phrase, p.author || null, p.showDate || null, p.style || {}]
+      );
+    }
+    await pool.query('COMMIT');
+    res.status(201).json({ success: true, count: phrases.length });
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    console.error('Error in POST /motivational-phrases/bulk:', err);
+    res.status(500).json({ error: 'Failed to bulk create motivational phrases', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 apiRouter.put('/motivational-phrases/:id', async (req, res) => {
   const { phrase, author, showDate, style } = req.body;
   try {
