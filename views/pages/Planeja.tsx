@@ -372,10 +372,6 @@ export const Planeja: React.FC = () => {
             <div className="flex justify-between items-center mb-4">
               <h3 className={`text-xl font-semibold ${themeClasses.text}`}>Disciplinas e Pesos</h3>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setIsEditalModalOpen(true)} className="text-sm py-1">
-                  <FileText size={16} className="mr-2" />
-                  Anexar Edital
-                </Button>
                 <Button variant="outline" onClick={() => navigate('/configuracoes/materias')} className="text-sm py-1">
                   <Settings size={16} className="mr-2" />
                   Gerenciar Matérias
@@ -447,6 +443,32 @@ export const Planeja: React.FC = () => {
 
         {step === 3 && (
           <div className="space-y-6 animate-fadeIn">
+            <h3 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Definir Pesos</h3>
+            <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+              {materias.filter(m => selectedMateriaIds.includes(m.id)).map(materia => (
+                <div key={materia.id} className="p-4 border border-gray-200 rounded-xl flex items-center justify-between">
+                  <span className={`font-medium ${themeClasses.text}`}>{materia.nome}</span>
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm text-gray-500">Peso:</label>
+                    <input 
+                      type="number" 
+                      min="1"
+                      className={`w-20 p-2 text-sm border rounded-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                      value={disciplineConfig[materia.id]?.peso ?? 1}
+                      onChange={(e) => setDisciplineConfig({
+                        ...disciplineConfig, 
+                        [materia.id]: { ...disciplineConfig[materia.id], peso: e.target.value === '' ? '' : Number(e.target.value) }
+                      })}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-6 animate-fadeIn">
             <h3 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Disponibilidade</h3>
             
             <div className="space-y-2">
@@ -506,7 +528,7 @@ export const Planeja: React.FC = () => {
              <div />
            )}
            
-           {step < 3 ? (
+           {step < 4 ? (
              <Button onClick={handleNext}>
                Próximo <ChevronRight size={18} />
              </Button>
