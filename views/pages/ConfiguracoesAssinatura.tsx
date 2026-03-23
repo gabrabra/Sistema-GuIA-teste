@@ -3,20 +3,38 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../../controllers/context/ThemeContext';
 import { CreditCard, Calendar, User, CheckCircle } from 'lucide-react';
+import { Payment } from '../../models/types';
 
 export const ConfiguracoesAssinatura: React.FC = () => {
   const { themeClasses } = useTheme();
 
-  // Mock data for the subscription
-  const subscriptionData = {
-    planName: 'Plano Premium',
-    status: 'active',
-    subscriberName: 'Luã Lima',
-    amount: 'R$ 49,90',
-    nextBillingDate: '15 de Abril de 2026',
-    paymentMethod: 'Cartão de Crédito final 4242',
-    since: '10 de Janeiro de 2026'
-  };
+  const [payment, setPayment] = React.useState<Payment | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchPayment = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        const response = await fetch('/api/payments', {
+          headers: { 'x-user-id': userId || '' }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.length > 0) {
+            setPayment(data[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching payment:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPayment();
+  }, []);
+
+  if (loading) return <div>Carregando...</div>;
+  if (!payment) return <div>Nenhuma assinatura encontrada.</div>;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -31,17 +49,17 @@ export const ConfiguracoesAssinatura: React.FC = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <p className="text-blue-100 mb-1">Plano Atual</p>
-              <h3 className="text-3xl font-bold">{subscriptionData.planName}</h3>
+              <h3 className="text-3xl font-bold">{payment.planName}</h3>
               <div className="flex items-center gap-2 mt-2">
                 <span className="flex items-center gap-1 bg-green-500/20 text-green-100 px-2 py-1 rounded-md text-sm font-medium">
-                  <CheckCircle size={14} /> Ativo
+                  <CheckCircle size={14} /> {payment.status === 'active' ? 'Ativo' : payment.status}
                 </span>
-                <span className="text-blue-100 text-sm">Desde {subscriptionData.since}</span>
+                <span className="text-blue-100 text-sm">Desde {new Date(payment.startDate).toLocaleDateString()}</span>
               </div>
             </div>
             <div className="text-left sm:text-right">
               <p className="text-blue-100 mb-1">Valor da Mensalidade</p>
-              <p className="text-3xl font-bold">{subscriptionData.amount}</p>
+              <p className="text-3xl font-bold">R$ {payment.amount.toFixed(2).replace('.', ',')}</p>
               <p className="text-blue-100 text-sm mt-1">por mês</p>
             </div>
           </div>
@@ -55,7 +73,7 @@ export const ConfiguracoesAssinatura: React.FC = () => {
             </div>
             <div>
               <p className="text-gray-500 text-sm">Data do Vencimento</p>
-              <p className={`text-lg font-bold ${themeClasses.text}`}>{subscriptionData.nextBillingDate}</p>
+              <p className={`text-lg font-bold ${themeClasses.text}`}>{new Date(payment.nextBillingDate).toLocaleDateString()}</p>
             </div>
           </div>
           <Button variant="outline" className="w-full mt-auto">Ver Histórico</Button>
@@ -68,7 +86,7 @@ export const ConfiguracoesAssinatura: React.FC = () => {
             </div>
             <div>
               <p className="text-gray-500 text-sm">Nome na Assinatura</p>
-              <p className={`text-lg font-bold ${themeClasses.text}`}>{subscriptionData.subscriberName}</p>
+              <p className={`text-lg font-bold ${themeClasses.text}`}>{payment.subscriberName}</p>
             </div>
           </div>
           <Button variant="outline" className="w-full mt-auto">Editar Dados</Button>
@@ -81,7 +99,7 @@ export const ConfiguracoesAssinatura: React.FC = () => {
             </div>
             <div>
               <p className="text-gray-500 text-sm">Método Atual</p>
-              <p className={`text-lg font-bold ${themeClasses.text}`}>{subscriptionData.paymentMethod}</p>
+              <p className={`text-lg font-bold ${themeClasses.text}`}>Cartão de Crédito final {payment.paymentMethodLast4}</p>
             </div>
           </div>
           <Button variant="outline" className="w-full mt-auto">Alterar Cartão</Button>

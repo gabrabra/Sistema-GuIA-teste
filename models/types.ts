@@ -67,6 +67,11 @@ export interface Disciplina {
   historico: SessaoEstudo[];
 }
 
+export interface HistoricoEstudo {
+  data: string; // YYYY-MM-DD
+  segundos: number;
+}
+
 export interface Payment {
   id: string;
   userId: string;
