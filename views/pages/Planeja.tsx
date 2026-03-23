@@ -3,7 +3,7 @@ import { useStudy } from '../../controllers/context/StudyContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { Check, ChevronLeft, ChevronRight, Save, Plus, Settings, Layers, FileText, Upload, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Save, Plus, Settings, Layers, FileText, Upload, Trash2, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
 
@@ -397,45 +397,45 @@ export const Planeja: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2">
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                 {materias.map(materia => (
-                  <div key={materia.id} className={`p-4 border rounded-xl transition-all ${selectedMateriaIds.includes(materia.id) ? 'border-blue-500 bg-blue-50/10' : 'border-gray-200'}`}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedMateriaIds.includes(materia.id)}
-                        onChange={() => toggleMateria(materia.id)}
-                        className="w-5 h-5 text-blue-600 rounded"
-                      />
-                      <span className={`font-medium ${themeClasses.text}`}>{materia.nome}</span>
+                  <div key={materia.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                    <div 
+                      className={`p-4 flex items-center justify-between cursor-pointer ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800' : 'bg-white'}`}
+                      onClick={() => {
+                        // Toggle expansion logic
+                        const expanded = disciplineConfig[materia.id]?.expanded;
+                        setDisciplineConfig({
+                          ...disciplineConfig,
+                          [materia.id]: { ...disciplineConfig[materia.id], expanded: !expanded }
+                        });
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedMateriaIds.includes(materia.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleMateria(materia.id);
+                          }}
+                          className="w-5 h-5 text-blue-600 rounded"
+                        />
+                        <span className={`font-medium ${themeClasses.text}`}>{materia.nome}</span>
+                      </div>
+                      <ChevronDown size={20} className={`text-gray-400 transition-transform ${disciplineConfig[materia.id]?.expanded ? 'rotate-180' : ''}`} />
                     </div>
                     
-                    {selectedMateriaIds.includes(materia.id) && (
-                      <div className="grid grid-cols-2 gap-2 pl-8">
-                         <div>
-                           <label className="text-xs text-gray-500">Peso</label>
-                           <input 
-                             type="number" 
-                             className={`w-full p-2 text-sm border rounded-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-                             value={disciplineConfig[materia.id]?.peso ?? 1}
-                             onChange={(e) => setDisciplineConfig({
-                               ...disciplineConfig, 
-                               [materia.id]: { ...disciplineConfig[materia.id], peso: e.target.value === '' ? '' : Number(e.target.value) }
-                             })}
-                           />
-                         </div>
-                         <div>
-                           <label className="text-xs text-gray-500">Horas/Sem</label>
-                           <input 
-                             type="number" 
-                             className={`w-full p-2 text-sm border rounded-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-                             value={disciplineConfig[materia.id]?.horas ?? 2}
-                             onChange={(e) => setDisciplineConfig({
-                               ...disciplineConfig, 
-                               [materia.id]: { ...disciplineConfig[materia.id], horas: e.target.value === '' ? '' : Number(e.target.value) }
-                             })}
-                           />
-                         </div>
+                    {disciplineConfig[materia.id]?.expanded && (
+                      <div className={`p-4 border-t border-gray-200 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+                        <div className="space-y-2">
+                          {materia.assuntos.map(assunto => (
+                            <div key={assunto.id} className="flex items-center gap-2 text-sm">
+                              <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" />
+                              <span className={themeClasses.text}>{assunto.nome}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
