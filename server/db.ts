@@ -68,8 +68,14 @@ export async function initDb(retries = 5, delay = 5000) {
         INSERT INTO ai_periodicities (id, name, days) VALUES
         ('daily', 'Diário', 1),
         ('weekly', 'Semanal', 7),
+        ('biweekly', 'Quinzenal', 15),
         ('monthly', 'Mensal', 30),
-        ('yearly', 'Anual', 365)
+        ('bimonthly', 'Bimestral', 60),
+        ('quarterly', 'Trimestral', 90),
+        ('quadrimesterly', 'Quadrimestral', 120),
+        ('semiannual', 'Semestral', 180),
+        ('yearly', 'Anual', 365),
+        ('biannual', 'Bianual', 730)
         ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, days = EXCLUDED.days;
 
         CREATE TABLE IF NOT EXISTS ai_profiles (

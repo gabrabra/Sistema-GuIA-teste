@@ -14,7 +14,7 @@ export interface Role {
 export interface AIProfile {
   id: string;
   name: string;
-  periodicity: 'daily' | 'weekly' | 'monthly';
+  periodicity: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'quadrimesterly' | 'semiannual' | 'yearly' | 'biannual';
   responde: {
     promptsPerPeriod: number;
     maxCharactersPerPrompt: number;

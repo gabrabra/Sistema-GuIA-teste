@@ -14,7 +14,7 @@ export const ConfiguracoesAI: React.FC = () => {
   
   const [newProfile, setNewProfile] = useState<{
     name: string;
-    periodicity: 'daily' | 'weekly' | 'monthly';
+    periodicity: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'bimonthly' | 'quarterly' | 'quadrimesterly' | 'semiannual' | 'yearly' | 'biannual';
     respondePrompts: number;
     respondeChars: number;
     redigePrompts: number;
@@ -89,12 +89,19 @@ export const ConfiguracoesAI: React.FC = () => {
           />
           <select
             value={newProfile.periodicity}
-            onChange={(e) => setNewProfile({...newProfile, periodicity: e.target.value as 'daily' | 'weekly' | 'monthly'})}
+            onChange={(e) => setNewProfile({...newProfile, periodicity: e.target.value as any})}
             className="px-4 py-2 border rounded-lg"
           >
             <option value="daily">Diário</option>
             <option value="weekly">Semanal</option>
+            <option value="biweekly">Quinzenal</option>
             <option value="monthly">Mensal</option>
+            <option value="bimonthly">Bimestral</option>
+            <option value="quarterly">Trimestral</option>
+            <option value="quadrimesterly">Quadrimestral</option>
+            <option value="semiannual">Semestral</option>
+            <option value="yearly">Anual</option>
+            <option value="biannual">Bianual</option>
           </select>
           <div className="p-4 border rounded-lg">
             <h3 className="font-bold mb-2">Guia Responde</h3>
@@ -140,7 +147,18 @@ export const ConfiguracoesAI: React.FC = () => {
           {profiles.map(profile => (
             <div key={profile.id} className="flex justify-between items-center p-4 border rounded-lg">
               <div>
-                <h3 className="font-bold">{profile.name} <span className="text-xs font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2">{profile.periodicity === 'daily' ? 'Diário' : profile.periodicity === 'weekly' ? 'Semanal' : 'Mensal'}</span></h3>
+                <h3 className="font-bold">{profile.name} <span className="text-xs font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2">
+                  {profile.periodicity === 'daily' ? 'Diário' : 
+                   profile.periodicity === 'weekly' ? 'Semanal' : 
+                   profile.periodicity === 'biweekly' ? 'Quinzenal' : 
+                   profile.periodicity === 'monthly' ? 'Mensal' : 
+                   profile.periodicity === 'bimonthly' ? 'Bimestral' : 
+                   profile.periodicity === 'quarterly' ? 'Trimestral' : 
+                   profile.periodicity === 'quadrimesterly' ? 'Quadrimestral' : 
+                   profile.periodicity === 'semiannual' ? 'Semestral' : 
+                   profile.periodicity === 'yearly' ? 'Anual' : 
+                   profile.periodicity === 'biannual' ? 'Bianual' : profile.periodicity}
+                </span></h3>
                 <p className="text-sm text-gray-500 mt-1">
                   Responde: {profile.responde.promptsPerPeriod} prompts/período, {profile.responde.maxCharactersPerPrompt} chars/prompt
                 </p>
@@ -179,12 +197,19 @@ export const ConfiguracoesAI: React.FC = () => {
               />
               <select
                 value={editingProfile.periodicity}
-                onChange={(e) => setEditingProfile({...editingProfile, periodicity: e.target.value as 'daily' | 'weekly' | 'monthly'})}
+                onChange={(e) => setEditingProfile({...editingProfile, periodicity: e.target.value as any})}
                 className="px-4 py-2 border rounded-lg text-gray-900"
               >
                 <option value="daily">Diário</option>
                 <option value="weekly">Semanal</option>
+                <option value="biweekly">Quinzenal</option>
                 <option value="monthly">Mensal</option>
+                <option value="bimonthly">Bimestral</option>
+                <option value="quarterly">Trimestral</option>
+                <option value="quadrimesterly">Quadrimestral</option>
+                <option value="semiannual">Semestral</option>
+                <option value="yearly">Anual</option>
+                <option value="biannual">Bianual</option>
               </select>
               
               <div className="p-4 border rounded-lg">
