@@ -7,6 +7,7 @@ import { formatTime, formatTimeWithSeconds } from '../../models/utils/timeUtils'
 import { Play, Pause, Plus, Flame, Zap, Target, BookOpen, Layers, PlusCircle, Clock, Book, Search, X, ChevronDown, ChevronUp, CheckCircle, Trophy, Activity, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
+import { DonutChart } from '../components/ui/DonutChart';
 
 export const Ciclo: React.FC = () => {
   const { 
@@ -171,6 +172,10 @@ export const Ciclo: React.FC = () => {
           );
         })}
       </div>
+
+      <Card title="Tópicos Estudados por Matéria">
+        <DonutChart materias={materias} />
+      </Card>
 
       {/* Maratona Diaria */}
       <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-none">
