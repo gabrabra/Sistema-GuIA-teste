@@ -14,15 +14,28 @@ export const ConfiguracoesAssinatura: React.FC = () => {
   React.useEffect(() => {
     const fetchPayment = async () => {
       try {
-        const userId = localStorage.getItem('userId');
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const userId = user?.id;
+        
+        console.log('Fetching payments for userId:', userId);
+        
+        if (!userId) {
+          console.error('No userId found in localStorage');
+          setLoading(false);
+          return;
+        }
+
         const response = await fetch('/api/payments', {
-          headers: { 'x-user-id': userId || '' }
+          headers: { 'x-user-id': userId }
         });
         if (response.ok) {
           const data = await response.json();
           if (data.length > 0) {
             setPayment(data[0]);
           }
+        } else {
+          console.error('Failed to fetch payments, status:', response.status);
         }
       } catch (error) {
         console.error('Error fetching payment:', error);
