@@ -3,6 +3,8 @@ import { usePrompts } from '../../controllers/context/PromptContext';
 import { useAIProfile } from '../../controllers/context/AIProfileContext';
 import { usePromptLimit } from '../hooks/usePromptLimit';
 import * as Icons from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { 
   PenTool, Sparkles, Eraser, AlignLeft, Maximize2, Minimize2, 
   Lightbulb, CheckCheck, RefreshCw, Link, Briefcase, LayoutTemplate, 
@@ -153,7 +155,11 @@ export const Redige: React.FC = () => {
                     ? 'bg-blue-600 text-white rounded-br-none shadow-md shadow-blue-200' 
                     : 'bg-white border border-gray-100 text-gray-800 rounded-bl-none shadow-sm'
                 }`}>
-                  <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                  <div className="leading-relaxed markdown-content">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.text}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}
