@@ -13,18 +13,30 @@ async function checkAndLogPrompt(userId: string, module: 'responde' | 'redige') 
   
   if (!aiProfileId) throw new Error('User profile not found');
 
-  // 2. Get limits
+  // 2. Get limits and periodicity days
   const profileResult = await pool.query(
     module === 'responde' 
-      ? 'SELECT responde_prompts_per_day as max_prompts FROM ai_profiles WHERE id = $1'
-      : 'SELECT redige_prompts_per_day as max_prompts FROM ai_profiles WHERE id = $1',
+      ? `SELECT p.responde_prompts_per_day as max_prompts, p.periodicity, COALESCE(per.days, 1) as days 
+         FROM ai_profiles p 
+         LEFT JOIN ai_periodicities per ON p.periodicity = per.id 
+         WHERE p.id = $1`
+      : `SELECT p.redige_prompts_per_day as max_prompts, p.periodicity, COALESCE(per.days, 1) as days 
+         FROM ai_profiles p 
+         LEFT JOIN ai_periodicities per ON p.periodicity = per.id 
+         WHERE p.id = $1`,
     [aiProfileId]
   );
   const maxPrompts = profileResult.rows[0]?.max_prompts;
+  const days = profileResult.rows[0]?.days || 1;
 
-  // 3. Count today's prompts
+  // 3. Determine the start date based on periodicity days
+  // If days = 1, it's CURRENT_DATE. If days = 7, it's CURRENT_DATE - 6 days.
+  const daysToSubtract = Math.max(0, days - 1);
+  const dateCondition = `CURRENT_DATE - INTERVAL '${daysToSubtract} days'`;
+
+  // 4. Count prompts in the period
   const countResult = await pool.query(
-    'SELECT COUNT(*) FROM ai_prompt_logs WHERE user_id = $1 AND module = $2 AND created_at >= CURRENT_DATE',
+    `SELECT COUNT(*) FROM ai_prompt_logs WHERE user_id = $1 AND module = $2 AND created_at >= ${dateCondition}`,
     [userId, module]
   );
   const currentCount = parseInt(countResult.rows[0].count);
@@ -58,7 +70,7 @@ apiRouter.post('/responde', async (req, res) => {
     res.json({ response });
   } catch (err) {
     if (err instanceof Error && err.message === 'LIMIT_REACHED') {
-      return res.status(429).json({ error: 'Daily limit reached' });
+      return res.status(429).json({ error: 'Period limit reached' });
     }
     console.error('Error in /responde:', err);
     res.status(500).json({ error: 'Failed to process request', details: err instanceof Error ? err.message : String(err) });
@@ -79,7 +91,7 @@ apiRouter.post('/redige', async (req, res) => {
     res.json({ response });
   } catch (err) {
     if (err instanceof Error && err.message === 'LIMIT_REACHED') {
-      return res.status(429).json({ error: 'Daily limit reached' });
+      return res.status(429).json({ error: 'Period limit reached' });
     }
     console.error('Error in /redige:', err);
     res.status(500).json({ error: 'Failed to process request', details: err instanceof Error ? err.message : String(err) });
@@ -202,8 +214,27 @@ apiRouter.get('/usage/:module', async (req, res) => {
   }
 
   try {
+    // 1. Get user profile
+    const userResult = await pool.query('SELECT ai_profile_id FROM users WHERE id = $1', [userId]);
+    const aiProfileId = userResult.rows[0]?.ai_profile_id;
+    
+    let dateCondition = 'CURRENT_DATE';
+    
+    if (aiProfileId) {
+      const profileResult = await pool.query(
+        `SELECT p.periodicity, COALESCE(per.days, 1) as days 
+         FROM ai_profiles p 
+         LEFT JOIN ai_periodicities per ON p.periodicity = per.id 
+         WHERE p.id = $1`,
+        [aiProfileId]
+      );
+      const days = profileResult.rows[0]?.days || 1;
+      const daysToSubtract = Math.max(0, days - 1);
+      dateCondition = `CURRENT_DATE - INTERVAL '${daysToSubtract} days'`;
+    }
+
     const countResult = await pool.query(
-      'SELECT COUNT(*) FROM ai_prompt_logs WHERE user_id = $1 AND module = $2 AND created_at >= CURRENT_DATE',
+      `SELECT COUNT(*) FROM ai_prompt_logs WHERE user_id = $1 AND module = $2 AND created_at >= ${dateCondition}`,
       [userId, module]
     );
     res.json({ count: parseInt(countResult.rows[0].count) });
@@ -592,12 +623,13 @@ apiRouter.get('/ai-profiles', async (req, res) => {
     const profiles = result.rows.map(row => ({
       id: row.id,
       name: row.name,
+      periodicity: row.periodicity || 'daily',
       responde: {
-        promptsPerDay: row.responde_prompts_per_day,
+        promptsPerPeriod: row.responde_prompts_per_day,
         maxCharactersPerPrompt: row.responde_max_chars
       },
       redige: {
-        promptsPerDay: row.redige_prompts_per_day,
+        promptsPerPeriod: row.redige_prompts_per_day,
         maxCharactersPerPrompt: row.redige_max_chars
       }
     }));
@@ -609,17 +641,18 @@ apiRouter.get('/ai-profiles', async (req, res) => {
 });
 
 apiRouter.post('/ai-profiles', async (req, res) => {
-  const { id, name, responde, redige } = req.body;
+  const { id, name, periodicity, responde, redige } = req.body;
   try {
     await pool.query(
-      `INSERT INTO ai_profiles (id, name, responde_prompts_per_day, responde_max_chars, redige_prompts_per_day, redige_max_chars)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
+      `INSERT INTO ai_profiles (id, name, periodicity, responde_prompts_per_day, responde_max_chars, redige_prompts_per_day, redige_max_chars)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         id, 
         name, 
-        responde?.promptsPerDay || 10, 
+        periodicity || 'daily',
+        responde?.promptsPerPeriod || 10, 
         responde?.maxCharactersPerPrompt || 500,
-        redige?.promptsPerDay || 5,
+        redige?.promptsPerPeriod || 5,
         redige?.maxCharactersPerPrompt || 1000
       ]
     );
@@ -631,17 +664,18 @@ apiRouter.post('/ai-profiles', async (req, res) => {
 });
 
 apiRouter.put('/ai-profiles/:id', async (req, res) => {
-  const { name, responde, redige } = req.body;
+  const { name, periodicity, responde, redige } = req.body;
   try {
     await pool.query(
       `UPDATE ai_profiles 
-       SET name = $1, responde_prompts_per_day = $2, responde_max_chars = $3, redige_prompts_per_day = $4, redige_max_chars = $5, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $6`,
+       SET name = $1, periodicity = $2, responde_prompts_per_day = $3, responde_max_chars = $4, redige_prompts_per_day = $5, redige_max_chars = $6, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $7`,
       [
         name,
-        responde?.promptsPerDay || 10, 
+        periodicity || 'daily',
+        responde?.promptsPerPeriod || 10, 
         responde?.maxCharactersPerPrompt || 500,
-        redige?.promptsPerDay || 5,
+        redige?.promptsPerPeriod || 5,
         redige?.maxCharactersPerPrompt || 1000,
         req.params.id
       ]

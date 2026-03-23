@@ -14,12 +14,13 @@ export interface Role {
 export interface AIProfile {
   id: string;
   name: string;
+  periodicity: 'daily' | 'weekly' | 'monthly';
   responde: {
-    promptsPerDay: number;
+    promptsPerPeriod: number;
     maxCharactersPerPrompt: number;
   };
   redige: {
-    promptsPerDay: number;
+    promptsPerPeriod: number;
     maxCharactersPerPrompt: number;
   };
 }

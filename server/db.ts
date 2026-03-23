@@ -59,9 +59,23 @@ export async function initDb(retries = 5, delay = 5000) {
           permissions JSONB DEFAULT '[]'::jsonb
         );
 
+        CREATE TABLE IF NOT EXISTS ai_periodicities (
+          id VARCHAR(50) PRIMARY KEY,
+          name VARCHAR(100) NOT NULL,
+          days INTEGER NOT NULL
+        );
+
+        INSERT INTO ai_periodicities (id, name, days) VALUES
+        ('daily', 'Diário', 1),
+        ('weekly', 'Semanal', 7),
+        ('monthly', 'Mensal', 30),
+        ('yearly', 'Anual', 365)
+        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, days = EXCLUDED.days;
+
         CREATE TABLE IF NOT EXISTS ai_profiles (
           id VARCHAR(255) PRIMARY KEY,
           name VARCHAR(255) NOT NULL,
+          periodicity VARCHAR(50) DEFAULT 'daily',
           responde_prompts_per_day INTEGER DEFAULT 10,
           responde_max_chars INTEGER DEFAULT 500,
           redige_prompts_per_day INTEGER DEFAULT 5,
@@ -69,6 +83,8 @@ export async function initDb(retries = 5, delay = 5000) {
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
+        
+        ALTER TABLE ai_profiles ADD COLUMN IF NOT EXISTS periodicity VARCHAR(50) DEFAULT 'daily';
 
         CREATE TABLE IF NOT EXISTS users (
           id VARCHAR(255) PRIMARY KEY,
@@ -156,16 +172,18 @@ export async function initDb(retries = 5, delay = 5000) {
         );
 
         ALTER TABLE motivational_phrases ADD COLUMN IF NOT EXISTS style JSONB DEFAULT '{}'::jsonb;
+      `);
 
-        -- Insert default phrase if none exists
-        const phrasesResult = await client.query('SELECT COUNT(*) FROM motivational_phrases');
-        if (parseInt(phrasesResult.rows[0].count) === 0) {
-          await client.query(
-            \`INSERT INTO motivational_phrases (id, phrase, author) VALUES ($1, $2, $3)\`,
-            ['default_phrase_1', 'O sucesso é a soma de pequenos esforços repetidos dia após dia.', 'Robert Collier']
-          );
-        }
+      // Insert default phrase if none exists
+      const phrasesResult = await client.query('SELECT COUNT(*) FROM motivational_phrases');
+      if (parseInt(phrasesResult.rows[0].count) === 0) {
+        await client.query(
+          `INSERT INTO motivational_phrases (id, phrase, author) VALUES ($1, $2, $3)`,
+          ['default_phrase_1', 'O sucesso é a soma de pequenos esforços repetidos dia após dia.', 'Robert Collier']
+        );
+      }
 
+      await client.query(`
         -- Add user_id to existing tables for multi-tenancy
         ALTER TABLE prompts ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         ALTER TABLE prompts ADD COLUMN IF NOT EXISTS prompt_content TEXT;

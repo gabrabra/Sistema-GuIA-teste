@@ -15,7 +15,7 @@ export const Redige: React.FC = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const profile = getUserProfile(user.aiProfileId);
   const maxChars = profile?.redige.maxCharactersPerPrompt || 1000;
-  const maxPrompts = profile?.redige.promptsPerDay || 10;
+  const maxPrompts = profile?.redige.promptsPerPeriod || 10;
   
   const { usedPrompts, hasReachedLimit, incrementUsage } = usePromptLimit('redige', maxPrompts);
 
@@ -35,7 +35,7 @@ export const Redige: React.FC = () => {
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
     if (hasReachedLimit) {
-      setMessages(prev => [...prev, { role: 'ai', text: `Você atingiu o limite diário de ${maxPrompts} prompts para o Guia Redige.` }]);
+      setMessages(prev => [...prev, { role: 'ai', text: `Você atingiu o limite de ${maxPrompts} prompts do seu período para o Guia Redige.` }]);
       return;
     }
     
@@ -196,7 +196,7 @@ export const Redige: React.FC = () => {
           <div className="flex flex-col">
             <span className="text-xs text-gray-400" aria-live="polite">{input.length}/{maxChars} caracteres</span>
             <span className={`text-xs ${hasReachedLimit ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-              {usedPrompts}/{maxPrompts} prompts diários
+              {usedPrompts}/{maxPrompts} prompts no período
             </span>
           </div>
           <button 

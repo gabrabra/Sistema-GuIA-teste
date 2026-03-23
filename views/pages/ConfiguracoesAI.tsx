@@ -9,8 +9,16 @@ export const ConfiguracoesAI: React.FC = () => {
   const { themeClasses } = useTheme();
   const { profiles, addProfile, deleteProfile, isLoading } = useAIProfile();
   
-  const [newProfile, setNewProfile] = useState({ 
+  const [newProfile, setNewProfile] = useState<{
+    name: string;
+    periodicity: 'daily' | 'weekly' | 'monthly';
+    respondePrompts: number;
+    respondeChars: number;
+    redigePrompts: number;
+    redigeChars: number;
+  }>({ 
     name: '', 
+    periodicity: 'daily',
     respondePrompts: 0, respondeChars: 0,
     redigePrompts: 0, redigeChars: 0
   });
@@ -21,10 +29,11 @@ export const ConfiguracoesAI: React.FC = () => {
         await addProfile({ 
           id: crypto.randomUUID(), 
           name: newProfile.name,
-          responde: { promptsPerDay: newProfile.respondePrompts, maxCharactersPerPrompt: newProfile.respondeChars },
-          redige: { promptsPerDay: newProfile.redigePrompts, maxCharactersPerPrompt: newProfile.redigeChars }
+          periodicity: newProfile.periodicity,
+          responde: { promptsPerPeriod: newProfile.respondePrompts, maxCharactersPerPrompt: newProfile.respondeChars },
+          redige: { promptsPerPeriod: newProfile.redigePrompts, maxCharactersPerPrompt: newProfile.redigeChars }
         });
-        setNewProfile({ name: '', respondePrompts: 0, respondeChars: 0, redigePrompts: 0, redigeChars: 0 });
+        setNewProfile({ name: '', periodicity: 'daily', respondePrompts: 0, respondeChars: 0, redigePrompts: 0, redigeChars: 0 });
       } catch (error) {
         console.error('Erro ao adicionar perfil', error);
       }
@@ -60,13 +69,22 @@ export const ConfiguracoesAI: React.FC = () => {
             placeholder="Nome do Perfil"
             value={newProfile.name}
             onChange={(e) => setNewProfile({...newProfile, name: e.target.value})}
-            className="px-4 py-2 border rounded-lg md:col-span-2"
+            className="px-4 py-2 border rounded-lg"
           />
+          <select
+            value={newProfile.periodicity}
+            onChange={(e) => setNewProfile({...newProfile, periodicity: e.target.value as 'daily' | 'weekly' | 'monthly'})}
+            className="px-4 py-2 border rounded-lg"
+          >
+            <option value="daily">Diário</option>
+            <option value="weekly">Semanal</option>
+            <option value="monthly">Mensal</option>
+          </select>
           <div className="p-4 border rounded-lg">
             <h3 className="font-bold mb-2">Guia Responde</h3>
             <input 
               type="number" 
-              placeholder="Prompts/dia"
+              placeholder="Prompts/período"
               value={newProfile.respondePrompts || ''}
               onChange={(e) => setNewProfile({...newProfile, respondePrompts: parseInt(e.target.value)})}
               className="w-full px-4 py-2 border rounded-lg mb-2"
@@ -83,7 +101,7 @@ export const ConfiguracoesAI: React.FC = () => {
             <h3 className="font-bold mb-2">Guia Redige</h3>
             <input 
               type="number" 
-              placeholder="Prompts/dia"
+              placeholder="Prompts/período"
               value={newProfile.redigePrompts || ''}
               onChange={(e) => setNewProfile({...newProfile, redigePrompts: parseInt(e.target.value)})}
               className="w-full px-4 py-2 border rounded-lg mb-2"
@@ -106,12 +124,12 @@ export const ConfiguracoesAI: React.FC = () => {
           {profiles.map(profile => (
             <div key={profile.id} className="flex justify-between items-center p-4 border rounded-lg">
               <div>
-                <h3 className="font-bold">{profile.name}</h3>
-                <p className="text-sm text-gray-500">
-                  Responde: {profile.responde.promptsPerDay} prompts/dia, {profile.responde.maxCharactersPerPrompt} chars/prompt
+                <h3 className="font-bold">{profile.name} <span className="text-xs font-normal bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2">{profile.periodicity === 'daily' ? 'Diário' : profile.periodicity === 'weekly' ? 'Semanal' : 'Mensal'}</span></h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Responde: {profile.responde.promptsPerPeriod} prompts/período, {profile.responde.maxCharactersPerPrompt} chars/prompt
                 </p>
                 <p className="text-sm text-gray-500">
-                  Redige: {profile.redige.promptsPerDay} prompts/dia, {profile.redige.maxCharactersPerPrompt} chars/prompt
+                  Redige: {profile.redige.promptsPerPeriod} prompts/período, {profile.redige.maxCharactersPerPrompt} chars/prompt
                 </p>
               </div>
               <Button variant="danger" onClick={() => handleDeleteProfile(profile.id)}>Excluir</Button>
