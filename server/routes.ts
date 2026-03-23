@@ -776,4 +776,29 @@ apiRouter.delete('/produtos/:id', async (req, res) => {
   }
 });
 
+// --- Payments ---
+apiRouter.get('/payments', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const result = await pool.query('SELECT * FROM payments WHERE user_id = $1', [userId]);
+    res.json(result.rows.map(row => ({
+      id: row.id,
+      userId: row.user_id,
+      planName: row.plan_name,
+      amount: parseFloat(row.amount),
+      status: row.status,
+      startDate: row.start_date,
+      nextBillingDate: row.next_billing_date,
+      paymentMethodLast4: row.payment_method_last4,
+      subscriberName: row.subscriber_name
+    })));
+  } catch (err) {
+    console.error('Error in GET /payments:', err);
+    res.status(500).json({ error: 'Failed to fetch payments', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 
