@@ -143,6 +143,17 @@ export const Planeja: React.FC = () => {
       setError('Por favor, selecione pelo menos uma matéria.');
       return;
     }
+    if (step === 3) {
+      const selectedMaterias = materias.filter(m => selectedMateriaIds.includes(m.id));
+      const hasInvalidWeight = selectedMaterias.some(m => {
+        const peso = disciplineConfig[m.id]?.peso;
+        return peso === '' || peso === undefined || Number(peso) < 1;
+      });
+      if (hasInvalidWeight) {
+        setError('Por favor, defina um peso válido (mínimo 1) para todas as matérias selecionadas.');
+        return;
+      }
+    }
     setStep(prev => prev + 1);
   };
   const handleBack = () => {

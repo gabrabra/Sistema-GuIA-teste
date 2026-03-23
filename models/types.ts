@@ -67,9 +67,16 @@ export interface Disciplina {
   historico: SessaoEstudo[];
 }
 
-export interface HistoricoEstudo {
-  data: string; // YYYY-MM-DD
-  segundos: number;
+export interface Payment {
+  id: string;
+  userId: string;
+  planName: string;
+  amount: number;
+  status: 'active' | 'canceled' | 'past_due';
+  startDate: string; // ISO string
+  nextBillingDate: string; // ISO string
+  paymentMethodLast4: string;
+  subscriberName: string;
 }
 
 export interface Concurso {

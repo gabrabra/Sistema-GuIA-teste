@@ -22,3 +22,17 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_profile_id VARCHAR(255) REFERENCES
 
 -- 4. Atualizar o usuário padrão para ter o perfil básico
 UPDATE users SET ai_profile_id = 'default-profile' WHERE email = 'lua.lima@recife.pe.gov.br';
+
+-- 5. Criar a tabela de pagamentos
+CREATE TABLE IF NOT EXISTS payments (
+  id VARCHAR(255) PRIMARY KEY,
+  user_id VARCHAR(255) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  plan_name VARCHAR(255) NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  status VARCHAR(50) NOT NULL CHECK (status IN ('active', 'canceled', 'past_due')),
+  start_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  next_billing_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  payment_method_last4 VARCHAR(4) NOT NULL,
+  subscriber_name VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
