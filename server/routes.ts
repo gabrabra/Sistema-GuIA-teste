@@ -445,7 +445,10 @@ apiRouter.delete('/concursos/:id', async (req, res) => {
 apiRouter.get('/materias', async (req, res) => {
   const userId = req.headers['x-user-id'];
   try {
-    const result = await pool.query('SELECT * FROM materias WHERE user_id = $1', [userId]);
+    const result = await pool.query(
+      'SELECT id, nome, COALESCE(assuntos, \'[]\'::jsonb) as assuntos, user_id, COALESCE(is_global, false) as "isGlobal" FROM materias WHERE is_global = true OR user_id = $1', 
+      [userId]
+    );
     res.json(result.rows);
   } catch (err) {
     console.error('Error in GET /materias:', err);
@@ -457,9 +460,13 @@ apiRouter.post('/materias', async (req, res) => {
   const userId = req.headers['x-user-id'];
   const { id, nome, assuntos } = req.body;
   try {
+    const userResult = await pool.query('SELECT role_id FROM users WHERE id = $1', [userId]);
+    const isAdmin = userResult.rows[0]?.role_id === 'admin';
+    const isGlobal = isAdmin; // Admins create global subjects
+
     await pool.query(
-      'INSERT INTO materias (id, user_id, nome, assuntos) VALUES ($1, $2, $3, $4)',
-      [id, userId, nome, JSON.stringify(assuntos || [])]
+      'INSERT INTO materias (id, user_id, nome, assuntos, is_global) VALUES ($1, $2, $3, $4, $5)',
+      [id, userId, nome, JSON.stringify(assuntos || []), isGlobal]
     );
     res.status(201).json({ success: true });
   } catch (err) {
@@ -472,10 +479,20 @@ apiRouter.put('/materias/:id', async (req, res) => {
   const userId = req.headers['x-user-id'];
   const { nome, assuntos } = req.body;
   try {
-    await pool.query(
-      'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3 AND user_id = $4',
-      [nome, JSON.stringify(assuntos || []), req.params.id, userId]
-    );
+    const userResult = await pool.query('SELECT role_id FROM users WHERE id = $1', [userId]);
+    const isAdmin = userResult.rows[0]?.role_id === 'admin';
+
+    if (isAdmin) {
+      await pool.query(
+        'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3 AND (is_global = true OR user_id = $4)',
+        [nome, JSON.stringify(assuntos || []), req.params.id, userId]
+      );
+    } else {
+      await pool.query(
+        'UPDATE materias SET nome = $1, assuntos = $2 WHERE id = $3 AND user_id = $4 AND (is_global = false OR is_global IS NULL)',
+        [nome, JSON.stringify(assuntos || []), req.params.id, userId]
+      );
+    }
     res.json({ success: true });
   } catch (err) {
     console.error('Error in PUT /materias/:id:', err);
@@ -486,7 +503,14 @@ apiRouter.put('/materias/:id', async (req, res) => {
 apiRouter.delete('/materias/:id', async (req, res) => {
   const userId = req.headers['x-user-id'];
   try {
-    await pool.query('DELETE FROM materias WHERE id = $1 AND user_id = $2', [req.params.id, userId]);
+    const userResult = await pool.query('SELECT role_id FROM users WHERE id = $1', [userId]);
+    const isAdmin = userResult.rows[0]?.role_id === 'admin';
+
+    if (isAdmin) {
+      await pool.query('DELETE FROM materias WHERE id = $1 AND (is_global = true OR user_id = $2)', [req.params.id, userId]);
+    } else {
+      await pool.query('DELETE FROM materias WHERE id = $1 AND user_id = $2 AND (is_global = false OR is_global IS NULL)', [req.params.id, userId]);
+    }
     res.json({ success: true });
   } catch (err) {
     console.error('Error in DELETE /materias/:id:', err);

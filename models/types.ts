@@ -46,6 +46,7 @@ export interface Materia {
   id: string;
   nome: string;
   assuntos: Assunto[];
+  isGlobal?: boolean;
 }
 
 export interface SessaoEstudo {

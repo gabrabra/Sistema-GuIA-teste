@@ -436,7 +436,7 @@ export const Planeja: React.FC = () => {
                     {disciplineConfig[materia.id]?.expanded && (
                       <div className={`p-4 border-t border-gray-200 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-900' : 'bg-gray-50'}`}>
                         <div className="space-y-2">
-                          {materia.assuntos.map(assunto => (
+                          {(materia.assuntos || []).map(assunto => (
                             <div key={assunto.id} className="flex items-center gap-2 text-sm">
                               <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" />
                               <span className={themeClasses.text}>{assunto.nome}</span>

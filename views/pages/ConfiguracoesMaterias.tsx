@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStudy } from '../../controllers/context/StudyContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { useTheme } from '../../controllers/context/ThemeContext';
-import { Plus, Trash2, ChevronDown, ChevronRight, FileText, List, Edit2, Save, X, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronRight, FileText, List, Edit2, Save, X, AlertTriangle, Globe } from 'lucide-react';
 
 export const ConfiguracoesMaterias: React.FC = () => {
   const { materias, addMateria, updateMateria, deleteMateria, addAssunto, updateAssunto, deleteAssunto, setMaterias } = useStudy();
@@ -22,6 +22,19 @@ export const ConfiguracoesMaterias: React.FC = () => {
   const [editingAssuntoName, setEditingAssuntoName] = useState('');
 
   const [importText, setImportText] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setIsAdmin(user.roleId === 'admin');
+      } catch (e) {
+        console.error('Failed to parse user from localStorage', e);
+      }
+    }
+  }, []);
 
   // Confirmation Modal State
   const [confirmDelete, setConfirmDelete] = useState<{
@@ -107,6 +120,8 @@ export const ConfiguracoesMaterias: React.FC = () => {
     // OR Lines that are all uppercase are subjects.
     // Everything else is a topic for the last subject.
     
+    const importedMaterias: any[] = [];
+    
     lines.forEach(line => {
       const isSubject = line.endsWith(':') || (line === line.toUpperCase() && line.length > 3 && !line.includes('-'));
       
@@ -115,24 +130,33 @@ export const ConfiguracoesMaterias: React.FC = () => {
         const newMateria = {
           id: crypto.randomUUID(),
           nome,
-          assuntos: []
+          assuntos: [],
+          isGlobal: isAdmin
         };
-        newMaterias.push(newMateria);
+        importedMaterias.push(newMateria);
         currentMateriaId = newMateria.id;
       } else if (currentMateriaId) {
         // Find the materia and add topic
-        const materiaIndex = newMaterias.findIndex(m => m.id === currentMateriaId);
+        const materiaIndex = importedMaterias.findIndex(m => m.id === currentMateriaId);
         if (materiaIndex >= 0) {
-            newMaterias[materiaIndex].assuntos.push({
+            importedMaterias[materiaIndex].assuntos.push({
                 id: crypto.randomUUID(),
                 nome: line,
-                concluido: false
+                concluido: false,
+                revisoesConcluidas: []
             });
         }
       }
     });
 
-    setMaterias(newMaterias);
+    // Call a function to save only the imported ones
+    if (importedMaterias.length > 0) {
+      // Assuming we can add a new function to context, or we just loop and call addMateria/addAssunto
+      // But addMateria doesn't take assuntos array.
+      // Let's use setMaterias but we need to fix setMaterias in context first.
+      setMaterias([...materias, ...importedMaterias]);
+    }
+    
     setImportText('');
     setActiveTab('manual');
   };
@@ -231,23 +255,30 @@ export const ConfiguracoesMaterias: React.FC = () => {
                     ) : (
                       <>
                         <h4 className={`font-bold ${themeClasses.text}`}>{materia.nome}</h4>
+                        {materia.isGlobal && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full flex items-center gap-1">
+                            <Globe size={12} /> Global
+                          </span>
+                        )}
                         <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                            {materia.assuntos.length} assuntos
+                            {(materia.assuntos || []).length} assuntos
                         </span>
-                        <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={(e) => handleEditMateria(materia.id, materia.nome, e)}
-                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                          >
-                            <Edit2 size={16} />
-                          </button>
-                          <button 
-                            onClick={(e) => handleDeleteMateria(materia.id, materia.nome, e)}
-                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        {(!materia.isGlobal || isAdmin) && (
+                          <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={(e) => handleEditMateria(materia.id, materia.nome, e)}
+                              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button 
+                              onClick={(e) => handleDeleteMateria(materia.id, materia.nome, e)}
+                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
@@ -255,23 +286,25 @@ export const ConfiguracoesMaterias: React.FC = () => {
 
                 {expandedMateriaId === materia.id && (
                   <div className={`p-4 border-t ${themeClasses.borderColor} bg-opacity-50 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-900' : 'bg-gray-50'}`}>
-                    <div className="mb-4 flex gap-2">
-                        <input
-                            type="text"
-                            value={newAssuntoName}
-                            onChange={(e) => setNewAssuntoName(e.target.value)}
-                            placeholder="Adicionar novo assunto..."
-                            className={`flex-1 px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddAssunto(materia.id)}
-                        />
-                        <Button variant="outline" className="py-1.5 px-3 text-sm" onClick={() => handleAddAssunto(materia.id)}>
-                            Adicionar
-                        </Button>
-                    </div>
+                    {(!materia.isGlobal || isAdmin) && (
+                      <div className="mb-4 flex gap-2">
+                          <input
+                              type="text"
+                              value={newAssuntoName}
+                              onChange={(e) => setNewAssuntoName(e.target.value)}
+                              placeholder="Adicionar novo assunto..."
+                              className={`flex-1 px-3 py-1.5 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                              onKeyDown={(e) => e.key === 'Enter' && handleAddAssunto(materia.id)}
+                          />
+                          <Button variant="outline" className="py-1.5 px-3 text-sm" onClick={() => handleAddAssunto(materia.id)}>
+                              Adicionar
+                          </Button>
+                      </div>
+                    )}
                     
                     <ul className="space-y-2 pl-2">
-                        {materia.assuntos.length === 0 && <li className="text-sm text-gray-400 italic">Nenhum assunto cadastrado.</li>}
-                        {materia.assuntos.map((assunto) => (
+                        {(!materia.assuntos || materia.assuntos.length === 0) && <li className="text-sm text-gray-400 italic">Nenhum assunto cadastrado.</li>}
+                        {(materia.assuntos || []).map((assunto) => (
                             <li key={assunto.id} className={`text-sm flex items-center justify-between group ${themeClasses.text}`}>
                                 <div className="flex items-center gap-2 flex-1">
                                   <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
@@ -299,20 +332,22 @@ export const ConfiguracoesMaterias: React.FC = () => {
                                   ) : (
                                     <>
                                       <span>{assunto.nome}</span>
-                                      <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button 
-                                          onClick={() => handleEditAssunto(assunto.id, assunto.nome)}
-                                          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                                        >
-                                          <Edit2 size={14} />
-                                        </button>
-                                        <button 
-                                          onClick={() => handleDeleteAssunto(materia.id, assunto.id, assunto.nome)}
-                                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                                        >
-                                          <Trash2 size={14} />
-                                        </button>
-                                      </div>
+                                      {(!materia.isGlobal || isAdmin) && (
+                                        <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button 
+                                            onClick={() => handleEditAssunto(assunto.id, assunto.nome)}
+                                            className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                                          >
+                                            <Edit2 size={14} />
+                                          </button>
+                                          <button 
+                                            onClick={() => handleDeleteAssunto(materia.id, assunto.id, assunto.nome)}
+                                            className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                                          >
+                                            <Trash2 size={14} />
+                                          </button>
+                                        </div>
+                                      )}
                                     </>
                                   )}
                                 </div>

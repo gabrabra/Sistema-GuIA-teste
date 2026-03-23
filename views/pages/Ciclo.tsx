@@ -40,8 +40,8 @@ export const Ciclo: React.FC = () => {
 
   // Calculate Indicators
   const totalSecondsStudied = disciplinas.reduce((acc, d) => acc + d.horasEstudadasTotal, 0);
-  const totalTopics = materias.reduce((acc, m) => acc + m.assuntos.length, 0);
-  const completedTopics = materias.reduce((acc, m) => acc + m.assuntos.filter(a => a.concluido).length, 0);
+  const totalTopics = materias.reduce((acc, m) => acc + (m.assuntos || []).length, 0);
+  const completedTopics = materias.reduce((acc, m) => acc + (m.assuntos || []).filter(a => a.concluido).length, 0);
   const completionRate = totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
   
   // Mock streak for now (can be implemented with history later)

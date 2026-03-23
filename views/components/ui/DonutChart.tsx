@@ -11,7 +11,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 export const DonutChart: React.FC<DonutChartProps> = ({ materias }) => {
   const data = materias.map(materia => ({
     name: materia.nome,
-    value: materia.assuntos.filter(a => a.concluido).length
+    value: (materia.assuntos || []).filter(a => a.concluido).length
   })).filter(item => item.value > 0);
 
   if (data.length === 0) {

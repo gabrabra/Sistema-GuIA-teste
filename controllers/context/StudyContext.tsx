@@ -260,10 +260,22 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   };
 
   const addMateria = useCallback((nome: string, id?: string) => {
+    let isGlobal = false;
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        isGlobal = user.roleId === 'admin';
+      }
+    } catch (e) {
+      console.error('Failed to parse user', e);
+    }
+
     const novaMateria: Materia = {
       id: id || crypto.randomUUID(),
       nome,
-      assuntos: []
+      assuntos: [],
+      isGlobal
     };
     setMaterias(prev => [...prev, novaMateria]);
     fetchWithAuth('/api/materias', {
@@ -271,7 +283,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novaMateria)
     }).catch(err => console.error('Failed to create materia', err));
-  }, []);
+  }, [fetchWithAuth]);
 
   const updateMateria = useCallback(async (id: string, nome: string) => {
     let updatedMateria: Materia | undefined;
@@ -319,7 +331,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (m.id === materiaId) {
           const newMateria = {
             ...m,
-            assuntos: [...m.assuntos, { id: crypto.randomUUID(), nome, concluido: false, revisoesConcluidas: [] }]
+            assuntos: [...(m.assuntos || []), { id: crypto.randomUUID(), nome, concluido: false, revisoesConcluidas: [] }]
           };
           return newMateria;
         }
@@ -350,7 +362,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (m.id === materiaId) {
           const newMateria = {
             ...m,
-            assuntos: m.assuntos.map(a => a.id === assuntoId ? { ...a, ...updates } : a)
+            assuntos: (m.assuntos || []).map(a => a.id === assuntoId ? { ...a, ...updates } : a)
           };
           return newMateria;
         }
@@ -475,7 +487,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (m.id === materiaId) {
           const newMateria = {
             ...m,
-            assuntos: m.assuntos.filter(a => a.id !== assuntoId)
+            assuntos: (m.assuntos || []).filter(a => a.id !== assuntoId)
           };
           return newMateria;
         }
@@ -547,21 +559,31 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setMaterias(newMaterias);
     try {
       const existingRes = await fetchWithAuth('/api/materias');
-      const existing = await existingRes.json();
+      const existing: Materia[] = await existingRes.json();
       
-      if (Array.isArray(existing)) {
-        for (const m of existing) {
-          await fetchWithAuth(`/api/materias/${m.id}`, { method: 'DELETE' });
+      const existingIds = new Set(existing.map(m => m.id));
+      
+      for (const m of newMaterias) {
+        if (existingIds.has(m.id)) {
+          // Update existing
+          await fetchWithAuth(`/api/materias/${m.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(m)
+          });
+        } else {
+          // Create new
+          await fetchWithAuth('/api/materias', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(m)
+          });
         }
       }
       
-      for (const m of newMaterias) {
-        await fetchWithAuth('/api/materias', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(m)
-        });
-      }
+      // We don't delete missing ones here to avoid accidentally deleting global subjects
+      // or subjects that were just not included in the newMaterias array.
+      // Deletion should be handled explicitly by deleteMateria.
     } catch (err) {
       console.error('Failed to sync materias', err);
     }

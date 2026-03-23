@@ -51,7 +51,7 @@ export const Revisoes: React.FC = () => {
 
   // Flatten data for the table
   const allTopics = materias.flatMap(materia => 
-    materia.assuntos.map(assunto => {
+    (materia.assuntos || []).map(assunto => {
       const { next, status, all } = getRevisionDates(assunto.dataEstudo, assunto.revisoesConcluidas);
       return {
         materiaId: materia.id,
