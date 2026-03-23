@@ -4,10 +4,13 @@ import { Button } from '../components/ui/Button';
 import { useTheme } from '../../controllers/context/ThemeContext';
 import { useAIProfile } from '../../controllers/context/AIProfileContext';
 import { AIProfile } from '../../models/types';
+import { X } from 'lucide-react';
 
 export const ConfiguracoesAI: React.FC = () => {
   const { themeClasses } = useTheme();
-  const { profiles, addProfile, deleteProfile, isLoading } = useAIProfile();
+  const { profiles, addProfile, updateProfile, deleteProfile, isLoading } = useAIProfile();
+  
+  const [editingProfile, setEditingProfile] = useState<AIProfile | null>(null);
   
   const [newProfile, setNewProfile] = useState<{
     name: string;
@@ -47,6 +50,19 @@ export const ConfiguracoesAI: React.FC = () => {
       await deleteProfile(id);
     } catch (error) {
       console.error('Erro ao excluir perfil', error);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (editingProfile && editingProfile.name && editingProfile.responde.promptsPerPeriod > 0 && editingProfile.responde.maxCharactersPerPrompt > 0 && editingProfile.redige.promptsPerPeriod > 0 && editingProfile.redige.maxCharactersPerPrompt > 0) {
+      try {
+        await updateProfile(editingProfile.id, editingProfile);
+        setEditingProfile(null);
+      } catch (error) {
+        console.error('Erro ao atualizar perfil', error);
+      }
+    } else {
+      console.warn('Preencha todos os campos corretamente');
     }
   };
 
@@ -132,11 +148,98 @@ export const ConfiguracoesAI: React.FC = () => {
                   Redige: {profile.redige.promptsPerPeriod} prompts/período, {profile.redige.maxCharactersPerPrompt} chars/prompt
                 </p>
               </div>
-              <Button variant="danger" onClick={() => handleDeleteProfile(profile.id)}>Excluir</Button>
+              <div className="flex gap-2">
+                <Button variant="secondary" onClick={() => setEditingProfile(profile)}>Editar</Button>
+                <Button variant="danger" onClick={() => handleDeleteProfile(profile.id)}>Excluir</Button>
+              </div>
             </div>
           ))}
         </div>
       </Card>
+
+      {editingProfile && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="p-6 w-full max-w-2xl bg-white relative">
+            <button 
+              onClick={() => setEditingProfile(null)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            >
+              <X size={24} />
+            </button>
+            
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">Editar Perfil</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input 
+                type="text" 
+                placeholder="Nome do Perfil"
+                value={editingProfile.name}
+                onChange={(e) => setEditingProfile({...editingProfile, name: e.target.value})}
+                className="px-4 py-2 border rounded-lg text-gray-900"
+              />
+              <select
+                value={editingProfile.periodicity}
+                onChange={(e) => setEditingProfile({...editingProfile, periodicity: e.target.value as 'daily' | 'weekly' | 'monthly'})}
+                className="px-4 py-2 border rounded-lg text-gray-900"
+              >
+                <option value="daily">Diário</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensal</option>
+              </select>
+              
+              <div className="p-4 border rounded-lg">
+                <h3 className="font-bold mb-2 text-gray-900">Guia Responde</h3>
+                <input 
+                  type="number" 
+                  placeholder="Prompts/período"
+                  value={editingProfile.responde.promptsPerPeriod || ''}
+                  onChange={(e) => setEditingProfile({
+                    ...editingProfile, 
+                    responde: { ...editingProfile.responde, promptsPerPeriod: parseInt(e.target.value) || 0 }
+                  })}
+                  className="w-full px-4 py-2 border rounded-lg mb-2 text-gray-900"
+                />
+                <input 
+                  type="number" 
+                  placeholder="Caracteres/prompt"
+                  value={editingProfile.responde.maxCharactersPerPrompt || ''}
+                  onChange={(e) => setEditingProfile({
+                    ...editingProfile, 
+                    responde: { ...editingProfile.responde, maxCharactersPerPrompt: parseInt(e.target.value) || 0 }
+                  })}
+                  className="w-full px-4 py-2 border rounded-lg text-gray-900"
+                />
+              </div>
+              
+              <div className="p-4 border rounded-lg">
+                <h3 className="font-bold mb-2 text-gray-900">Guia Redige</h3>
+                <input 
+                  type="number" 
+                  placeholder="Prompts/período"
+                  value={editingProfile.redige.promptsPerPeriod || ''}
+                  onChange={(e) => setEditingProfile({
+                    ...editingProfile, 
+                    redige: { ...editingProfile.redige, promptsPerPeriod: parseInt(e.target.value) || 0 }
+                  })}
+                  className="w-full px-4 py-2 border rounded-lg mb-2 text-gray-900"
+                />
+                <input 
+                  type="number" 
+                  placeholder="Caracteres/prompt"
+                  value={editingProfile.redige.maxCharactersPerPrompt || ''}
+                  onChange={(e) => setEditingProfile({
+                    ...editingProfile, 
+                    redige: { ...editingProfile.redige, maxCharactersPerPrompt: parseInt(e.target.value) || 0 }
+                  })}
+                  className="w-full px-4 py-2 border rounded-lg text-gray-900"
+                />
+              </div>
+              
+              <Button onClick={handleUpdateProfile} className="md:col-span-2">Salvar Alterações</Button>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

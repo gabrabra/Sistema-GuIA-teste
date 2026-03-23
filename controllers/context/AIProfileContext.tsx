@@ -5,6 +5,7 @@ interface AIProfileContextType {
   profiles: AIProfile[];
   getUserProfile: (profileId?: string) => AIProfile | undefined;
   addProfile: (profile: AIProfile) => Promise<void>;
+  updateProfile: (id: string, profile: AIProfile) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
   isLoading: boolean;
 }
@@ -56,6 +57,25 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
+  const updateProfile = async (id: string, profile: AIProfile) => {
+    try {
+      const response = await fetch(`/api/ai-profiles/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+      });
+      if (response.ok) {
+        setProfiles(prev => prev.map(p => p.id === id ? profile : p));
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update AI profile');
+      }
+    } catch (error) {
+      console.error('Failed to update AI profile:', error);
+      throw error;
+    }
+  };
+
   const deleteProfile = async (id: string) => {
     try {
       const response = await fetch(`/api/ai-profiles/${id}`, {
@@ -74,7 +94,7 @@ export const AIProfileProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   return (
-    <AIProfileContext.Provider value={{ profiles, getUserProfile, addProfile, deleteProfile, isLoading }}>
+    <AIProfileContext.Provider value={{ profiles, getUserProfile, addProfile, updateProfile, deleteProfile, isLoading }}>
       {children}
     </AIProfileContext.Provider>
   );
