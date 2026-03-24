@@ -432,7 +432,7 @@ export const StudyProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 if (assunto) {
                     updateAssunto(disciplina.materiaId, assunto.id, { 
                         concluido: true,
-                        dataEstudo: assunto.dataEstudo || new Date().toISOString()
+                        dataEstudo: new Date().toISOString()
                     });
                 } else {
                     console.log('Assunto not found:', activeTopic);

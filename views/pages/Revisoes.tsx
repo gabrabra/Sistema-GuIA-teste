@@ -236,7 +236,10 @@ export const Revisoes: React.FC = () => {
                             <td className={`px-6 py-4 ${themeClasses.text}`}>
                               <input 
                                 type="date" 
-                                value={topic.dataEstudo ? new Date(topic.dataEstudo).toISOString().split('T')[0] : ''}
+                                value={topic.dataEstudo ? (() => {
+                                  const d = new Date(topic.dataEstudo);
+                                  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                })() : ''}
                                 disabled
                                 className={`bg-transparent outline-none text-sm w-32 cursor-not-allowed text-gray-500`}
                               />

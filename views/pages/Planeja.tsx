@@ -205,6 +205,7 @@ export const Planeja: React.FC = () => {
 
     setConcursoSelecionado({
       id: concursoSelecionado?.id,
+      userId: concursoSelecionado?.userId || '',
       orgao: concurso.orgao,
       nome: concurso.nome,
       possuiEdital: concurso.possuiEdital,
