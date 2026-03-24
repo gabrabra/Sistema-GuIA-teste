@@ -175,12 +175,12 @@ export const Ciclo: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Tópicos Estudados por Matéria">
-          <DonutChart materias={materias} />
-        </Card>
-        
         <Card title="Agenda de Revisões">
           <WeeklyCalendar materias={materias} />
+        </Card>
+
+        <Card title="Tópicos Estudados por Matéria">
+          <DonutChart materias={materias} />
         </Card>
       </div>
 
