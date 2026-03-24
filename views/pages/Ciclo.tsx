@@ -8,6 +8,7 @@ import { Play, Pause, Plus, Flame, Zap, Target, BookOpen, Layers, PlusCircle, Cl
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
 import { DonutChart } from '../components/ui/DonutChart';
+import { WeeklyCalendar } from '../components/ui/WeeklyCalendar';
 
 export const Ciclo: React.FC = () => {
   const { 
@@ -173,9 +174,15 @@ export const Ciclo: React.FC = () => {
         })}
       </div>
 
-      <Card title="Tópicos Estudados por Matéria">
-        <DonutChart materias={materias} />
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card title="Tópicos Estudados por Matéria">
+          <DonutChart materias={materias} />
+        </Card>
+        
+        <Card title="Agenda de Revisões">
+          <WeeklyCalendar materias={materias} />
+        </Card>
+      </div>
 
       {/* Maratona Diaria */}
       <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-none">
