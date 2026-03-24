@@ -133,9 +133,14 @@ export const Ciclo: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className={`text-2xl font-bold ${themeClasses.text}`}>Ciclo de Estudos</h2>
-        <p className="text-gray-500">Gerencie sua maratona e escolha seu guia de hoje</p>
+      <header className="flex justify-between items-center">
+        <div>
+          <h2 className={`text-2xl font-bold ${themeClasses.text}`}>Ciclo de Estudos</h2>
+          <p className="text-gray-500">Gerencie sua maratona e escolha seu guia de hoje</p>
+        </div>
+        <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-xl font-bold">
+          Hoje: {formatTime(horasEstudadasHoje)}
+        </div>
       </header>
 
       {/* Guide Selector */}
@@ -177,11 +182,11 @@ export const Ciclo: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          <Card title="Agenda de Revisões" className="h-[400px]">
+          <Card title="Agenda de Revisões" className="h-[550px]">
             <WeeklyCalendar materias={materias} />
           </Card>
           <Card title="Frequência de Estudo">
-            <FrequencyChart materias={materias} />
+            <FrequencyChart disciplinas={disciplinas} />
           </Card>
         </div>
 

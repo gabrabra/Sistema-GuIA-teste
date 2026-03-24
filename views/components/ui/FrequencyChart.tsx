@@ -3,24 +3,40 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useTheme } from '../../../controllers/context/ThemeContext';
 
 interface FrequencyChartProps {
-  materias: any[];
+  disciplinas: any[];
 }
 
-export const FrequencyChart: React.FC<FrequencyChartProps> = ({ materias }) => {
+export const FrequencyChart: React.FC<FrequencyChartProps> = ({ disciplinas }) => {
   const { themeClasses } = useTheme();
 
   const data = useMemo(() => {
-    // Mocking frequency data for the last 7 days
-    const last7Days = Array.from({ length: 7 }).map((_, i) => {
+    const studyTimePerDay = new Map<string, number>();
+    
+    // Initialize last 7 days
+    const last7Days: string[] = [];
+    for (let i = 6; i >= 0; i--) {
       const d = new Date();
-      d.setDate(d.getDate() - (6 - i));
-      return {
-        name: d.toLocaleDateString('pt-BR', { weekday: 'short' }),
-        horas: Math.floor(Math.random() * 5) + 1, // Mock data
-      };
+      d.setDate(d.getDate() - i);
+      const dayName = d.toLocaleDateString('pt-BR', { weekday: 'short' });
+      last7Days.push(dayName);
+      studyTimePerDay.set(dayName, 0);
+    }
+
+    disciplinas.forEach(d => {
+      (d.historico || []).forEach((s: any) => {
+        const date = new Date(s.data || new Date());
+        const dayName = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+        if (studyTimePerDay.has(dayName)) {
+          studyTimePerDay.set(dayName, (studyTimePerDay.get(dayName) || 0) + (s.segundos || 0) / 3600);
+        }
+      });
     });
-    return last7Days;
-  }, [materias]);
+
+    return last7Days.map(day => ({
+      name: day,
+      horas: parseFloat(studyTimePerDay.get(day)!.toFixed(1)),
+    }));
+  }, [disciplinas]);
 
   return (
     <div className="h-48 w-full">
