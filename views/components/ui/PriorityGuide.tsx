@@ -22,7 +22,9 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
       if (aStudied !== bStudied) return aStudied ? 1 : -1;
 
       // 2. Weight (descending)
-      if (b.peso !== a.peso) return b.peso - a.peso;
+      const pesoA = Number(a.peso) || 0;
+      const pesoB = Number(b.peso) || 0;
+      if (pesoB !== pesoA) return pesoB - pesoA;
 
       // 3. Alphabetical
       return a.nome.localeCompare(b.nome);
@@ -44,14 +46,8 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
     const isStudied = disc.horasEstudadasHoje > 0;
     const isNext = disc.id === nextSubject?.id;
     
-    // Assign a color from the palette for pending, gray for studied
-    let color = '#e5e7eb'; // default gray for studied
-    if (!isStudied) {
-      color = COLORS[index % COLORS.length];
-    }
-    if (themeClasses.bg === 'bg-gray-950' && isStudied) {
-      color = '#374151'; // dark mode gray
-    }
+    // Always assign a color from the palette
+    const color = COLORS[index % COLORS.length];
 
     return {
       id: disc.id,
@@ -125,6 +121,8 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
                   innerRadius={60}
                   outerRadius={90}
                   paddingAngle={2}
+                  startAngle={90}
+                  endAngle={-270}
                   dataKey="value"
                   onClick={(data) => {
                     if (!data.studied) {
@@ -140,6 +138,7 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
                       stroke={entry.isNext ? '#2563eb' : 'transparent'}
                       strokeWidth={entry.isNext ? 3 : 0}
                       className="transition-all duration-300 hover:opacity-80 outline-none"
+                      fillOpacity={entry.studied ? 0.2 : 1}
                     />
                   ))}
                 </Pie>
@@ -152,12 +151,12 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
                     return (
                       <ul className="flex flex-wrap justify-center gap-3 mt-4">
                         {payload?.map((entry: any, index: number) => (
-                          <li key={`item-${index}`} className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                          <li key={`item-${index}`} className={`flex items-center text-xs text-gray-500 dark:text-gray-400 ${chartData[index].studied ? 'opacity-50' : ''}`}>
                             <span 
                               className="w-3 h-3 rounded-full mr-1.5" 
-                              style={{ backgroundColor: entry.color }}
+                              style={{ backgroundColor: entry.color, opacity: chartData[index].studied ? 0.3 : 1 }}
                             />
-                            <span className={chartData[index].studied ? 'line-through opacity-60' : ''}>
+                            <span className={chartData[index].studied ? 'line-through' : ''}>
                               {entry.value}
                             </span>
                           </li>
