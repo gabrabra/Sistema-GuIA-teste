@@ -185,13 +185,13 @@ export const Dashboard: React.FC = () => {
                     placeholder="Pesquisar assunto..."
                   />
                   {isDropdownOpen && (
-                    <div className={`absolute z-50 w-full mt-1 border rounded-lg shadow-lg ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className={`absolute z-50 w-full mt-1 border rounded-lg shadow-lg max-h-60 overflow-y-auto ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                       {linkedMateria.assuntos
                         .filter(a => a.nome.toLowerCase().includes(searchTerm.toLowerCase()))
                         .map((assunto) => (
                           <div
                             key={assunto.id}
-                            className={`p-3 cursor-pointer ${topic === assunto.nome ? 'bg-blue-50 text-blue-700' : ''}`}
+                            className={`p-3 cursor-pointer hover:bg-blue-50 ${topic === assunto.nome ? 'bg-blue-100 text-blue-700' : ''}`}
                             onClick={() => {
                               setTopic(assunto.nome);
                               setSearchTerm(assunto.nome);
@@ -201,6 +201,9 @@ export const Dashboard: React.FC = () => {
                             {assunto.nome}
                           </div>
                         ))}
+                      {linkedMateria.assuntos.filter(a => a.nome.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                        <div className="p-3 text-gray-500">Nenhum assunto encontrado</div>
+                      )}
                     </div>
                   )}
                 </div>

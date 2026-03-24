@@ -184,10 +184,15 @@ export const Planeja: React.FC = () => {
 
   const selectAllAssuntos = (materia: any) => {
     const assuntoIds = (materia.assuntos || []).map((a: any) => a.id);
-    setSelectedAssuntoIds(prev => {
-      const newIds = [...new Set([...prev, ...assuntoIds])];
-      return newIds;
-    });
+    const allSelected = assuntoIds.every((id: string) => selectedAssuntoIds.includes(id));
+
+    if (allSelected) {
+      // Se todos já estão selecionados, desmarca todos
+      setSelectedAssuntoIds(prev => prev.filter(id => !assuntoIds.includes(id)));
+    } else {
+      // Caso contrário, marca todos
+      setSelectedAssuntoIds(prev => [...new Set([...prev, ...assuntoIds])]);
+    }
   };
 
   const handleFinish = () => {
