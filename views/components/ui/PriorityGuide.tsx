@@ -17,8 +17,8 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
   const sortedDisciplinas = useMemo(() => {
     return [...disciplinas].sort((a, b) => {
       // 1. Studied today? (false comes first)
-      const aStudied = a.horasEstudadasHoje > 0;
-      const bStudied = b.horasEstudadasHoje > 0;
+      const aStudied = a.horasEstudadasHoje >= a.horasSemanaMeta * 3600;
+      const bStudied = b.horasEstudadasHoje >= b.horasSemanaMeta * 3600;
       if (aStudied !== bStudied) return aStudied ? 1 : -1;
 
       // 2. Weight (descending)
@@ -39,11 +39,11 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
     );
   }
 
-  const nextSubject = sortedDisciplinas.find(d => d.horasEstudadasHoje === 0);
+  const nextSubject = sortedDisciplinas.find(d => d.horasEstudadasHoje < d.horasSemanaMeta * 3600);
   const allStudied = !nextSubject;
 
   const chartData = sortedDisciplinas.map((disc, index) => {
-    const isStudied = disc.horasEstudadasHoje > 0;
+    const isStudied = disc.horasEstudadasHoje >= disc.horasSemanaMeta * 3600;
     const isNext = disc.id === nextSubject?.id;
     
     // Always assign a color from the palette
@@ -124,7 +124,7 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
                   startAngle={90}
                   endAngle={-270}
                   dataKey="value"
-                  onClick={(data) => {
+                  onClick={(data: any) => {
                     if (!data.studied) {
                       onStudyClick(data.id);
                     }

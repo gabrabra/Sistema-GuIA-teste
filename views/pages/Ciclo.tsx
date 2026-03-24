@@ -7,7 +7,6 @@ import { formatTime, formatTimeWithSeconds } from '../../models/utils/timeUtils'
 import { Play, Pause, Plus, Flame, Zap, Target, BookOpen, Layers, PlusCircle, Clock, Book, Search, X, ChevronDown, ChevronUp, CheckCircle, Trophy, Activity, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
-import { CycleFlow } from '../components/ui/CycleFlow';
 import { PriorityGuide } from '../components/ui/PriorityGuide';
 import { WeeklyCalendar } from '../components/ui/WeeklyCalendar';
 import { FrequencyChart } from '../components/ui/FrequencyChart';
@@ -191,11 +190,8 @@ export const Ciclo: React.FC = () => {
           </Card>
         </div>
 
-        <Card title="Seu Momento no Ciclo" className="flex flex-col">
-          <div className="mb-6">
-            <CycleFlow materias={materias} />
-          </div>
-          <div className="border-t border-gray-100 dark:border-gray-800 pt-6 flex-1">
+        <Card title="Prioridades de Estudo" className="flex flex-col">
+          <div className="flex-1">
             <PriorityGuide disciplinas={disciplinas} onStudyClick={(id) => handleOpenModal('study', id)} />
           </div>
         </Card>
@@ -276,7 +272,7 @@ export const Ciclo: React.FC = () => {
                         {isActive && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>}
                         </h4>
                         <p className="text-sm text-gray-500 mt-1">
-                          Meta Semanal: {formatTime(disc.horasSemanaMeta * 3600)}
+                          Meta Diária: {formatTime(disc.horasSemanaMeta * 3600)}
                         </p>
                     </div>
                     

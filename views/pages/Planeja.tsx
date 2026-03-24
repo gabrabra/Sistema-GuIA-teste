@@ -216,78 +216,27 @@ export const Planeja: React.FC = () => {
 
     setIsEditing(false);
 
-    // 1. Prepare pool of subjects with their counts based on weight
-    let pool: { id: string, count: number, originalMateria: any }[] = [];
+    // 1. Prepare pool of subjects
+    const newDisciplinas: any[] = [];
     
-    selectedMateriaIds.forEach(id => {
+    selectedMateriaIds.forEach((id, index) => {
       const configPeso = disciplineConfig[id]?.peso;
-      const peso = configPeso === '' || configPeso === undefined ? 1 : Number(configPeso);
-      // Ensure at least 1, handle decimals by flooring
-      const count = Math.max(1, Math.floor(peso)); 
+      const pesoTotal = Math.max(1, configPeso === '' || configPeso === undefined ? 1 : Number(configPeso));
       const materia = materias.find(m => m.id === id);
       
       if (materia) {
-        pool.push({
-          id: id,
-          count: count,
-          originalMateria: materia
+        newDisciplinas.push({
+          id: `cycle-${index}-${id}`,
+          nome: materia.nome,
+          peso: pesoTotal,
+          horasSemanaMeta: pesoTotal, // Using this field to store the daily goal in hours
+          horasEstudadasTotal: 0,
+          horasEstudadasHoje: 0,
+          concluida: false,
+          materiaId: id
         });
       }
     });
-
-    // 2. Interleaved distribution algorithm
-    const newDisciplinas: any[] = [];
-    let lastAddedId: string | null = null;
-    
-    const totalItems = pool.reduce((acc, item) => acc + item.count, 0);
-
-    for (let i = 0; i < totalItems; i++) {
-        // Sort pool: 
-        // Priority 1: Items that are NOT the last added one (to maximize interleaving)
-        // Priority 2: Items with highest remaining count (to avoid leftovers at the end)
-        
-        pool.sort((a, b) => {
-            if (a.count === 0) return 1;
-            if (b.count === 0) return -1;
-            
-            // If one is the last added, deprioritize it
-            const aIsLast = a.id === lastAddedId;
-            const bIsLast = b.id === lastAddedId;
-            
-            if (aIsLast && !bIsLast) return 1;
-            if (!aIsLast && bIsLast) return -1;
-            
-            // Otherwise sort by count descending
-            return b.count - a.count;
-        });
-
-        // Pick the best candidate
-        const candidate = pool.find(p => p.count > 0);
-
-        if (candidate) {
-            const configPeso = disciplineConfig[candidate.id]?.peso;
-            const configHoras = disciplineConfig[candidate.id]?.horas;
-            const pesoTotal = Math.max(1, configPeso === '' || configPeso === undefined ? 1 : Number(configPeso));
-            const horasTotal = configHoras === '' || configHoras === undefined ? 2 : Number(configHoras);
-            
-            // Split the weekly goal among the blocks
-            const horasPorBloco = horasTotal / pesoTotal;
-
-            newDisciplinas.push({
-                id: `cycle-${i}-${candidate.id}`,
-                nome: candidate.originalMateria.nome,
-                peso: pesoTotal,
-                horasSemanaMeta: horasPorBloco,
-                horasEstudadasTotal: 0,
-                horasEstudadasHoje: 0,
-                concluida: false,
-                materiaId: candidate.id
-            });
-
-            candidate.count--;
-            lastAddedId = candidate.id;
-        }
-    }
 
     setDisciplinas(newDisciplinas);
     setMetaSemanal(totalHorasNum, availability.dias);
