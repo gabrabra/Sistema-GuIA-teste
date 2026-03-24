@@ -8,6 +8,7 @@ import { Play, Pause, Plus, Flame, Zap, Target, BookOpen, Layers, PlusCircle, Cl
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
 import { CycleFlow } from '../components/ui/CycleFlow';
+import { PriorityGuide } from '../components/ui/PriorityGuide';
 import { WeeklyCalendar } from '../components/ui/WeeklyCalendar';
 import { FrequencyChart } from '../components/ui/FrequencyChart';
 
@@ -190,8 +191,13 @@ export const Ciclo: React.FC = () => {
           </Card>
         </div>
 
-        <Card title="Seu Momento no Ciclo">
-          <CycleFlow materias={materias} />
+        <Card title="Seu Momento no Ciclo" className="flex flex-col">
+          <div className="mb-6">
+            <CycleFlow materias={materias} />
+          </div>
+          <div className="border-t border-gray-100 dark:border-gray-800 pt-6 flex-1">
+            <PriorityGuide disciplinas={disciplinas} onStudyClick={(id) => handleOpenModal('study', id)} />
+          </div>
         </Card>
       </div>
 
