@@ -7,7 +7,7 @@ import { formatTime, formatTimeWithSeconds } from '../../models/utils/timeUtils'
 import { Play, Pause, Plus, Flame, Zap, Target, BookOpen, Layers, PlusCircle, Clock, Book, Search, X, ChevronDown, ChevronUp, CheckCircle, Trophy, Activity, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
-import { DonutChart } from '../components/ui/DonutChart';
+import { CycleFlow } from '../components/ui/CycleFlow';
 import { WeeklyCalendar } from '../components/ui/WeeklyCalendar';
 
 export const Ciclo: React.FC = () => {
@@ -179,8 +179,8 @@ export const Ciclo: React.FC = () => {
           <WeeklyCalendar materias={materias} />
         </Card>
 
-        <Card title="Tópicos Estudados por Matéria">
-          <DonutChart materias={materias} />
+        <Card title="Seu Momento no Ciclo">
+          <CycleFlow materias={materias} />
         </Card>
       </div>
 
