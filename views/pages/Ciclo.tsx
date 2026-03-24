@@ -272,7 +272,7 @@ export const Ciclo: React.FC = () => {
                         {isActive && <span className="flex h-3 w-3 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span></span>}
                         </h4>
                         <p className="text-sm text-gray-500 mt-1">
-                          Meta Diária: {formatTime(disc.horasSemanaMeta * 3600)}
+                          Meta Diária: {formatTime(disc.peso * 3600)}
                         </p>
                     </div>
                     

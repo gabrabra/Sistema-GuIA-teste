@@ -17,8 +17,8 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
   const sortedDisciplinas = useMemo(() => {
     return [...disciplinas].sort((a, b) => {
       // 1. Studied today? (false comes first)
-      const aStudied = a.horasEstudadasHoje >= a.horasSemanaMeta * 3600;
-      const bStudied = b.horasEstudadasHoje >= b.horasSemanaMeta * 3600;
+      const aStudied = a.horasEstudadasHoje >= a.peso * 3600;
+      const bStudied = b.horasEstudadasHoje >= b.peso * 3600;
       if (aStudied !== bStudied) return aStudied ? 1 : -1;
 
       // 2. Weight (descending)
@@ -39,11 +39,11 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
     );
   }
 
-  const nextSubject = sortedDisciplinas.find(d => d.horasEstudadasHoje < d.horasSemanaMeta * 3600);
+  const nextSubject = sortedDisciplinas.find(d => d.horasEstudadasHoje < d.peso * 3600);
   const allStudied = !nextSubject;
 
   const chartData = sortedDisciplinas.map((disc, index) => {
-    const isStudied = disc.horasEstudadasHoje >= disc.horasSemanaMeta * 3600;
+    const isStudied = disc.horasEstudadasHoje >= disc.peso * 3600;
     const isNext = disc.id === nextSubject?.id;
     
     // Always assign a color from the palette
@@ -111,15 +111,15 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
           </div>
 
           <h4 className={`text-sm font-bold ${themeClasses.text} mb-2 px-1 text-center`}>Distribuição de Prioridades (Peso)</h4>
-          <div className="flex-1 min-h-[250px] relative">
+          <div className="flex-1 min-h-[450px] relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={chartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
+                  innerRadius={100}
+                  outerRadius={150}
                   paddingAngle={2}
                   startAngle={90}
                   endAngle={-270}
