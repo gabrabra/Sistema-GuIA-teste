@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { BookOpen, Clock, Calendar, CalendarCheck, CheckCircle2 } from 'lucide-react';
 import { useTheme } from '../../../controllers/context/ThemeContext';
 
