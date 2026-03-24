@@ -177,7 +177,7 @@ export const Ciclo: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          <Card title="Agenda de Revisões" className="h-[400px] overflow-y-auto">
+          <Card title="Agenda de Revisões" className="h-[400px]">
             <WeeklyCalendar materias={materias} />
           </Card>
           <Card title="Frequência de Estudo">
