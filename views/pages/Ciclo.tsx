@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../controllers/context/ThemeContext';
 import { CycleFlow } from '../components/ui/CycleFlow';
 import { WeeklyCalendar } from '../components/ui/WeeklyCalendar';
+import { FrequencyChart } from '../components/ui/FrequencyChart';
 
 export const Ciclo: React.FC = () => {
   const { 
@@ -175,9 +176,14 @@ export const Ciclo: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Agenda de Revisões">
-          <WeeklyCalendar materias={materias} />
-        </Card>
+        <div className="space-y-6">
+          <Card title="Agenda de Revisões" className="h-[400px] overflow-y-auto">
+            <WeeklyCalendar materias={materias} />
+          </Card>
+          <Card title="Frequência de Estudo">
+            <FrequencyChart materias={materias} />
+          </Card>
+        </div>
 
         <Card title="Seu Momento no Ciclo">
           <CycleFlow materias={materias} />
