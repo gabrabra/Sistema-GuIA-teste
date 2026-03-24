@@ -103,65 +103,105 @@ export const CycleFlow: React.FC<CycleFlowProps> = ({ materias }) => {
     ];
   }, [materias]);
 
+  const totalTopics = stages.reduce((acc, stage) => acc + stage.total, 0);
+
   return (
-    <div className="py-4 px-2">
-      <div className="relative">
-        {/* Connecting Line */}
-        <div className="absolute left-6 top-6 bottom-6 w-0.5 bg-gray-200 dark:bg-gray-700" />
-
-        <div className="space-y-6">
-          {stages.map((stage, index) => {
-            const Icon = stage.icon;
-            const hasAction = stage.dueToday > 0;
-            const isActive = stage.total > 0;
-
+    <div className="py-8 px-4 flex justify-center items-center w-full overflow-hidden">
+      <div className="relative w-full max-w-[500px] aspect-square min-h-[400px]">
+        
+        {/* Circular Track SVG */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100">
+          <circle 
+            cx="50" 
+            cy="50" 
+            r="35" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="0.5" 
+            className="text-gray-300 dark:text-gray-600" 
+            strokeDasharray="2 2" 
+          />
+          {/* Add directional arrows along the circle */}
+          {stages.map((_, i) => {
+            // Position arrows halfway between nodes
+            const angle = (i * 72) - 90 + 36; // +36 degrees to put it in the middle
+            const rad = angle * Math.PI / 180;
+            const x = 50 + 35 * Math.cos(rad);
+            const y = 50 + 35 * Math.sin(rad);
+            // Rotation of the arrow: tangent to the circle
+            // Tangent angle = angle + 90
+            const rot = angle + 90;
+            
             return (
-              <motion.div
-                key={stage.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative flex items-start gap-4"
-              >
-                {/* Icon Node */}
-                <div className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-2 bg-white dark:bg-gray-800 transition-colors duration-300 ${isActive ? stage.borderColor : 'border-gray-200 dark:border-gray-700'} ${isActive ? stage.color : 'text-gray-400'}`}>
-                  <Icon size={20} />
-                  {/* Pulse effect if action is needed today */}
-                  {hasAction && (
-                    <span className={`absolute -top-1 -right-1 flex h-3 w-3`}>
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${stage.bg.replace('100', '400')}`}></span>
-                      <span className={`relative inline-flex rounded-full h-3 w-3 ${stage.bg.replace('100', '500')}`}></span>
+              <g key={`arrow-${i}`} transform={`translate(${x}, ${y}) rotate(${rot})`}>
+                <path d="M -2 -2 L 2 0 L -2 2" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400 dark:text-gray-500" />
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Center Content */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-full w-24 h-24 shadow-sm border border-gray-100 dark:border-gray-700 z-0">
+          <span className="text-2xl font-bold text-gray-800 dark:text-gray-100">{totalTopics}</span>
+          <span className="text-[10px] text-gray-500 uppercase tracking-wider">Tópicos</span>
+        </div>
+
+        {/* Nodes */}
+        {stages.map((stage, i) => {
+          const angle = (i * 72) - 90;
+          const rad = angle * Math.PI / 180;
+          const x = 50 + 35 * Math.cos(rad);
+          const y = 50 + 35 * Math.sin(rad);
+          
+          const Icon = stage.icon;
+          const hasAction = stage.dueToday > 0;
+          const isActive = stage.total > 0;
+
+          return (
+            <motion.div
+              key={stage.id}
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.1, type: 'spring', stiffness: 120 }}
+              className="absolute flex flex-col items-center justify-center z-10"
+              style={{ 
+                left: `${x}%`, 
+                top: `${y}%`, 
+                transform: 'translate(-50%, -50%)',
+                width: '120px'
+              }}
+            >
+              {/* Icon Circle */}
+              <div className={`relative w-14 h-14 rounded-full flex items-center justify-center border-2 bg-white dark:bg-gray-800 shadow-md transition-all duration-300 ${isActive ? stage.borderColor : 'border-gray-200 dark:border-gray-700'} ${isActive ? stage.color : 'text-gray-400'}`}>
+                <Icon size={24} />
+                
+                {/* Pulse effect if action is needed today */}
+                {hasAction && (
+                  <span className={`absolute -top-1 -right-1 flex h-4 w-4`}>
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${stage.bg.replace('100', '400')}`}></span>
+                    <span className={`relative inline-flex rounded-full h-4 w-4 ${stage.bg.replace('100', '500')}`}></span>
+                  </span>
+                )}
+              </div>
+
+              {/* Label & Counts */}
+              <div className={`mt-2 text-center ${isActive ? '' : 'opacity-50'}`}>
+                <h4 className={`text-xs font-bold ${themeClasses.text} leading-tight`}>{stage.label}</h4>
+                
+                <div className="mt-1 flex flex-col items-center gap-1">
+                  <span className="text-[10px] text-gray-500 font-medium bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
+                    {stage.total} no fluxo
+                  </span>
+                  {stage.dueToday > 0 && stage.id !== 'concluido' && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${stage.bg} ${stage.color}`}>
+                      {stage.dueToday} pendente
                     </span>
                   )}
                 </div>
-
-                {/* Content */}
-                <div className={`flex-1 pt-1 ${isActive ? '' : 'opacity-50'}`}>
-                  <h4 className={`font-semibold ${themeClasses.text}`}>{stage.label}</h4>
-                  
-                  <div className="mt-1 flex flex-wrap gap-2 text-sm">
-                    {stage.id === 'concluido' ? (
-                      <span className="text-gray-500">
-                        {stage.total} tópicos finalizados
-                      </span>
-                    ) : (
-                      <>
-                        <span className="text-gray-500">
-                          {stage.total} no fluxo
-                        </span>
-                        {stage.dueToday > 0 && (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${stage.bg} ${stage.color}`}>
-                            {stage.dueToday} para hoje/atrasado
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );
