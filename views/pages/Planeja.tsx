@@ -28,7 +28,7 @@ export const Planeja: React.FC = () => {
   // Form State
   const [concurso, setConcurso] = useState({ orgao: '', nome: '', possuiEdital: true, dataProva: '' });
   const [selectedMateriaIds, setSelectedMateriaIds] = useState<string[]>([]);
-  const [disciplineConfig, setDisciplineConfig] = useState<Record<string, { peso: number | string, horas: number | string }>>({});
+  const [disciplineConfig, setDisciplineConfig] = useState<Record<string, { peso: number | string, horas: number | string, expanded?: boolean }>>({});
   const [availability, setAvailability] = useState<{ totalHoras: number | string, dias: string[] }>({ totalHoras: 20, dias: [] });
   const [error, setError] = useState<string | null>(null);
 
@@ -170,7 +170,7 @@ export const Planeja: React.FC = () => {
       setDisciplineConfig(newConfig);
     } else {
       setSelectedMateriaIds(prev => [...prev, id]);
-      setDisciplineConfig(prev => ({ ...prev, [id]: { peso: 1, horas: 2 } }));
+      setDisciplineConfig(prev => ({ ...prev, [id]: { peso: 1, horas: 2, expanded: true } }));
     }
   };
 
