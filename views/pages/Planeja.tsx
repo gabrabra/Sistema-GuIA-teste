@@ -28,6 +28,8 @@ export const Planeja: React.FC = () => {
   // Form State
   const [concurso, setConcurso] = useState({ orgao: '', nome: '', possuiEdital: true, dataProva: '' });
   const [selectedMateriaIds, setSelectedMateriaIds] = useState<string[]>([]);
+  const [selectedAssuntoIds, setSelectedAssuntoIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [disciplineConfig, setDisciplineConfig] = useState<Record<string, { peso: number | string, horas: number | string, expanded?: boolean }>>({});
   const [availability, setAvailability] = useState<{ totalHoras: number | string, dias: string[] }>({ totalHoras: 20, dias: [] });
   const [error, setError] = useState<string | null>(null);
@@ -172,6 +174,20 @@ export const Planeja: React.FC = () => {
       setSelectedMateriaIds(prev => [...prev, id]);
       setDisciplineConfig(prev => ({ ...prev, [id]: { peso: 1, horas: 2, expanded: true } }));
     }
+  };
+
+  const toggleAssunto = (id: string) => {
+    setSelectedAssuntoIds(prev =>
+      prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]
+    );
+  };
+
+  const selectAllAssuntos = (materia: any) => {
+    const assuntoIds = (materia.assuntos || []).map((a: any) => a.id);
+    setSelectedAssuntoIds(prev => {
+      const newIds = [...new Set([...prev, ...assuntoIds])];
+      return newIds;
+    });
   };
 
   const handleFinish = () => {
@@ -389,6 +405,14 @@ export const Planeja: React.FC = () => {
                 </Button>
               </div>
             </div>
+
+            <input
+              type="text"
+              placeholder="Buscar matéria ou assunto..."
+              className={`w-full p-3 border rounded-xl mb-4 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             
             {materias.length === 0 ? (
               <div 
@@ -405,48 +429,66 @@ export const Planeja: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                {materias.map(materia => (
-                  <div key={materia.id} className="border border-gray-200 rounded-xl overflow-hidden">
-                    <div 
-                      className={`p-4 flex items-center justify-between cursor-pointer ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800' : 'bg-white'}`}
-                      onClick={() => {
-                        // Toggle expansion logic
-                        const expanded = disciplineConfig[materia.id]?.expanded;
-                        setDisciplineConfig({
-                          ...disciplineConfig,
-                          [materia.id]: { ...disciplineConfig[materia.id], expanded: !expanded }
-                        });
-                      }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <input 
-                          type="checkbox" 
-                          checked={selectedMateriaIds.includes(materia.id)}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            toggleMateria(materia.id);
+                {materias
+                  .filter(materia => {
+                    const matchesMateria = materia.nome.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesAssunto = (materia.assuntos || []).some(assunto => assunto.nome.toLowerCase().includes(searchTerm.toLowerCase()));
+                    return matchesMateria || matchesAssunto;
+                  })
+                  .map(materia => {
+                    const isExpanded = disciplineConfig[materia.id]?.expanded || (searchTerm && (materia.assuntos || []).some(assunto => assunto.nome.toLowerCase().includes(searchTerm.toLowerCase())));
+                    return (
+                      <div key={materia.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div 
+                          className={`p-4 flex items-center justify-between cursor-pointer ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800' : 'bg-white'}`}
+                          onClick={() => {
+                            const expanded = disciplineConfig[materia.id]?.expanded;
+                            setDisciplineConfig({
+                              ...disciplineConfig,
+                              [materia.id]: { ...disciplineConfig[materia.id], expanded: !expanded }
+                            });
                           }}
-                          className="w-5 h-5 text-blue-600 rounded"
-                        />
-                        <span className={`font-medium ${themeClasses.text}`}>{materia.nome}</span>
-                      </div>
-                      <ChevronDown size={20} className={`text-gray-400 transition-transform ${disciplineConfig[materia.id]?.expanded ? 'rotate-180' : ''}`} />
-                    </div>
-                    
-                    {disciplineConfig[materia.id]?.expanded && (
-                      <div className={`p-4 border-t border-gray-200 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-900' : 'bg-gray-50'}`}>
-                        <div className="space-y-2">
-                          {(materia.assuntos || []).map(assunto => (
-                            <div key={assunto.id} className="flex items-center gap-2 text-sm">
-                              <input type="checkbox" className="w-4 h-4 text-blue-600 rounded" />
-                              <span className={themeClasses.text}>{assunto.nome}</span>
-                            </div>
-                          ))}
+                        >
+                          <div className="flex items-center gap-3">
+                            <input 
+                              type="checkbox" 
+                              checked={selectedMateriaIds.includes(materia.id)}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                toggleMateria(materia.id);
+                              }}
+                              className="w-5 h-5 text-blue-600 rounded"
+                            />
+                            <span className={`font-medium ${themeClasses.text}`}>{materia.nome}</span>
+                          </div>
+                          <ChevronDown size={20} className={`text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                         </div>
+                        
+                        {isExpanded && (
+                          <div className={`p-4 border-t border-gray-200 ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-900' : 'bg-gray-50'}`}>
+                            <Button variant="outline" onClick={() => selectAllAssuntos(materia)} className="mb-2 text-xs py-1 px-2">
+                              Marcar todos
+                            </Button>
+                            <div className="space-y-2">
+                              {(materia.assuntos || [])
+                                .filter(assunto => assunto.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+                                .map(assunto => (
+                                <div key={assunto.id} className="flex items-center gap-2 text-sm">
+                                  <input 
+                                    type="checkbox" 
+                                    className="w-4 h-4 text-blue-600 rounded"
+                                    checked={selectedAssuntoIds.includes(assunto.id)}
+                                    onChange={() => toggleAssunto(assunto.id)}
+                                  />
+                                  <span className={themeClasses.text}>{assunto.nome}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                    );
+                  })}
               </div>
             )}
           </div>
