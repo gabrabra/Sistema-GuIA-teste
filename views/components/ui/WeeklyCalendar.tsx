@@ -102,7 +102,7 @@ export const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ materias }) => {
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   return (
-    <div className="flex flex-col h-full min-h-[300px]">
+    <div className="flex flex-col h-fit min-h-[300px]">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
           <CalendarIcon size={20} className="text-blue-500" />
@@ -119,18 +119,18 @@ export const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ materias }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2 flex-1">
+      <div className="grid grid-cols-7 gap-1 flex-1 p-0.5">
         {weekDays.map((day, i) => {
           const revs = getRevisionsForDate(day);
           const today = isToday(day);
           
           return (
-            <div key={i} className={`flex flex-col border rounded-lg overflow-hidden ${today ? 'border-blue-300 bg-blue-50/30' : 'border-gray-100 bg-gray-50/50'}`}>
-              <div className={`text-center py-1 text-xs font-medium border-b ${today ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+            <div key={i} className={`h-full flex flex-col border rounded-lg overflow-hidden ${today ? 'border-blue-300 bg-blue-50/30' : 'border-gray-100 bg-gray-50/50'}`}>
+              <div className={`text-center py-0.5 text-xs font-medium border-b ${today ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
                 {dayNames[day.getDay()]}
                 <div className={`text-lg ${today ? 'font-bold' : ''}`}>{day.getDate()}</div>
               </div>
-              <div className="flex-1 p-1 overflow-y-auto max-h-[200px] space-y-1">
+              <div className="flex-1 p-1 overflow-y-auto max-h-[150px] space-y-1">
                 {revs.length > 0 ? (
                   revs.map((rev, idx) => (
                     <div key={idx} className="text-[10px] p-1 rounded bg-white border border-gray-200 shadow-sm leading-tight" title={`${rev.materia}: ${rev.assunto} (${rev.label})`}>
