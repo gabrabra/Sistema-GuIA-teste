@@ -328,27 +328,6 @@ export const Dashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Maratona Diaria */}
-      <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-none">
-        <div className="flex items-center gap-3 mb-4">
-          <Flame className="text-yellow-300" size={28} />
-          <div>
-            <h3 className="text-lg font-bold leading-none">Maratona Diária</h3>
-            <p className="text-white/60 text-xs mt-1">Modo: Ciclo Padrão</p>
-          </div>
-        </div>
-        <div className="flex justify-between items-end mb-2">
-          <span className="text-4xl font-bold">{formatTime(horasEstudadasHoje)}</span>
-          <span className="text-white/70 font-medium mb-1">/ {formatTime(maratonaMeta)}</span>
-        </div>
-        <div className="w-full bg-black/20 rounded-full h-3 overflow-hidden">
-          <div 
-            className="bg-yellow-400 h-full rounded-full transition-all duration-500" 
-            style={{ width: `${Math.min(maratonaProgress, 100)}%` }} 
-          />
-        </div>
-      </Card>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Chart Meta Semanal */}
         <Card title="Desempenho Semanal" className="md:col-span-2">
