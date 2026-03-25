@@ -128,15 +128,15 @@ export const Responde: React.FC = () => {
                   key={idx}
                   onClick={() => handlePromptClick(prompt)}
                   aria-label={`Usar prompt: ${prompt.title}`}
-                  className={`flex flex-col items-start p-2.5 rounded-lg border transition-all duration-300 text-left w-full hover:scale-[1.01] hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-1 ${prompt.color}`}
+                  className={`flex flex-col items-start p-4 md:p-5 rounded-lg border transition-all duration-300 text-left w-full hover:scale-[1.01] hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-1 ${prompt.color}`}
                 >
-                  <div className="flex items-center gap-1.5 mb-1 w-full">
-                    <div className={`p-1 rounded bg-white/60 shrink-0 ${prompt.iconColor}`}>
-                      <IconComponent size={14} aria-hidden="true" />
+                  <div className="flex items-center gap-2 mb-2 w-full">
+                    <div className={`p-1.5 rounded bg-white/60 shrink-0 ${prompt.iconColor}`}>
+                      <IconComponent size={18} aria-hidden="true" />
                     </div>
-                    <h3 className="font-bold text-gray-800 text-xs lg:text-[13px] leading-tight truncate">{prompt.title}</h3>
+                    <h3 className="font-bold text-gray-800 text-sm md:text-base lg:text-lg leading-tight truncate">{prompt.title}</h3>
                   </div>
-                  <p className="text-[11px] lg:text-xs text-gray-600 leading-tight line-clamp-2">{prompt.description}</p>
+                  <p className="text-xs md:text-sm lg:text-base text-gray-600 leading-tight line-clamp-2">{prompt.description}</p>
                 </button>
               );
             })}
