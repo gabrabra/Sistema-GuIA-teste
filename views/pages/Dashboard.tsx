@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { Modal } from '../components/ui/Modal';
 import { formatTime, formatTimeWithSeconds } from '../../models/utils/timeUtils';
-import { Play, Pause, Award, Calendar } from 'lucide-react';
+import { Play, Pause, Award, Calendar, Flame } from 'lucide-react';
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useNavigate } from 'react-router-dom';
 import { StudyHeatmap } from '../components/ui/StudyHeatmap';
@@ -72,6 +72,9 @@ export const Dashboard: React.FC = () => {
   // Daily Goal (Mocked as 3 hours for demo, but could be dynamic)
   const metaDiariaSegundos = 3 * 3600; 
   const progressoDiario = metaDiariaSegundos > 0 ? (horasEstudadasHoje / metaDiariaSegundos) * 100 : 0;
+
+  const maratonaMeta = 4 * 3600; // Mock 4 hours daily marathon goal
+  const maratonaProgress = maratonaMeta > 0 ? (horasEstudadasHoje / maratonaMeta) * 100 : 0;
 
   // Weekly Goal
   const totalEstudadoSemana = historicoEstudos.reduce((acc, curr) => acc + curr.segundos, 0);
@@ -324,6 +327,27 @@ export const Dashboard: React.FC = () => {
           )}
         </Card>
       </div>
+
+      {/* Maratona Diaria */}
+      <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-none">
+        <div className="flex items-center gap-3 mb-4">
+          <Flame className="text-yellow-300" size={28} />
+          <div>
+            <h3 className="text-lg font-bold leading-none">Maratona Diária</h3>
+            <p className="text-white/60 text-xs mt-1">Modo: Ciclo Padrão</p>
+          </div>
+        </div>
+        <div className="flex justify-between items-end mb-2">
+          <span className="text-4xl font-bold">{formatTime(horasEstudadasHoje)}</span>
+          <span className="text-white/70 font-medium mb-1">/ {formatTime(maratonaMeta)}</span>
+        </div>
+        <div className="w-full bg-black/20 rounded-full h-3 overflow-hidden">
+          <div 
+            className="bg-yellow-400 h-full rounded-full transition-all duration-500" 
+            style={{ width: `${Math.min(maratonaProgress, 100)}%` }} 
+          />
+        </div>
+      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Chart Meta Semanal */}
