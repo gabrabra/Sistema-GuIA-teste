@@ -452,7 +452,7 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
       traceMetadata: {
         __trace_source__: "agent-builder",
         workflow_id: "wf_69b053fd5a2c8190a39f249a4ece65060af2a944fc0a98fe",
-        version: "6"
+        version: "draft"
       }
     });
 

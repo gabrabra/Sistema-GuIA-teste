@@ -210,7 +210,8 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
       modelProvider: provider,
       traceMetadata: {
         __trace_source__: "agent-builder",
-        workflow_id: "wf_69a2e740f304819086bdbca788645e8e0a8d66b9f84ab910"
+        workflow_id: "wf_69a2e740f304819086bdbca788645e8e0a8d66b9f84ab910",
+        version: "draft"
       }
     });
     const guiaRedigeResultTemp = await runner.run(
