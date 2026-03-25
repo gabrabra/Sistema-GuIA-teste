@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../../controllers/context/ThemeContext';
-import { Save } from 'lucide-react';
+import { Save, Code } from 'lucide-react';
 
 interface AIAgent {
   id: string;
@@ -18,6 +18,10 @@ export const ConfiguracoesAgentes: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importCode, setImportCode] = useState('');
+  const [importError, setImportError] = useState('');
 
   useEffect(() => {
     fetchAgents();
@@ -70,6 +74,121 @@ export const ConfiguracoesAgentes: React.FC = () => {
     }
   };
 
+  const extractInstructions = (body: string) => {
+    const prefix = "instructions:";
+    const idx = body.indexOf(prefix);
+    if (idx === -1) return null;
+    
+    let start = idx + prefix.length;
+    while (start < body.length && /\s/.test(body[start])) {
+      start++;
+    }
+    
+    const quoteChar = body[start];
+    if (!['`', '"', "'"].includes(quoteChar)) return null;
+    
+    let end = start + 1;
+    let isEscaped = false;
+    while (end < body.length) {
+      if (body[end] === '\\' && !isEscaped) {
+        isEscaped = true;
+      } else if (body[end] === quoteChar && !isEscaped) {
+        break;
+      } else {
+        isEscaped = false;
+      }
+      end++;
+    }
+    
+    let content = body.substring(start + 1, end);
+    if (quoteChar === '`') {
+      content = content.replace(/\\`/g, '`').replace(/\\\$/g, '$');
+    } else if (quoteChar === '"') {
+      content = content.replace(/\\"/g, '"').replace(/\\n/g, '\n');
+    } else if (quoteChar === "'") {
+      content = content.replace(/\\'/g, "'").replace(/\\n/g, '\n');
+    }
+    
+    return content;
+  };
+
+  const parseSDKCode = (code: string) => {
+    const parsedAgents = [];
+    const agentRegex = /new\s+Agent\s*\(\s*\{([\s\S]*?)\}\s*\)/g;
+    let match;
+    while ((match = agentRegex.exec(code)) !== null) {
+      const agentBody = match[1];
+      
+      const nameMatch = agentBody.match(/name:\s*["']([^"']+)["']/);
+      const name = nameMatch ? nameMatch[1] : null;
+      
+      const modelMatch = agentBody.match(/model:\s*["']([^"']+)["']/);
+      const model = modelMatch ? modelMatch[1] : null;
+      
+      const instructions = extractInstructions(agentBody);
+      
+      if (name && instructions) {
+        parsedAgents.push({ name, instructions, model });
+      }
+    }
+    return parsedAgents;
+  };
+
+  const handleImportSDK = () => {
+    setImportError('');
+    const parsedAgents = parseSDKCode(importCode);
+    
+    if (parsedAgents.length === 0) {
+      setImportError('Nenhum agente encontrado no código fornecido. Verifique se copiou o código completo do SDK.');
+      return;
+    }
+
+    let updatedCount = 0;
+    const newAgentsList = [...agents];
+
+    parsedAgents.forEach(parsedAgent => {
+      const existingAgentIndex = newAgentsList.findIndex(a => 
+        a.name.toLowerCase() === parsedAgent.name.toLowerCase() || 
+        a.id.toLowerCase() === parsedAgent.name.toLowerCase() ||
+        parsedAgent.name.toLowerCase().includes(a.name.toLowerCase()) ||
+        a.name.toLowerCase().includes(parsedAgent.name.toLowerCase())
+      );
+
+      if (existingAgentIndex >= 0) {
+        newAgentsList[existingAgentIndex] = {
+          ...newAgentsList[existingAgentIndex],
+          instructions: parsedAgent.instructions,
+          model: parsedAgent.model || newAgentsList[existingAgentIndex].model
+        };
+        updatedCount++;
+        
+        if (selectedAgent && selectedAgent.id === newAgentsList[existingAgentIndex].id) {
+          setSelectedAgent(newAgentsList[existingAgentIndex]);
+        }
+      } else if (parsedAgents.length === 1 && selectedAgent) {
+        const idx = newAgentsList.findIndex(a => a.id === selectedAgent.id);
+        if (idx >= 0) {
+          newAgentsList[idx] = {
+            ...newAgentsList[idx],
+            instructions: parsedAgent.instructions,
+            model: parsedAgent.model || newAgentsList[idx].model
+          };
+          setSelectedAgent(newAgentsList[idx]);
+          updatedCount++;
+        }
+      }
+    });
+
+    if (updatedCount > 0) {
+      setAgents(newAgentsList);
+      setIsImportModalOpen(false);
+      setImportCode('');
+      setMessage({ type: 'success', text: `${updatedCount} agente(s) atualizado(s) com os dados do SDK! Lembre-se de clicar em "Salvar Alterações".` });
+    } else {
+      setImportError('Agentes encontrados no código não correspondem aos agentes existentes no sistema.');
+    }
+  };
+
   if (isLoading) {
     return <div className="p-8 text-center">Carregando agentes...</div>;
   }
@@ -106,14 +225,24 @@ export const ConfiguracoesAgentes: React.FC = () => {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className={`text-xl font-semibold ${themeClasses.text}`}>Editar: {selectedAgent.name}</h2>
-                <Button 
-                  onClick={handleSave} 
-                  disabled={isSaving}
-                  className="flex items-center gap-2"
-                >
-                  <Save size={18} />
-                  {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-                </Button>
+                <div className="flex gap-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setIsImportModalOpen(true)} 
+                    className="flex items-center gap-2"
+                  >
+                    <Code size={18} />
+                    Importar SDK
+                  </Button>
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={isSaving}
+                    className="flex items-center gap-2"
+                  >
+                    <Save size={18} />
+                    {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                  </Button>
+                </div>
               </div>
 
               {message && (
@@ -170,6 +299,41 @@ export const ConfiguracoesAgentes: React.FC = () => {
           )}
         </Card>
       </div>
+
+      {/* Modal de Importação SDK */}
+      {isImportModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="p-6 border-b">
+              <h3 className="text-xl font-bold text-gray-900">Importar do Agents SDK</h3>
+              <p className="text-gray-500 text-sm mt-1">Cole o código TypeScript exportado do OpenAI Agents SDK. O sistema atualizará automaticamente as instruções e o modelo.</p>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto">
+              {importError && (
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
+                  {importError}
+                </div>
+              )}
+              <textarea
+                value={importCode}
+                onChange={(e) => setImportCode(e.target.value)}
+                placeholder="import { Agent } from 'openai/agents';&#10;&#10;const myAgent = new Agent({&#10;  name: 'Classify',&#10;  instructions: `...`&#10;});"
+                className="w-full h-64 p-4 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none bg-gray-50"
+              />
+            </div>
+            
+            <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setIsImportModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleImportSDK}>
+                Processar Código
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
