@@ -15,11 +15,6 @@ function getClient() {
 
 const provider = new OpenAIProvider({ openAIClient: getClient() });
 
-// Tool definitions
-const fileSearch = fileSearchTool([
-  "vs_69887b8370508191ab4a218e976749df"
-]);
-
 const defaultGuiaRedigeInstructions = `Você é o GuIA Redige, assistente especialista em provas discursivas de concursos públicos (textos dissertativos e peças técnicas).
 MISSÃO
 Produzir respostas discursivas indistinguíveis de textos humanos, compatíveis com correção manual de banca examinadora, maximizando pontuação e evitando penalizações formais.
@@ -179,21 +174,27 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
     // Fetch instructions from DB
     let instructions = defaultGuiaRedigeInstructions;
     let model = "gpt-4o-mini";
+    let vectorStoreId = "vs_69887b8370508191ab4a218e976749df";
     try {
-      const result = await pool.query('SELECT instructions, model FROM ai_agents WHERE id = $1', ['guia-redige']);
+      const result = await pool.query('SELECT instructions, model, vector_store_id FROM ai_agents WHERE id = $1', ['guia-redige']);
       if (result.rows.length > 0) {
         instructions = result.rows[0].instructions;
         model = result.rows[0].model;
+        if (result.rows[0].vector_store_id) {
+          vectorStoreId = result.rows[0].vector_store_id;
+        }
       } else {
         // Insert default if not exists
         await pool.query(
-          `INSERT INTO ai_agents (id, name, instructions, model) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
-          ['guia-redige', 'GuIA Redige', defaultGuiaRedigeInstructions, 'gpt-4o-mini']
+          `INSERT INTO ai_agents (id, name, instructions, model, vector_store_id) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`,
+          ['guia-redige', 'GuIA Redige', defaultGuiaRedigeInstructions, 'gpt-4o-mini', vectorStoreId]
         );
       }
     } catch (err) {
       console.error('Failed to fetch agent instructions:', err);
     }
+
+    const fileSearch = fileSearchTool([vectorStoreId]);
 
     const guiaRedige = new Agent({
       name: "GuIA Redige",

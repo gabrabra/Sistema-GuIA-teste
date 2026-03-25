@@ -9,6 +9,7 @@ interface AIAgent {
   name: string;
   instructions: string;
   model: string;
+  vector_store_id?: string;
 }
 
 export const ConfiguracoesAgentes: React.FC = () => {
@@ -115,6 +116,11 @@ export const ConfiguracoesAgentes: React.FC = () => {
   const parseSDKCode = (code: string) => {
     const parsedAgents = [];
     const agentRegex = /new\s+Agent\s*\(\s*\{([\s\S]*?)\}\s*\)/g;
+    
+    // Global fallback if not found inside agent
+    const globalVsMatch = code.match(/vs_[a-zA-Z0-9]+/);
+    const globalVectorStoreId = globalVsMatch ? globalVsMatch[0] : undefined;
+
     let match;
     while ((match = agentRegex.exec(code)) !== null) {
       const agentBody = match[1];
@@ -127,14 +133,20 @@ export const ConfiguracoesAgentes: React.FC = () => {
       
       const instructions = extractInstructions(agentBody);
       
+      // Try to find vector store ID near the agent definition or inside it
+      // This is tricky because tools are often defined outside the agent
+      // We'll use the global one as a fallback
+      const agentVsMatch = agentBody.match(/vs_[a-zA-Z0-9]+/);
+      const vector_store_id = agentVsMatch ? agentVsMatch[0] : globalVectorStoreId;
+      
       if (name && instructions) {
-        parsedAgents.push({ name, instructions, model });
+        parsedAgents.push({ name, instructions, model, vector_store_id });
       }
     }
     return parsedAgents;
   };
 
-  const handleImportSDK = () => {
+  const handleImportSDK = async () => {
     setImportError('');
     const parsedAgents = parseSDKCode(importCode);
     
@@ -145,6 +157,7 @@ export const ConfiguracoesAgentes: React.FC = () => {
 
     let updatedCount = 0;
     const newAgentsList = [...agents];
+    const agentsToSave: AIAgent[] = [];
 
     parsedAgents.forEach(parsedAgent => {
       const existingAgentIndex = newAgentsList.findIndex(a => 
@@ -158,8 +171,10 @@ export const ConfiguracoesAgentes: React.FC = () => {
         newAgentsList[existingAgentIndex] = {
           ...newAgentsList[existingAgentIndex],
           instructions: parsedAgent.instructions,
-          model: parsedAgent.model || newAgentsList[existingAgentIndex].model
+          model: parsedAgent.model || newAgentsList[existingAgentIndex].model,
+          vector_store_id: parsedAgent.vector_store_id || newAgentsList[existingAgentIndex].vector_store_id
         };
+        agentsToSave.push(newAgentsList[existingAgentIndex]);
         updatedCount++;
         
         if (selectedAgent && selectedAgent.id === newAgentsList[existingAgentIndex].id) {
@@ -171,8 +186,10 @@ export const ConfiguracoesAgentes: React.FC = () => {
           newAgentsList[idx] = {
             ...newAgentsList[idx],
             instructions: parsedAgent.instructions,
-            model: parsedAgent.model || newAgentsList[idx].model
+            model: parsedAgent.model || newAgentsList[idx].model,
+            vector_store_id: parsedAgent.vector_store_id || newAgentsList[idx].vector_store_id
           };
+          agentsToSave.push(newAgentsList[idx]);
           setSelectedAgent(newAgentsList[idx]);
           updatedCount++;
         }
@@ -180,10 +197,25 @@ export const ConfiguracoesAgentes: React.FC = () => {
     });
 
     if (updatedCount > 0) {
-      setAgents(newAgentsList);
-      setIsImportModalOpen(false);
-      setImportCode('');
-      setMessage({ type: 'success', text: `${updatedCount} agente(s) atualizado(s) com os dados do SDK! Lembre-se de clicar em "Salvar Alterações".` });
+      setIsSaving(true);
+      try {
+        for (const agent of agentsToSave) {
+          await fetch(`/api/ai-agents/${agent.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(agent),
+          });
+        }
+        setAgents(newAgentsList);
+        setIsImportModalOpen(false);
+        setImportCode('');
+        setMessage({ type: 'success', text: `${updatedCount} agente(s) importado(s) e salvo(s) no banco de dados com sucesso!` });
+      } catch (err) {
+        setImportError('Erro ao salvar no banco de dados.');
+      } finally {
+        setIsSaving(false);
+        setTimeout(() => setMessage(null), 4000);
+      }
     } else {
       setImportError('Agentes encontrados no código não correspondem aos agentes existentes no sistema.');
     }
@@ -276,6 +308,20 @@ export const ConfiguracoesAgentes: React.FC = () => {
                     <option value="o3-mini">o3-mini</option>
                     <option value="o4-mini">o4-mini</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Vector Store ID (Base de Conhecimento)</label>
+                  <input
+                    type="text"
+                    value={selectedAgent.vector_store_id || ''}
+                    onChange={(e) => setSelectedAgent({ ...selectedAgent, vector_store_id: e.target.value })}
+                    placeholder="Ex: vs_abc123..."
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    ID do Vector Store usado pelo agente para buscar arquivos (opcional).
+                  </p>
                 </div>
 
                 <div>

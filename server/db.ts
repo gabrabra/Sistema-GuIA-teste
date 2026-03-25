@@ -64,6 +64,7 @@ export async function initDb(retries = 5, delay = 5000) {
           name VARCHAR(100) NOT NULL,
           instructions TEXT NOT NULL,
           model VARCHAR(50) NOT NULL,
+          vector_store_id VARCHAR(100),
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
 
@@ -207,6 +208,9 @@ export async function initDb(retries = 5, delay = 5000) {
         ALTER TABLE produtos ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         ALTER TABLE concursos ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         
+        -- Add vector_store_id to ai_agents
+        ALTER TABLE ai_agents ADD COLUMN IF NOT EXISTS vector_store_id VARCHAR(100);
+        
         -- Add new columns to user_settings
         ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS concurso_objetivo VARCHAR(255);
         ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS preferences JSONB DEFAULT '{}'::jsonb;
@@ -228,11 +232,11 @@ export async function initDb(retries = 5, delay = 5000) {
         ON CONFLICT (id) DO NOTHING;
 
         -- Insert default agents
-        INSERT INTO ai_agents (id, name, instructions, model) VALUES
-          ('guia-responde-geral', 'GuIA Responde-Geral', '✅ SYSTEM PROMPT – GuIA Responde – Geral...', 'gpt-4o-mini'),
-          ('guia-responde-portugues', 'GuIA Responde-Português-4o-mini', 'INÍCIO DO SYSTEM PROMPT...', 'o3-mini'),
-          ('guia-redige', 'GuIA Redige', 'Você é o GuIA Redige, assistente especialista em provas discursivas...', 'gpt-4o-mini'),
-          ('classify', 'Classify', '### ROLE\nYou are a careful classification assistant...', 'gpt-4o-mini')
+        INSERT INTO ai_agents (id, name, instructions, model, vector_store_id) VALUES
+          ('guia-responde-geral', 'GuIA Responde-Geral', '✅ SYSTEM PROMPT – GuIA Responde – Geral...', 'gpt-4o-mini', 'vs_69b066f4fe00819198cf2854ea00bb96'),
+          ('guia-responde-portugues', 'GuIA Responde-Português-4o-mini', 'INÍCIO DO SYSTEM PROMPT...', 'o3-mini', 'vs_69a3098120f48191aa372a865ddb5398'),
+          ('guia-redige', 'GuIA Redige', 'Você é o GuIA Redige, assistente especialista em provas discursivas...', 'gpt-4o-mini', 'vs_69887b8370508191ab4a218e976749df'),
+          ('classify', 'Classify', '### ROLE\nYou are a careful classification assistant...', 'gpt-4o-mini', null)
         ON CONFLICT (id) DO NOTHING;
 
         -- Insert default user for login validation

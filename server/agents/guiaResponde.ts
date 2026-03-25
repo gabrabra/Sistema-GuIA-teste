@@ -3,11 +3,6 @@ import { OpenAI } from "openai";
 import { z } from "zod";
 import { pool } from '../db.js';
 
-// Tool definitions
-const fileSearch = fileSearchTool([
-  "vs_69b066f4fe00819198cf2854ea00bb96"
-]);
-
 // Shared client for guardrails and file search
 let client: OpenAI;
 function getClient() {
@@ -417,11 +412,14 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
     let classifyModel = defaultModel;
     let geralInstructions = defaultGuiaRespondeGeralInstructions;
     let geralModel = defaultModel;
+    let geralVectorStoreId = "vs_69b066f4fe00819198cf2854ea00bb96";
     let portuguesInstructions = defaultGuiaRespondePortuguesInstructions;
     let portuguesModel = reasoningModel;
 
+    let portuguesVectorStoreId = "vs_69a3098120f48191aa372a865ddb5398";
+
     try {
-      const result = await pool.query('SELECT id, instructions, model FROM ai_agents WHERE id IN ($1, $2, $3)', ['classify', 'guia-responde-geral', 'guia-responde-portugues']);
+      const result = await pool.query('SELECT id, instructions, model, vector_store_id FROM ai_agents WHERE id IN ($1, $2, $3)', ['classify', 'guia-responde-geral', 'guia-responde-portugues']);
       
       const agentsMap = result.rows.reduce((acc, row) => {
         acc[row.id] = row;
@@ -441,25 +439,33 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
       if (agentsMap['guia-responde-geral']) {
         geralInstructions = agentsMap['guia-responde-geral'].instructions;
         geralModel = agentsMap['guia-responde-geral'].model;
+        if (agentsMap['guia-responde-geral'].vector_store_id) {
+          geralVectorStoreId = agentsMap['guia-responde-geral'].vector_store_id;
+        }
       } else {
         await pool.query(
-          `INSERT INTO ai_agents (id, name, instructions, model) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
-          ['guia-responde-geral', 'GuIA Responde-Geral', defaultGuiaRespondeGeralInstructions, defaultModel]
+          `INSERT INTO ai_agents (id, name, instructions, model, vector_store_id) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`,
+          ['guia-responde-geral', 'GuIA Responde-Geral', defaultGuiaRespondeGeralInstructions, defaultModel, geralVectorStoreId]
         );
       }
 
       if (agentsMap['guia-responde-portugues']) {
         portuguesInstructions = agentsMap['guia-responde-portugues'].instructions;
         portuguesModel = agentsMap['guia-responde-portugues'].model;
+        if (agentsMap['guia-responde-portugues'].vector_store_id) {
+          portuguesVectorStoreId = agentsMap['guia-responde-portugues'].vector_store_id;
+        }
       } else {
         await pool.query(
-          `INSERT INTO ai_agents (id, name, instructions, model) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
-          ['guia-responde-portugues', 'GuIA Responde-Português-4o-mini', defaultGuiaRespondePortuguesInstructions, reasoningModel]
+          `INSERT INTO ai_agents (id, name, instructions, model, vector_store_id) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`,
+          ['guia-responde-portugues', 'GuIA Responde-Português-4o-mini', defaultGuiaRespondePortuguesInstructions, reasoningModel, portuguesVectorStoreId]
         );
       }
     } catch (err) {
       console.error('Failed to fetch agent instructions:', err);
     }
+
+    const fileSearch = fileSearchTool([geralVectorStoreId]);
 
     const classify = new Agent({
       name: "Classify",
@@ -523,7 +529,7 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
       const rag_query = "[NOVA QUESTÃO - IGNORE TODO O HISTÓRICO ANTERIOR]\\n\\n" + state.ultima_questao;
       
       try {
-        await getClient().vectorStores.search("vs_69a3098120f48191aa372a865ddb5398", {
+        await getClient().vectorStores.search(portuguesVectorStoreId, {
           query: rag_query,
           max_num_results: 8
         });
@@ -567,7 +573,7 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
         const rag_query = "[NOVA QUESTÃO - IGNORE TODO O HISTÓRICO ANTERIOR]\\n\\n" + state.ultima_questao;
         
         try {
-          await getClient().vectorStores.search("vs_69a3098120f48191aa372a865ddb5398", {
+          await getClient().vectorStores.search(portuguesVectorStoreId, {
             query: rag_query,
             max_num_results: 8
           });
