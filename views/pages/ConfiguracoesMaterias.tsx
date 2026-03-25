@@ -263,7 +263,6 @@ export const ConfiguracoesMaterias: React.FC = () => {
                         <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                             {(materia.assuntos || []).length} assuntos
                         </span>
-                        {(!materia.isGlobal || isAdmin) && (
                           <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button 
                               onClick={(e) => handleEditMateria(materia.id, materia.nome, e)}
@@ -278,7 +277,6 @@ export const ConfiguracoesMaterias: React.FC = () => {
                               <Trash2 size={16} />
                             </button>
                           </div>
-                        )}
                       </>
                     )}
                   </div>
