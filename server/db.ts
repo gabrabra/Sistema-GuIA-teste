@@ -59,13 +59,10 @@ export async function initDb(retries = 5, delay = 5000) {
           permissions JSONB DEFAULT '[]'::jsonb
         );
 
-        CREATE TABLE IF NOT EXISTS ai_agents (
-          id VARCHAR(50) PRIMARY KEY,
-          name VARCHAR(100) NOT NULL,
-          instructions TEXT NOT NULL,
-          model VARCHAR(50) NOT NULL,
-          vector_store_id VARCHAR(100),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        CREATE TABLE IF NOT EXISTS roles (
+          id VARCHAR(255) PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          permissions JSONB DEFAULT '[]'::jsonb
         );
 
         CREATE TABLE IF NOT EXISTS ai_periodicities (
@@ -177,6 +174,18 @@ export async function initDb(retries = 5, delay = 5000) {
           segundos INTEGER NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS ai_prompt_logs (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE,
+          module VARCHAR(50) NOT NULL,
+          prompt_input TEXT,
+          ai_output TEXT,
+          input_tokens INTEGER DEFAULT 0,
+          output_tokens INTEGER DEFAULT 0,
+          total_tokens INTEGER DEFAULT 0,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS motivational_phrases (
           id VARCHAR(255) PRIMARY KEY,
           phrase TEXT NOT NULL,
@@ -208,8 +217,7 @@ export async function initDb(retries = 5, delay = 5000) {
         ALTER TABLE produtos ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         ALTER TABLE concursos ADD COLUMN IF NOT EXISTS user_id VARCHAR(255) REFERENCES users(id) ON DELETE CASCADE;
         
-        -- Add vector_store_id to ai_agents
-        ALTER TABLE ai_agents ADD COLUMN IF NOT EXISTS vector_store_id VARCHAR(100);
+        -- Add vector_store_id to ai_agents (Removed since table is gone)
         
         -- Add new columns to user_settings
         ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS concurso_objetivo VARCHAR(255);
@@ -231,13 +239,12 @@ export async function initDb(retries = 5, delay = 5000) {
           ('default-profile', 'Básico', 10, 500, 5, 1000)
         ON CONFLICT (id) DO NOTHING;
 
-        -- Insert default agents
-        INSERT INTO ai_agents (id, name, instructions, model, vector_store_id) VALUES
-          ('guia-responde-geral', 'GuIA Responde-Geral', '✅ SYSTEM PROMPT – GuIA Responde – Geral...', 'gpt-4o-mini', 'vs_69b066f4fe00819198cf2854ea00bb96'),
-          ('guia-responde-portugues', 'GuIA Responde-Português-4o-mini', 'INÍCIO DO SYSTEM PROMPT...', 'o3-mini', 'vs_69a3098120f48191aa372a865ddb5398'),
-          ('guia-redige', 'GuIA Redige', 'Você é o GuIA Redige, assistente especialista em provas discursivas...', 'gpt-4o-mini', 'vs_69887b8370508191ab4a218e976749df'),
-          ('classify', 'Classify', '### ROLE\nYou are a careful classification assistant...', 'gpt-4o-mini', null)
+        -- Insert default AI profile
+        INSERT INTO ai_profiles (id, name, responde_prompts_per_day, responde_max_chars, redige_prompts_per_day, redige_max_chars) VALUES
+          ('default-profile', 'Básico', 10, 500, 5, 1000)
         ON CONFLICT (id) DO NOTHING;
+
+        -- (Omitted default agents inserts)
 
         -- Insert default user for login validation
         INSERT INTO users (id, name, email, password_hash, role_id, status, ai_profile_id) VALUES

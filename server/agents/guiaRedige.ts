@@ -171,28 +171,10 @@ type WorkflowInput = { input_as_text: string };
 export const runWorkflow = async (workflow: WorkflowInput) => {
   return await withTrace("2-GuIA Redige", async () => {
     
-    // Fetch instructions from DB
-    let instructions = defaultGuiaRedigeInstructions;
-    let model = "gpt-4o-mini";
-    let vectorStoreId = "vs_69887b8370508191ab4a218e976749df";
-    try {
-      const result = await pool.query('SELECT instructions, model, vector_store_id FROM ai_agents WHERE id = $1', ['guia-redige']);
-      if (result.rows.length > 0) {
-        instructions = result.rows[0].instructions;
-        model = result.rows[0].model;
-        if (result.rows[0].vector_store_id) {
-          vectorStoreId = result.rows[0].vector_store_id;
-        }
-      } else {
-        // Insert default if not exists
-        await pool.query(
-          `INSERT INTO ai_agents (id, name, instructions, model, vector_store_id) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING`,
-          ['guia-redige', 'GuIA Redige', defaultGuiaRedigeInstructions, 'gpt-4o-mini', vectorStoreId]
-        );
-      }
-    } catch (err) {
-      console.error('Failed to fetch agent instructions:', err);
-    }
+    // Use default instructions directly (DB table ai_agents was removed)
+    const instructions = defaultGuiaRedigeInstructions;
+    const model = "gpt-4o-mini";
+    const vectorStoreId = "vs_69887b8370508191ab4a218e976749df";
 
     const fileSearch = fileSearchTool([vectorStoreId]);
 

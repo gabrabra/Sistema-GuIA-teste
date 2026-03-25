@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@openai/agents": "^0.7.2",
+    "@openai/chatkit-react": "^1.5.0",
     "@tailwindcss/vite": "^4.2.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
