@@ -145,6 +145,7 @@ export const ConfiguracoesAgentes: React.FC = () => {
                     <option value="o1-mini">o1-mini</option>
                     <option value="o1-preview">o1-preview</option>
                     <option value="o3-mini">o3-mini</option>
+                    <option value="o4-mini">o4-mini</option>
                   </select>
                 </div>
 
