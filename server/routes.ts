@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { pool } from './db.js';
-import { runWorkflow } from './agents/guiaResponde.js';
-import { runWorkflow as runRedigeWorkflow } from './agents/guiaRedige.js';
+import { runWorkflow } from './agents/guiaOrquestrador.js';
 
 export const apiRouter = Router();
 
@@ -64,7 +63,7 @@ apiRouter.post('/responde', async (req, res) => {
   
   try {
     await checkAndLogPrompt(userId, 'responde');
-    const response = await runWorkflow({ input_as_text: message });
+    const response = await runWorkflow({ input_as_text: message, intent: 'responde' });
     // Note: Assuming token counts are 0 for now as they aren't returned by runWorkflow
     await logPrompt(userId, 'responde', message, response, 0, 0);
     res.json({ response });
@@ -86,7 +85,7 @@ apiRouter.post('/redige', async (req, res) => {
   
   try {
     await checkAndLogPrompt(userId, 'redige');
-    const response = await runRedigeWorkflow({ input_as_text: message });
+    const response = await runWorkflow({ input_as_text: message, intent: 'redige' });
     await logPrompt(userId, 'redige', message, response, 0, 0);
     res.json({ response });
   } catch (err) {
@@ -756,6 +755,7 @@ apiRouter.get('/ai-agents', async (req, res) => {
 apiRouter.put('/ai-agents/:id', async (req, res) => {
   const { instructions, model, vector_store_id } = req.body;
   try {
+    await pool.query('ALTER TABLE ai_agents ADD COLUMN IF NOT EXISTS vector_store_id VARCHAR(100);');
     await pool.query(
       `UPDATE ai_agents SET instructions = $1, model = $2, vector_store_id = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4`,
       [instructions, model, vector_store_id || null, req.params.id]
@@ -770,6 +770,7 @@ apiRouter.put('/ai-agents/:id', async (req, res) => {
 apiRouter.post('/ai-agents', async (req, res) => {
   const { id, name, instructions, model, vector_store_id } = req.body;
   try {
+    await pool.query('ALTER TABLE ai_agents ADD COLUMN IF NOT EXISTS vector_store_id VARCHAR(100);');
     await pool.query(
       `INSERT INTO ai_agents (id, name, instructions, model, vector_store_id) VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (id) DO UPDATE SET instructions = EXCLUDED.instructions, model = EXCLUDED.model, vector_store_id = EXCLUDED.vector_store_id, updated_at = CURRENT_TIMESTAMP`,
