@@ -20,33 +20,33 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
       ...d,
       remaining: Math.max(1, Math.round(d.peso)),
       color: COLORS[index % COLORS.length]
-    })).sort((a, b) => b.remaining - a.remaining);
+    }));
 
     const totalSlots = remaining.reduce((sum, d) => sum + d.remaining, 0);
-    let lastId: string | null = null;
+    const lastSeen: Record<string, number> = {};
+    disciplinas.forEach(d => lastSeen[d.id] = -disciplinas.length); // Inicializa com valor negativo para permitir escolha inicial
 
     for (let i = 0; i < totalSlots; i++) {
-      // Pick candidates that are not the last subject
-      let candidates = remaining.filter(d => d.remaining > 0 && d.id !== lastId);
+      // Pega candidatos que ainda têm peso restante
+      let candidates = remaining.filter(d => d.remaining > 0);
       
-      if (candidates.length === 0) {
-        // If only the last subject remains, pick it
-        candidates = remaining.filter(d => d.remaining > 0);
-      }
+      // Ordena por gap (descendente), depois por peso restante (descendente)
+      candidates.sort((a, b) => {
+        const gapA = i - lastSeen[a.id];
+        const gapB = i - lastSeen[b.id];
+        if (gapA !== gapB) return gapB - gapA; // Maior gap primeiro
+        return b.remaining - a.remaining; // Mais peso restante primeiro
+      });
 
-      if (candidates.length > 0) {
-        // Pick the one with most remaining weight among candidates
-        candidates.sort((a, b) => b.remaining - a.remaining);
-        const pick = candidates[0];
-        slots.push({
-          id: pick.id,
-          nome: pick.nome,
-          color: pick.color,
-          subjectIndex: slots.filter(s => s.id === pick.id).length
-        });
-        pick.remaining--;
-        lastId = pick.id;
-      }
+      const pick = candidates[0];
+      slots.push({
+        id: pick.id,
+        nome: pick.nome,
+        color: pick.color,
+        subjectIndex: slots.filter(s => s.id === pick.id).length
+      });
+      pick.remaining--;
+      lastSeen[pick.id] = i;
     }
     return slots;
   }, [disciplinas]);
