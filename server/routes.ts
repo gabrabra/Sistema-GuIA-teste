@@ -64,7 +64,41 @@ apiRouter.post('/responde', async (req, res) => {
   
   try {
     await checkAndLogPrompt(userId, 'responde');
-    const response = await runWorkflow({ input_as_text: message });
+    
+    // Direct call to OpenAI API as requested
+    const apiKey = "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";
+    const endpoint = "https://api.openai.com/v1/responses";
+    const payload = {
+      model: "gpt-4.1-mini",
+      input: [
+        {
+          role: "system",
+          content: "Você é um assistente inteligente que responde de forma clara"
+        },
+        {
+          role: "user",
+          content: message
+        }
+      ]
+    };
+
+    const apiResponse = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!apiResponse.ok) {
+      const errorData = await apiResponse.json().catch(() => ({}));
+      throw new Error(`Erro na API (${apiResponse.status}): ${errorData.error?.message || apiResponse.statusText}`);
+    }
+
+    const data = await apiResponse.json();
+    const response = data.output[0].content[0].text;
+
     // Note: Assuming token counts are 0 for now as they aren't returned by runWorkflow
     await logPrompt(userId, 'responde', message, response, 0, 0);
     res.json({ response });
@@ -86,7 +120,41 @@ apiRouter.post('/redige', async (req, res) => {
   
   try {
     await checkAndLogPrompt(userId, 'redige');
-    const response = await runRedigeWorkflow({ input_as_text: message });
+    
+    // Direct call to OpenAI API as requested
+    const apiKey = "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";
+    const endpoint = "https://api.openai.com/v1/responses";
+    const payload = {
+      model: "gpt-4.1-mini",
+      input: [
+        {
+          role: "system",
+          content: "Você é um assistente inteligente que responde de forma clara"
+        },
+        {
+          role: "user",
+          content: message
+        }
+      ]
+    };
+
+    const apiResponse = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!apiResponse.ok) {
+      const errorData = await apiResponse.json().catch(() => ({}));
+      throw new Error(`Erro na API (${apiResponse.status}): ${errorData.error?.message || apiResponse.statusText}`);
+    }
+
+    const data = await apiResponse.json();
+    const response = data.output[0].content[0].text;
+
     await logPrompt(userId, 'redige', message, response, 0, 0);
     res.json({ response });
   } catch (err) {

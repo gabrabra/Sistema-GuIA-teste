@@ -14,21 +14,41 @@ const COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#eab308', '#14b8a6'
 export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStudyClick }) => {
   const { themeClasses } = useTheme();
 
-  const sortedDisciplinas = useMemo(() => {
-    return [...disciplinas].sort((a, b) => {
-      // 1. Studied today? (false comes first)
-      const aStudied = a.horasEstudadasHoje >= a.peso * 3600;
-      const bStudied = b.horasEstudadasHoje >= b.peso * 3600;
-      if (aStudied !== bStudied) return aStudied ? 1 : -1;
+  const cycleSlots = useMemo(() => {
+    const slots: { id: string; nome: string; color: string; subjectIndex: number }[] = [];
+    const remaining = disciplinas.map((d, index) => ({
+      ...d,
+      remaining: Math.max(1, Math.round(d.peso)),
+      color: COLORS[index % COLORS.length]
+    })).sort((a, b) => b.remaining - a.remaining);
 
-      // 2. Weight (descending)
-      const pesoA = Number(a.peso) || 0;
-      const pesoB = Number(b.peso) || 0;
-      if (pesoB !== pesoA) return pesoB - pesoA;
+    const totalSlots = remaining.reduce((sum, d) => sum + d.remaining, 0);
+    let lastId: string | null = null;
 
-      // 3. Alphabetical
-      return a.nome.localeCompare(b.nome);
-    });
+    for (let i = 0; i < totalSlots; i++) {
+      // Pick candidates that are not the last subject
+      let candidates = remaining.filter(d => d.remaining > 0 && d.id !== lastId);
+      
+      if (candidates.length === 0) {
+        // If only the last subject remains, pick it
+        candidates = remaining.filter(d => d.remaining > 0);
+      }
+
+      if (candidates.length > 0) {
+        // Pick the one with most remaining weight among candidates
+        candidates.sort((a, b) => b.remaining - a.remaining);
+        const pick = candidates[0];
+        slots.push({
+          id: pick.id,
+          nome: pick.nome,
+          color: pick.color,
+          subjectIndex: slots.filter(s => s.id === pick.id).length
+        });
+        pick.remaining--;
+        lastId = pick.id;
+      }
+    }
+    return slots;
   }, [disciplinas]);
 
   if (disciplinas.length === 0) {
@@ -39,35 +59,48 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
     );
   }
 
-  const nextSubject = sortedDisciplinas.find(d => d.horasEstudadasHoje < d.peso * 3600);
-  const allStudied = !nextSubject;
+  const chartData = useMemo(() => {
+    // Track how much time each subject has "consumed" across slots
+    const subjectProgress: Record<string, number> = {};
+    disciplinas.forEach(d => {
+      subjectProgress[d.id] = d.horasEstudadasHoje;
+    });
 
-  const chartData = sortedDisciplinas.map((disc, index) => {
-    const isStudied = disc.horasEstudadasHoje >= disc.peso * 3600;
-    const isNext = disc.id === nextSubject?.id;
-    
-    // Always assign a color from the palette
-    const color = COLORS[index % COLORS.length];
+    let foundNext = false;
 
-    return {
-      id: disc.id,
-      name: disc.nome,
-      value: disc.peso,
-      studied: isStudied,
-      isNext: isNext,
-      color: color
-    };
-  });
+    return cycleSlots.map((slot) => {
+      const progress = subjectProgress[slot.id];
+      const isStudied = progress >= 3600; // 1 hour per slot
+      
+      let isNext = false;
+      if (!isStudied && !foundNext) {
+        isNext = true;
+        foundNext = true;
+      }
+
+      // Consume 1 hour from progress for this subject
+      subjectProgress[slot.id] = Math.max(0, progress - 3600);
+
+      return {
+        ...slot,
+        value: 1,
+        studied: isStudied,
+        isNext: isNext
+      };
+    });
+  }, [cycleSlots, disciplinas]);
+
+  const nextSlot = chartData.find(s => s.isNext);
+  const allStudied = !nextSlot;
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
         <div className={`p-3 rounded-lg shadow-lg border ${themeClasses.bg === 'bg-gray-950' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <p className={`font-bold ${themeClasses.text}`}>{data.name}</p>
-          <p className="text-sm text-gray-500">Peso: {data.value}</p>
+          <p className={`font-bold ${themeClasses.text}`}>{data.nome}</p>
           <p className={`text-xs mt-1 font-medium ${data.studied ? 'text-green-500' : 'text-blue-500'}`}>
-            {data.studied ? 'Estudada hoje' : data.isNext ? 'Próxima indicação' : 'Pendente'}
+            {data.studied ? 'Concluído neste ciclo' : data.isNext ? 'Próxima indicação' : 'Pendente'}
           </p>
         </div>
       );
@@ -96,21 +129,21 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
               </p>
               <h3 className={`text-xl font-bold ${themeClasses.text} flex items-center gap-2`}>
                 <Target size={20} className="text-blue-500" />
-                {nextSubject.nome}
+                {nextSlot.nome}
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                Peso: {nextSubject.peso}
+                Sessão {nextSlot.subjectIndex + 1} de {disciplinas.find(d => d.id === nextSlot.id)?.peso}
               </p>
             </div>
             <button
-              onClick={() => onStudyClick(nextSubject.id)}
+              onClick={() => onStudyClick(nextSlot.id)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
             >
               Estudar <ArrowRight size={16} />
             </button>
           </div>
 
-          <h4 className={`text-sm font-bold ${themeClasses.text} mb-2 px-1 text-center`}>Distribuição de Prioridades (Peso)</h4>
+          <h4 className={`text-sm font-bold ${themeClasses.text} mb-2 px-1 text-center`}>Ordem do Ciclo de Estudos</h4>
           <div className="flex-1 min-h-[450px] relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -136,7 +169,7 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
                       key={`cell-${index}`} 
                       fill={entry.color} 
                       stroke={entry.isNext ? '#2563eb' : 'transparent'}
-                      strokeWidth={entry.isNext ? 3 : 0}
+                      strokeWidth={entry.isNext ? 4 : 0}
                       className="transition-all duration-300 hover:opacity-80 outline-none"
                       fillOpacity={entry.studied ? 0.2 : 1}
                     />
@@ -148,16 +181,23 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
                   height={36}
                   content={(props) => {
                     const { payload } = props;
+                    // Unique subjects for legend
+                    const uniqueSubjects = disciplinas.map((d, i) => ({
+                      name: d.nome,
+                      color: COLORS[i % COLORS.length],
+                      studied: d.horasEstudadasHoje >= d.peso * 3600
+                    }));
+
                     return (
                       <ul className="flex flex-wrap justify-center gap-3 mt-4">
-                        {payload?.map((entry: any, index: number) => (
-                          <li key={`item-${index}`} className={`flex items-center text-xs text-gray-500 dark:text-gray-400 ${chartData[index].studied ? 'opacity-50' : ''}`}>
+                        {uniqueSubjects.map((entry: any, index: number) => (
+                          <li key={`item-${index}`} className={`flex items-center text-xs text-gray-500 dark:text-gray-400 ${entry.studied ? 'opacity-50' : ''}`}>
                             <span 
                               className="w-3 h-3 rounded-full mr-1.5" 
-                              style={{ backgroundColor: entry.color, opacity: chartData[index].studied ? 0.3 : 1 }}
+                              style={{ backgroundColor: entry.color, opacity: entry.studied ? 0.3 : 1 }}
                             />
-                            <span className={chartData[index].studied ? 'line-through' : ''}>
-                              {entry.value}
+                            <span className={entry.studied ? 'line-through' : ''}>
+                              {entry.name}
                             </span>
                           </li>
                         ))}
@@ -174,7 +214,7 @@ export const PriorityGuide: React.FC<PriorityGuideProps> = ({ disciplinas, onStu
                 {chartData.filter(d => !d.studied).length}
               </span>
               <span className="block text-[10px] text-gray-500 uppercase tracking-wider">
-                Pendentes
+                Sessões Restantes
               </span>
             </div>
           </div>
