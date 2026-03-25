@@ -7,11 +7,17 @@ export const ConfiguracoesAgentesIA: React.FC = () => {
   const { themeClasses } = useTheme();
   const [openaiKey, setOpenaiKey] = useState('');
   const [redisUrl, setRedisUrl] = useState('');
-  const [respondeAgentConfig, setRespondeAgentConfig] = useState('');
+  const [guiaRespondePipeline, setGuiaRespondePipeline] = useState('');
+  const [guiaRedigePipeline, setGuiaRedigePipeline] = useState('');
 
   const handleSave = () => {
     // Implement save logic here, e.g., call an API to save these settings
-    console.log('Saving AI Agent configurations:', { openaiKey, redisUrl, respondeAgentConfig });
+    console.log('Saving AI Agent configurations:', { 
+      openaiKey, 
+      redisUrl, 
+      guiaRespondePipeline,
+      guiaRedigePipeline
+    });
     alert('Configurações salvas com sucesso!');
   };
 
@@ -55,15 +61,30 @@ export const ConfiguracoesAgentesIA: React.FC = () => {
       </Card>
 
       <Card className="p-6">
-        <h2 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Configurações do Agente "Responde"</h2>
+        <h2 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Pipeline: Guia Responde</h2>
         <div className="space-y-4">
           <div>
-            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>Configuração do Agente</label>
+            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>JSON do Pipeline</label>
             <textarea 
-              value={respondeAgentConfig}
-              onChange={(e) => setRespondeAgentConfig(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg h-32"
-              placeholder="Cole a configuração do agente aqui..."
+              value={guiaRespondePipeline}
+              onChange={(e) => setGuiaRespondePipeline(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg h-64 font-mono text-sm"
+              placeholder='{"target_agent": "Guia Responde", ...}'
+            />
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <h2 className={`text-xl font-semibold mb-4 ${themeClasses.text}`}>Pipeline: Guia Redige</h2>
+        <div className="space-y-4">
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${themeClasses.text}`}>JSON do Pipeline</label>
+            <textarea 
+              value={guiaRedigePipeline}
+              onChange={(e) => setGuiaRedigePipeline(e.target.value)}
+              className="w-full px-4 py-2 border rounded-lg h-64 font-mono text-sm"
+              placeholder='{"target_agent": "Guia Redige", ...}'
             />
           </div>
         </div>
