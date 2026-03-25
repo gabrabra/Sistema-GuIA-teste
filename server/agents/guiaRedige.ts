@@ -7,7 +7,7 @@ let client: OpenAI;
 function getClient() {
   if (!client) {
     client = new OpenAI({ 
-      apiKey: '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',
+      apiKey: process.env.OPENAI_API_KEY,
     });
   }
   return client;
