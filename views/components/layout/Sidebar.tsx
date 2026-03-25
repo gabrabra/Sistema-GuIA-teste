@@ -90,8 +90,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Permissões', path: '/configuracoes/permissoes', icon: Shield, permission: 'conf_perms' },
     { name: 'Produtos', path: '/configuracoes/produtos', icon: ShoppingBag, permission: 'conf_produtos' },
     { name: 'Prompts IA', path: '/configuracoes/prompts', icon: MessageSquare, permission: 'conf_prompts' },
+    { name: 'Agentes de IA', path: '/configuracoes/agentes-ia', icon: MessageSquare, permission: 'conf_prompts' },
     { name: 'Frases', path: '/configuracoes/frases', icon: Type, permission: 'conf_phrases' },
-    { name: 'Agente de IA', path: '/configuracoes/agentes', icon: MessageSquare, permission: 'conf_prompts' },
   ].filter(item => hasPermission(item.permission));
 
   const handleLogout = () => {

@@ -36,3 +36,12 @@ CREATE TABLE IF NOT EXISTS payments (
   subscriber_name VARCHAR(255) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 6. Criar a tabela de configurações dos agentes de IA
+CREATE TABLE IF NOT EXISTS ai_agent_configs (
+  id VARCHAR(255) PRIMARY KEY,
+  openai_api_key TEXT,
+  redis_url TEXT,
+  responde_agent_config TEXT,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
