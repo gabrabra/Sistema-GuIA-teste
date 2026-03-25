@@ -91,6 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { name: 'Produtos', path: '/configuracoes/produtos', icon: ShoppingBag, permission: 'conf_produtos' },
     { name: 'Prompts IA', path: '/configuracoes/prompts', icon: MessageSquare, permission: 'conf_prompts' },
     { name: 'Frases', path: '/configuracoes/frases', icon: Type, permission: 'conf_phrases' },
+    { name: 'Agente de IA', path: '/configuracoes/agentes', icon: MessageSquare, permission: 'conf_prompts' },
   ].filter(item => hasPermission(item.permission));
 
   const handleLogout = () => {

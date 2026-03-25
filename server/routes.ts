@@ -697,6 +697,46 @@ apiRouter.delete('/ai-profiles/:id', async (req, res) => {
   }
 });
 
+// --- AI Agents Config ---
+apiRouter.get('/ai-agents', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM ai_agents ORDER BY name ASC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error in GET /ai-agents:', err);
+    res.status(500).json({ error: 'Failed to fetch AI agents', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.put('/ai-agents/:id', async (req, res) => {
+  const { instructions, model } = req.body;
+  try {
+    await pool.query(
+      `UPDATE ai_agents SET instructions = $1, model = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3`,
+      [instructions, model, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in PUT /ai-agents/:id:', err);
+    res.status(500).json({ error: 'Failed to update AI agent', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+apiRouter.post('/ai-agents', async (req, res) => {
+  const { id, name, instructions, model } = req.body;
+  try {
+    await pool.query(
+      `INSERT INTO ai_agents (id, name, instructions, model) VALUES ($1, $2, $3, $4)
+       ON CONFLICT (id) DO UPDATE SET instructions = EXCLUDED.instructions, model = EXCLUDED.model, updated_at = CURRENT_TIMESTAMP`,
+      [id, name, instructions, model]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error in POST /ai-agents:', err);
+    res.status(500).json({ error: 'Failed to create AI agent', details: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 // --- Motivational Phrases ---
 apiRouter.get('/motivational-phrases', async (req, res) => {
   try {

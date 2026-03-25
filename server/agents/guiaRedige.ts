@@ -1,5 +1,6 @@
 import { fileSearchTool, Agent, AgentInputItem, Runner, withTrace, OpenAIProvider } from "@openai/agents";
 import { OpenAI } from "openai";
+import { pool } from '../db.js';
 
 // Shared client for guardrails and file search
 let client: OpenAI;
@@ -17,10 +18,9 @@ const provider = new OpenAIProvider({ openAIClient: getClient() });
 // Tool definitions
 const fileSearch = fileSearchTool([
   "vs_69887b8370508191ab4a218e976749df"
-])
-const guiaRedige = new Agent({
-  name: "GuIA Redige",
-  instructions: `Você é o GuIA Redige, assistente especialista em provas discursivas de concursos públicos (textos dissertativos e peças técnicas).
+]);
+
+const defaultGuiaRedigeInstructions = `Você é o GuIA Redige, assistente especialista em provas discursivas de concursos públicos (textos dissertativos e peças técnicas).
 MISSÃO
 Produzir respostas discursivas indistinguíveis de textos humanos, compatíveis com correção manual de banca examinadora, maximizando pontuação e evitando penalizações formais.
 OBJETIVO
@@ -168,38 +168,48 @@ não há enumeração indevida
 cada parágrafo trata um aspecto do comando
 o limite de linhas foi respeitado
 a Parte 1 está limpa e copiável para prova
-a Parte 2 contém apenas análise de estudo`,
-  model: "gpt-4o-mini",
-  tools: [
-    fileSearch
-  ],
-  modelSettings: {
-    temperature: 0.6,
-    topP: 1,
-    maxTokens: 2048,
-    store: true
-  }
-});
-
-const guiaPlaneja = new Agent({
-  name: "GuIA Planeja",
-  instructions: "",
-  model: "o4-mini",
-  modelSettings: {
-    reasoning: {
-      effort: "low",
-      summary: "auto"
-    },
-    store: true
-  }
-});
+a Parte 2 contém apenas análise de estudo`;
 
 type WorkflowInput = { input_as_text: string };
-
 
 // Main code entrypoint
 export const runWorkflow = async (workflow: WorkflowInput) => {
   return await withTrace("2-GuIA Redige", async () => {
+    
+    // Fetch instructions from DB
+    let instructions = defaultGuiaRedigeInstructions;
+    let model = "gpt-4o-mini";
+    try {
+      const result = await pool.query('SELECT instructions, model FROM ai_agents WHERE id = $1', ['guia-redige']);
+      if (result.rows.length > 0) {
+        instructions = result.rows[0].instructions;
+        model = result.rows[0].model;
+      } else {
+        // Insert default if not exists
+        await pool.query(
+          `INSERT INTO ai_agents (id, name, instructions, model) VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+          ['guia-redige', 'GuIA Redige', defaultGuiaRedigeInstructions, 'gpt-4o-mini']
+        );
+      }
+    } catch (err) {
+      console.error('Failed to fetch agent instructions:', err);
+    }
+
+    const guiaRedige = new Agent({
+      name: "GuIA Redige",
+      instructions,
+      model,
+      tools: [
+        fileSearch
+      ],
+      modelSettings: {
+        temperature: 0.6,
+        topP: 1,
+        maxTokens: 2048,
+        store: true
+      }
+    });
+
     const state = {
 
     };
@@ -210,8 +220,7 @@ export const runWorkflow = async (workflow: WorkflowInput) => {
       modelProvider: provider,
       traceMetadata: {
         __trace_source__: "agent-builder",
-        workflow_id: "wf_69a2e740f304819086bdbca788645e8e0a8d66b9f84ab910",
-        version: "draft"
+        workflow_id: "wf_69a2e740f304819086bdbca788645e8e0a8d66b9f84ab910"
       }
     });
     const guiaRedigeResultTemp = await runner.run(

@@ -59,6 +59,14 @@ export async function initDb(retries = 5, delay = 5000) {
           permissions JSONB DEFAULT '[]'::jsonb
         );
 
+        CREATE TABLE IF NOT EXISTS ai_agents (
+          id VARCHAR(50) PRIMARY KEY,
+          name VARCHAR(100) NOT NULL,
+          instructions TEXT NOT NULL,
+          model VARCHAR(50) NOT NULL,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+
         CREATE TABLE IF NOT EXISTS ai_periodicities (
           id VARCHAR(50) PRIMARY KEY,
           name VARCHAR(100) NOT NULL,
@@ -217,6 +225,14 @@ export async function initDb(retries = 5, delay = 5000) {
         -- Insert default AI profile
         INSERT INTO ai_profiles (id, name, responde_prompts_per_day, responde_max_chars, redige_prompts_per_day, redige_max_chars) VALUES
           ('default-profile', 'Básico', 10, 500, 5, 1000)
+        ON CONFLICT (id) DO NOTHING;
+
+        -- Insert default agents
+        INSERT INTO ai_agents (id, name, instructions, model) VALUES
+          ('guia-responde-geral', 'GuIA Responde-Geral', '✅ SYSTEM PROMPT – GuIA Responde – Geral...', 'gpt-4o-mini'),
+          ('guia-responde-portugues', 'GuIA Responde-Português-4o-mini', 'INÍCIO DO SYSTEM PROMPT...', 'o3-mini'),
+          ('guia-redige', 'GuIA Redige', 'Você é o GuIA Redige, assistente especialista em provas discursivas...', 'gpt-4o-mini'),
+          ('classify', 'Classify', '### ROLE\nYou are a careful classification assistant...', 'gpt-4o-mini')
         ON CONFLICT (id) DO NOTHING;
 
         -- Insert default user for login validation
