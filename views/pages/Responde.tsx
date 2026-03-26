@@ -15,10 +15,8 @@ export const Responde: React.FC = () => {
   const { control } = useChatKit({
     api: {
       async getClientSecret() {
-        if (hasReachedLimit) {
-            throw new Error('Limite de prompts atingido para este período.');
-        }
-
+        // hasReachedLimit check removed for test mode
+        
         const res = await fetch('/api/chatkit/session', {
           method: 'POST',
           headers: {
@@ -33,9 +31,7 @@ export const Responde: React.FC = () => {
         }
 
         const { client_secret } = await res.json();
-        // Increment usage when a session is created/started
-        // Note: In a real app, you might want more granular tracking
-        incrementUsage();
+        // incrementUsage() removed for test mode
         return client_secret;
       },
     },
@@ -63,6 +59,8 @@ export const Responde: React.FC = () => {
         <ChatKit 
           control={control} 
           className="absolute inset-0 h-full w-full"
+          // Public domain verification code
+          // domain="domain_pk_69c47c9d13a881938a8fe7953367964002e9917233bce6a8"
         />
       </div>
 
