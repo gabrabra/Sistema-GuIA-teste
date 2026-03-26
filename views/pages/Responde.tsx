@@ -59,8 +59,6 @@ export const Responde: React.FC = () => {
         <ChatKit 
           control={control} 
           className="absolute inset-0 h-full w-full"
-          // Public domain verification code
-          // domain="domain_pk_69c47c9d13a881938a8fe7953367964002e9917233bce6a8"
         />
       </div>
 
